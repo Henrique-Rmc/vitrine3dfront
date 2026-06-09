@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', 'Roboto', ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    @apply bg-zinc-950 text-zinc-100 antialiased;
+  }
+
+  body {
+    @apply min-h-screen;
+  }
+}
