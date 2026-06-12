@@ -10,7 +10,9 @@ interface StoreInfo {
   loading: boolean
 }
 
-export function useStoreInfo(): StoreInfo {
+// storeSlug is passed by the caller (from URL params) so future API calls can
+// fetch the correct store: GET /api/stores/:storeSlug
+export function useStoreInfo(storeSlug: string): StoreInfo {
   const [loading, setLoading] = useState(true)
   const [info, setInfo] = useState<Omit<StoreInfo, 'loading'>>({
     storeName: '',
@@ -21,7 +23,8 @@ export function useStoreInfo(): StoreInfo {
   })
 
   useEffect(() => {
-    // TODO: replace with GET /api/store and GET /api/categories
+    if (!storeSlug) return
+    // TODO: replace with GET /api/stores/${storeSlug} and GET /api/categories?storeSlug=${storeSlug}
     setInfo({
       storeName: 'PrintLab 3D',
       storeDescription: 'Impressão 3D de alta qualidade em PLA, ABS e Resina. Action figures, props e peças técnicas sob encomenda.',
@@ -35,7 +38,7 @@ export function useStoreInfo(): StoreInfo {
       ],
     })
     setLoading(false)
-  }, [])
+  }, [storeSlug])
 
   return { ...info, loading }
 }

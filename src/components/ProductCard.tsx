@@ -1,27 +1,30 @@
 import type { Product } from '../types'
 import { buildWhatsAppUrl } from '../utils/whatsapp'
 
-interface ProductCardProps {
-  product: Product
-  whatsappNumber: string
-}
-
 const MATERIAL_BADGE: Record<string, string> = {
   PLA:    'bg-blue-900/80 text-blue-300 border-blue-700/60',
   ABS:    'bg-orange-900/80 text-orange-300 border-orange-700/60',
   Resina: 'bg-purple-900/80 text-purple-300 border-purple-700/60',
   PETG:   'bg-teal-900/80 text-teal-300 border-teal-700/60',
 }
-
 const defaultBadge = 'bg-zinc-800/80 text-zinc-300 border-zinc-700/60'
 
-export default function ProductCard({ product, whatsappNumber }: ProductCardProps) {
+interface ProductCardProps {
+  product: Product
+  whatsappNumber: string
+  onOpenModal: (product: Product) => void
+}
+
+export default function ProductCard({ product, whatsappNumber, onOpenModal }: ProductCardProps) {
   const { name, imageUrl, material, multicolor, dimensions } = product
   const badgeStyle = MATERIAL_BADGE[material] ?? defaultBadge
   const whatsappUrl = buildWhatsAppUrl(whatsappNumber, name)
 
   return (
-    <article className="group flex flex-col rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden shadow-lg hover:border-zinc-600 transition-colors">
+    <article
+      className="group flex flex-col rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden shadow-lg hover:border-zinc-600 transition-colors cursor-pointer"
+      onClick={() => onOpenModal(product)}
+    >
       {/* Image */}
       <div className="relative aspect-square overflow-hidden bg-zinc-800">
         <img
@@ -31,14 +34,10 @@ export default function ProductCard({ product, whatsappNumber }: ProductCardProp
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
 
-        {/* Material badge — overlaid bottom-left */}
-        <span
-          className={`absolute bottom-2 left-2 rounded-full border backdrop-blur-sm px-2 py-0.5 text-[10px] font-semibold ${badgeStyle}`}
-        >
+        <span className={`absolute bottom-2 left-2 rounded-full border backdrop-blur-sm px-2 py-0.5 text-[10px] font-semibold ${badgeStyle}`}>
           {material}
         </span>
 
-        {/* Multicolor — overlaid top-right */}
         {multicolor && (
           <span className="absolute top-2 right-2 rounded-full bg-zinc-900/80 backdrop-blur-sm px-2 py-0.5 text-[10px] font-semibold text-zinc-100 border border-zinc-700/60">
             Multicolor
@@ -54,10 +53,12 @@ export default function ProductCard({ product, whatsappNumber }: ProductCardProp
           <p className="text-[11px] text-zinc-500 leading-none">{dimensions}</p>
         )}
 
+        {/* Stop propagation so clicking CTA goes to WhatsApp, not the modal */}
         <a
           href={whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
           className="mt-auto flex items-center justify-center gap-1.5 rounded-lg bg-green-600 hover:bg-green-500 active:bg-green-700 px-3 py-2 text-xs font-semibold text-white transition-colors"
           aria-label={`Solicitar orçamento para ${name} via WhatsApp`}
         >

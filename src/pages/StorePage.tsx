@@ -1,18 +1,22 @@
-import { useMemo } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useMemo, useState } from 'react'
+import { useParams, useSearchParams } from 'react-router-dom'
 import StoreProfileHeader from '../components/StoreProfileHeader'
 import CategoryBar from '../components/CategoryBar'
 import HeroSection from '../components/HeroSection'
 import ProductCard from '../components/ProductCard'
+import ProductModal from '../components/ProductModal'
 import ProductSkeleton from '../components/ProductSkeleton'
 import { useStoreInfo } from '../hooks/useStoreInfo'
 import { mockProducts, featuredProductIds } from '../data/mockProducts'
+import type { Product } from '../types'
 
 const SKELETON_COUNT = 8
 
 export default function StorePage() {
-  const { storeName, storeDescription, whatsappNumber, logoUrl, categories, loading } = useStoreInfo()
+  const { storeSlug = '' } = useParams<{ storeSlug: string }>()
+  const { storeName, storeDescription, whatsappNumber, logoUrl, categories, loading } = useStoreInfo(storeSlug)
   const [searchParams] = useSearchParams()
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
 
   const activeCategoryId = searchParams.get('category')
     ? Number(searchParams.get('category'))
@@ -32,9 +36,13 @@ export default function StorePage() {
       : visible.filter((p) => p.categoryId === activeCategoryId)
   }, [activeCategoryId])
 
+  const selectedCategoryName = selectedProduct
+    ? (categories.find((c) => c.id === selectedProduct.categoryId)?.name ?? '')
+    : ''
+
   return (
     <>
-      {/* ── 1. Store Profile ── */}
+      {/* ── Store Profile ── */}
       <StoreProfileHeader
         storeName={storeName || 'Carregando…'}
         storeDescription={storeDescription}
@@ -43,14 +51,18 @@ export default function StorePage() {
         categories={categories}
       />
 
-      {/* ── 2. Category bar (sticky below the 64 px header) ── */}
+      {/* ── Category bar ── */}
       {!loading && <CategoryBar categories={categories} />}
 
-      {/* ── 3. Content ── */}
+      {/* ── Content ── */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        {/* Hero — visible only on "Todos" */}
+        {/* Hero */}
         {!loading && activeCategoryId === null && (
-          <HeroSection products={featuredProducts} whatsappNumber={whatsappNumber} />
+          <HeroSection
+            products={featuredProducts}
+            whatsappNumber={whatsappNumber}
+            onOpenModal={setSelectedProduct}
+          />
         )}
 
         {/* Catalog */}
@@ -76,6 +88,7 @@ export default function StorePage() {
                     key={product.id}
                     product={product}
                     whatsappNumber={whatsappNumber}
+                    onOpenModal={setSelectedProduct}
                   />
                 ))}
           </div>
@@ -87,6 +100,16 @@ export default function StorePage() {
           )}
         </section>
       </div>
+
+      {/* ── Product Modal ── */}
+      {selectedProduct && (
+        <ProductModal
+          product={selectedProduct}
+          whatsappNumber={whatsappNumber}
+          categoryName={selectedCategoryName}
+          onClose={() => setSelectedProduct(null)}
+        />
+      )}
     </>
   )
 }

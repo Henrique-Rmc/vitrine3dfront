@@ -5,9 +5,10 @@ import { buildWhatsAppUrl } from '../utils/whatsapp'
 interface HeroSectionProps {
   products: Product[]
   whatsappNumber: string
+  onOpenModal: (product: Product) => void
 }
 
-export default function HeroSection({ products, whatsappNumber }: HeroSectionProps) {
+export default function HeroSection({ products, whatsappNumber, onOpenModal }: HeroSectionProps) {
   const [activeIndex, setActiveIndex] = useState(0)
   const trackRef = useRef<HTMLDivElement>(null)
 
@@ -18,7 +19,6 @@ export default function HeroSection({ products, whatsappNumber }: HeroSectionPro
   function onScroll() {
     const el = trackRef.current
     if (!el) return
-    // find the child whose offsetLeft is closest to scrollLeft
     let closest = 0
     let minDist = Infinity
     Array.from(el.children).forEach((child, i) => {
@@ -41,7 +41,7 @@ export default function HeroSection({ products, whatsappNumber }: HeroSectionPro
         Em Destaque
       </p>
 
-      {/* ── Mobile: snap carousel (oculto em lg+) ───────────────────────── */}
+      {/* ── Mobile: snap carousel ── */}
       <div
         ref={trackRef}
         onScroll={onScroll}
@@ -49,7 +49,12 @@ export default function HeroSection({ products, whatsappNumber }: HeroSectionPro
       >
         {products.map((p) => (
           <div key={p.id} className="snap-start shrink-0 w-[68%]">
-            <HeroCard product={p} whatsappNumber={whatsappNumber} large />
+            <HeroCard
+              product={p}
+              whatsappNumber={whatsappNumber}
+              large
+              onOpenModal={onOpenModal}
+            />
           </div>
         ))}
       </div>
@@ -72,16 +77,22 @@ export default function HeroSection({ products, whatsappNumber }: HeroSectionPro
         </div>
       )}
 
-      {/* ── Desktop: bento grid (oculto em < lg) ────────────────────────── */}
+      {/* ── Desktop: bento grid ── */}
       <div className="hidden lg:grid gap-3 grid-cols-2 grid-rows-2">
         <HeroCard
           product={main}
           whatsappNumber={whatsappNumber}
           large
           className="row-span-2"
+          onOpenModal={onOpenModal}
         />
         {rest.slice(0, 2).map((p) => (
-          <HeroCard key={p.id} product={p} whatsappNumber={whatsappNumber} />
+          <HeroCard
+            key={p.id}
+            product={p}
+            whatsappNumber={whatsappNumber}
+            onOpenModal={onOpenModal}
+          />
         ))}
       </div>
     </section>
@@ -93,15 +104,17 @@ interface HeroCardProps {
   whatsappNumber: string
   large?: boolean
   className?: string
+  onOpenModal: (product: Product) => void
 }
 
-function HeroCard({ product, whatsappNumber, large = false, className = '' }: HeroCardProps) {
+function HeroCard({ product, whatsappNumber, large = false, className = '', onOpenModal }: HeroCardProps) {
   const { name, imageUrl, material, description } = product
   const whatsappUrl = buildWhatsAppUrl(whatsappNumber, name)
 
   return (
     <article
-      className={`group relative overflow-hidden rounded-2xl bg-zinc-900 border border-zinc-800 shadow-xl hover:border-zinc-600 transition-colors ${className}`}
+      className={`group relative overflow-hidden rounded-2xl bg-zinc-900 border border-zinc-800 shadow-xl hover:border-zinc-600 transition-colors cursor-pointer ${className}`}
+      onClick={() => onOpenModal(product)}
     >
       <div className={`relative overflow-hidden ${large ? 'aspect-3/4 lg:aspect-auto lg:h-full min-h-72' : 'aspect-video'}`}>
         <img
@@ -125,10 +138,12 @@ function HeroCard({ product, whatsappNumber, large = false, className = '' }: He
           <p className="text-sm text-zinc-400 line-clamp-2 mb-3">{description}</p>
         )}
 
+        {/* stopPropagation so clicking CTA opens WhatsApp, not the modal */}
         <a
           href={whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
           className="inline-flex items-center gap-2 rounded-lg bg-green-600 hover:bg-green-500 active:bg-green-700 px-4 py-2 text-sm font-semibold text-white transition-colors"
         >
           <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">

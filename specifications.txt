@@ -1,0 +1,323 @@
+================================================================================
+  VITRINE3D — ESPECIFICAÇÕES DO PROJETO
+  Data: Junho 2026
+================================================================================
+
+
+────────────────────────────────────────────────────────────────────────────────
+1. VISÃO GERAL
+────────────────────────────────────────────────────────────────────────────────
+
+Vitrine3D é uma plataforma SaaS para profissionais de impressão 3D criarem e
+gerenciarem sua vitrine de produtos online. Cada vendedor possui uma URL própria
+(ex: vitrine3d.com/printlab3d) onde exibe seu catálogo e recebe pedidos de
+orçamento diretamente via WhatsApp, sem intermediários.
+
+Tecnologias do frontend:
+  - React 19 + TypeScript
+  - Vite 6
+  - Tailwind CSS v4
+  - React Router DOM v7
+  - Axios
+
+Backend previsto (ainda não implementado):
+  - Spring Boot (Java)
+  - PostgreSQL
+  - MinIO (armazenamento de imagens)
+  - JSoup (scraper do MakerWorld)
+
+
+────────────────────────────────────────────────────────────────────────────────
+2. CASOS DE USO ESPERADOS
+────────────────────────────────────────────────────────────────────────────────
+
+UC-01 | VISITANTE visualiza a landing page da plataforma
+  - Acessa vitrine3d.com
+  - Vê apresentação da plataforma com os diferenciais
+  - Pode clicar em "Seja um Vendedor" para criar conta
+  - Pode clicar em "Ver exemplo de vitrine" para visualizar uma loja demo
+
+UC-02 | VISITANTE acessa a vitrine de um vendedor
+  - Acessa vitrine3d.com/{slug-da-loja}
+  - Visualiza perfil da loja (nome, descrição, avatar)
+  - Filtra produtos por categoria
+  - Vê produtos em destaque no carrossel/bento hero
+  - Clica em um produto e vê o modal com todos os detalhes
+  - Clica em "Solicitar Orçamento" e é redirecionado ao WhatsApp
+
+UC-03 | VENDEDOR cria conta na plataforma
+  - Acessa /admin/register
+  - Preenche nome, e-mail, senha, nome da loja, slug, cidade , estado,  WhatsApp
+  - Recebe confirmação e é redirecionado ao painel
+
+UC-04 | VENDEDOR faz login no painel
+  - Acessa /admin/login
+  - Preenche e-mail e senha
+  - Em caso de sucesso é redirecionado ao painel de produtos
+  - Em caso de erro vê mensagem de feedback
+  - Sessão persiste via JWT no localStorage
+
+UC-05 | VENDEDOR gerencia seus produtos
+  - Visualiza lista de todos os produtos com miniatura, nome, material e status
+  - Adiciona novo produto manualmente ou via importação do MakerWorld
+  - Edita informações de um produto existente
+  - Ativa/desativa visibilidade de um produto na vitrine
+  - Exclui um produto
+
+UC-06 | VENDEDOR importa produto do MakerWorld
+  - Cola a URL de um modelo do MakerWorld no formulário
+  - O backend faz scraping e retorna nome, descrição e URL da imagem
+  - O formulário é preenchido automaticamente
+  - O vendedor complementa as informações (material, dimensões, categoria)
+  - Salva o produto
+
+UC-07 | VENDEDOR gerencia categorias
+  - Visualiza categorias globais da plataforma
+  - Cria categorias personalizadas para sua loja
+  - Vincula produtos às categorias
+
+UC-08 | VENDEDOR configura sua loja
+  - Atualiza nome da loja, descrição e número de WhatsApp
+  - Faz upload ou define URL do logo
+  - Visualiza e altera seu slug de URL
+
+UC-09 | SISTEMA renova sessão automaticamente
+  - Sessão é recarregada do localStorage ao abrir o navegador
+  - Token expirado ou inválido redireciona para login automaticamente (401)
+
+
+────────────────────────────────────────────────────────────────────────────────
+3. FUNCIONALIDADES IMPLEMENTADAS (FRONTEND)
+────────────────────────────────────────────────────────────────────────────────
+
+[CONCLUÍDO] Estrutura base do projeto
+  - Vite + React 19 + TypeScript configurados
+  - Tailwind CSS v4 com @tailwindcss/vite
+  - React Router DOM v7 com estrutura de layouts aninhados
+  - Arquivo .gitignore configurado
+  - Variável de ambiente VITE_API_BASE_URL via .env.local
+
+[CONCLUÍDO] Roteamento e layouts
+  - Rota /              → PlatformLandingPage (apresentação da plataforma)
+  - Rota /:storeSlug    → MainLayout → StorePage (vitrine dinâmica por vendedor)
+  - Rota /admin/login   → LoginPage (pública)
+  - Rota /admin/products → AdminLayout → ProductManagement (protegida)
+  - Rota /admin/dashboard → AdminLayout → DashboardPage (protegida, legado)
+  - ProtectedRoute com guard de autenticação e redirect com estado "from"
+
+[CONCLUÍDO] PlatformLandingPage
+  - Apresentação da plataforma Vitrine3D
+  - Botão "Seja um Vendedor" (aponta para /admin/login — aguardando /admin/register)
+  - Botão "Ver exemplo de vitrine" com link para loja demo
+  - Seção de 3 features cards
+  - Design responsivo mobile-first
+
+[CONCLUÍDO] StorePage — vitrine pública do vendedor
+  - Captura storeSlug via useParams
+  - StoreProfileHeader com avatar, nome, descrição e estatísticas da loja
+  - CategoryBar sticky com filtro por categoria via URL (?category=id)
+  - HeroSection: carrossel snap-scroll mobile / bento grid desktop
+  - Grade de produtos (ProductCard) com skeleton loading
+  - ProductModal com detalhes completos ao clicar em qualquer produto
+  - Botão "Solicitar Orçamento" constrói URL do WhatsApp dinamicamente
+  - e.stopPropagation() nos botões de WhatsApp para não abrir modal indesejado
+
+[CONCLUÍDO] Componentes da vitrine pública
+  - Header           → barra topo com marca "Vitrine3D" + ícone de menu mobile
+  - MobileDrawer     → sidebar deslizante (mobile: overlay; desktop: persistente)
+  - StoreProfileHeader
+  - CategoryBar
+  - HeroSection (carrossel mobile + bento grid desktop)
+  - ProductCard
+  - ProductModal (bottom sheet mobile / dialog desktop)
+  - ProductSkeleton
+
+[CONCLUÍDO] Autenticação
+  - AuthContext com useState + localStorage (rehydration no mount)
+  - login() chama authService.loginUser() → POST /api/auth/login
+  - logout() limpa localStorage e estado
+  - ProtectedRoute com spinner enquanto estado carrega
+  - Interceptor de request: anexa Bearer token em todas as requisições
+  - Interceptor de response: 401 fora do endpoint de login limpa sessão e redireciona
+
+[CONCLUÍDO] Painel administrativo — Layout
+  - AdminLayout:
+      Desktop → AdminSidebar fixa (w-60) + área de conteúdo com ml-60
+      Mobile  → top bar com logout + <Outlet> + bottom nav fixa
+  - AdminSidebar com brand, navegação por NavLink e user/logout no rodapé
+  - Navegação: Products, Categories, Settings
+  - NAV_ITEMS definido uma única vez e reutilizado no sidebar e no bottom nav
+
+[CONCLUÍDO] Painel administrativo — ProductManagement
+  - Cabeçalho com contagem de produtos e botão "Add New Product"
+  - ProductList responsiva:
+      Desktop → tabela com colunas: imagem, nome+dimensões, material, status, ações
+      Mobile  → cards com thumbnail, badges e botões de ação
+  - Badges de material com cor por tipo (PLA=azul, ABS=laranja, Resina=roxo, PETG=teal)
+  - Badge de status com ponto colorido (Visible=verde / Hidden=cinza)
+  - Botões Edit (ícone lápis) e Delete (ícone lixo) por produto
+  - Delete com window.confirm antes de remover do estado local
+  - Alimentado por mockProducts (12 produtos de dados fictícios)
+
+[CONCLUÍDO] Serviços de API (estrutura pronta, sem backend)
+  - apiClient.ts  → instância Axios com baseURL, interceptors de auth e 401
+  - authService.ts    → loginUser()
+  - productService.ts → listProducts(), createProduct(), deleteProduct(), scrapeFromMakerWorld()
+  - categoryService.ts → listCategories(), createCategory()
+
+[CONCLUÍDO] Utilitários e tipos
+  - buildWhatsAppUrl() em src/utils/whatsapp.ts
+  - Interfaces TypeScript: User, Category, Product em src/types/index.ts
+  - Dados fictícios em src/data/mockProducts.ts (12 produtos com imagens do picsum)
+
+[ CONCLUIDO ] Página de cadastro de vendedor (/admin/register)
+  - Formulário: nome, e-mail, senha, nome da loja, slug, WhatsApp, logo
+  - Chamar POST /api/auth/register
+  - Botão "Seja um Vendedor" na PlatformLandingPage e no MobileDrawer já apontam
+    para /admin/login como fallback — devem ser atualizados para /admin/register
+
+[CONCLUIDO] Formulário de criação/edição de produto (/admin/products/new e /edit/:id)
+  - ProductManagement.tsx já navega para estas rotas ao clicar em Add/Edit
+  - As rotas e o componente do formulário ainda não existem
+  - DashboardPage.tsx (legado) já contém uma versão funcional do formulário
+    que pode ser extraída como base para o novo componente ProductForm-
+────────────────────────────────────────────────────────────────────────────────
+4. FUNCIONALIDADES PENDENTES (FRONTEND)
+────────────────────────────────────────────────────────────────────────────────
+
+
+
+
+
+[PENDENTE] Integração real do useStoreInfo com a API
+  - src/hooks/useStoreInfo.ts retorna dados fixos (mock)
+  - Deve chamar GET /api/stores/{storeSlug} e GET /api/categories?storeSlug={slug}
+  - Tratamento de erro para loja não encontrada (404 → página de loja inexistente)
+
+[PENDENTE] Integração real de ProductManagement com a API
+  - ProductManagement.tsx usa mockProducts como estado inicial
+  - Deve chamar productService.listProducts() no useEffect
+  - Delete deve chamar productService.deleteProduct(id)
+  - Feedback de erro nas operações
+
+[PENDENTE] Página de gerenciamento de categorias (/admin/categories)
+  - Rota existe no AdminLayout NAV_ITEMS mas não foi criada
+  - Listar categorias globais + categorias do vendedor
+  - Criar categoria personalizada
+  - Vincular/desvincular categorias de produtos
+
+[PENDENTE] Página de configurações da loja (/admin/settings)
+  - Rota existe no AdminLayout NAV_ITEMS mas não foi criada
+  - Editar perfil da loja: nome, descrição, WhatsApp, logo, slug
+  - Chamar PATCH /api/stores/{id}
+
+[PENDENTE] Autenticação no MobileDrawer
+  - isAuthenticated em MobileDrawer.tsx é hardcoded como false
+  - Deve consumir useAuth() para exibir os links corretos (guest vs autenticado)
+  - "View My Store" deve usar o slug do vendedor autenticado
+
+[PENDENTE] Tratamento de erros e estados de borda na vitrine
+  - Página 404 personalizada para loja não encontrada (slug inválido)
+  - Error boundary global para capturar erros de renderização
+  - Estado de erro nas listagens quando a API retorna falha
+
+[PENDENTE] SEO e meta tags
+  - Título e descrição dinâmicos por loja (usando nome e descrição do vendedor)
+  - Open Graph tags para compartilhamento em redes sociais
+  - Considerar migração para framework com SSR (Next.js) para SEO real
+
+
+────────────────────────────────────────────────────────────────────────────────
+5. BACKEND — NÃO IMPLEMENTADO
+────────────────────────────────────────────────────────────────────────────────
+
+Toda a camada de servidor ainda precisa ser construída. Os contratos de API
+foram definidos no FRONTEND_CONTEXT.md e os serviços do frontend já estão
+preparados para consumi-los.
+
+Endpoints necessários (Spring Boot):
+
+  Autenticação:
+    POST /api/auth/login       → { email, password } → { token, user }
+    POST /api/auth/register    → { ...UserPayload } → { token, user }
+
+  Lojas:
+    GET  /api/stores/:slug     → StoreInfo pública do vendedor
+    PATCH /api/stores/:id      → Atualizar dados da loja (autenticado)
+
+  Produtos:
+    GET  /api/products         → Listar produtos do vendedor autenticado
+    POST /api/products         → Criar produto
+    PATCH /api/products/:id    → Editar produto
+    DELETE /api/products/:id   → Excluir produto
+    POST /api/products/scrape  → { url } → { name, description, imageUrl } (JSoup)
+
+  Categorias:
+    GET  /api/categories       → Listar categorias (globais + do vendedor)
+    POST /api/categories       → Criar categoria personalizada
+    DELETE /api/categories/:id → Excluir categoria do vendedor
+
+
+────────────────────────────────────────────────────────────────────────────────
+6. REQUISITOS PARA DEPLOY
+────────────────────────────────────────────────────────────────────────────────
+
+Para o projeto ser implantado em produção, os itens abaixo precisam estar
+concluídos. Os marcados com [!] são bloqueantes (sem eles o sistema não funciona).
+
+  BACKEND
+  [!] Implementar todos os endpoints listados na seção 5
+  [!] Configurar banco de dados PostgreSQL em produção
+  [!] Configurar MinIO (ou AWS S3) para armazenamento de imagens
+  [!] Configurar variáveis de ambiente de produção (DB, JWT secret, MinIO)
+  [!] Deploy do servidor Spring Boot (Railway, Render, EC2, etc.)
+  [!] Configurar CORS para aceitar requisições da URL do frontend em produção
+
+  FRONTEND
+  [!] Substituir todos os dados fictícios por chamadas reais à API:
+        → useStoreInfo.ts → GET /api/stores/:slug
+        → ProductManagement.tsx → productService.listProducts()
+        → MobileDrawer.tsx → conectar isAuthenticated ao useAuth()
+  [!] Criar página /admin/register (cadastro de vendedor)
+  [!] Criar formulário /admin/products/new e /admin/products/edit/:id
+  [ ] Criar página /admin/categories
+  [ ] Criar página /admin/settings
+  [ ] Tratar erro 404 para slug de loja inválido
+  [!] Configurar variável VITE_API_BASE_URL com a URL real do backend em produção
+      (arquivo .env.production ou variável de ambiente da plataforma de hosting)
+
+  INFRAESTRUTURA
+  [!] Registrar domínio (ex: vitrine3d.com.br)
+  [!] Configurar HTTPS/SSL (Let's Encrypt ou certificado da plataforma de hosting)
+  [!] Deploy do frontend (Vercel, Netlify ou Nginx):
+        → Executar: npm run build
+        → Servir a pasta dist/
+        → Configurar redirect de todas as rotas para index.html (SPA routing)
+  [ ] Configurar CDN para assets estáticos
+  [ ] Monitoramento de erros (ex: Sentry)
+  [ ] CI/CD pipeline (GitHub Actions ou similar)
+
+  TESTES
+  [ ] Testes unitários dos serviços e hooks
+  [ ] Testes de integração dos fluxos principais (login, CRUD de produtos)
+  [ ] Testes end-to-end do fluxo do visitante (ver vitrine → abrir modal → WhatsApp)
+
+  SEGURANÇA
+  [!] Validar e sanitizar todos os inputs no backend
+  [!] Configurar expiração e renovação do JWT
+  [!] Rate limiting nas rotas de autenticação
+  [ ] Política de CORS restritiva (apenas domínios autorizados)
+
+
+────────────────────────────────────────────────────────────────────────────────
+7. ESTIMATIVA DE ESTADO DO PROJETO
+────────────────────────────────────────────────────────────────────────────────
+
+  Frontend — interface e componentes:  ~75% concluído
+  Frontend — integração com API:       ~15% concluído (estrutura pronta, sem dados reais)
+  Backend:                              ~0% concluído
+  Infraestrutura / DevOps:              ~0% concluído
+
+  Estimativa geral para deploy:        ~25% concluído
+
+================================================================================
