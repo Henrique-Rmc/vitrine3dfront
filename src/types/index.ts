@@ -3,6 +3,7 @@ export interface User {
   email: string
   userName: string
   storeName: string
+  slug: string
   whatsappNumber: string
   storeDescription: string
   logoUrl: string
@@ -29,4 +30,5 @@ export interface Product {
   isVisible: boolean
   categoryId: number
   userId: number
+  whatsappUrl?: string
 }

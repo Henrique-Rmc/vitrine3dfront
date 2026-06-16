@@ -1,44 +1,84 @@
 import { useEffect, useState } from 'react'
-import type { Category } from '../types'
+import type { Category, Product } from '../types'
+import apiClient from '../services/apiClient'
+import { listPublicProducts } from '../services/productService'
+import { listCategories } from '../services/categoryService'
 
-interface StoreInfo {
+interface StoreUser {
+  id: number
+  storeName: string
+  storeDescription: string
+  whatsappNumber: string
+  logoUrl: string
+}
+
+export interface StoreInfo {
+  storeId: number | null
   storeName: string
   storeDescription: string
   whatsappNumber: string
   logoUrl: string
   categories: Category[]
+  products: Product[]
   loading: boolean
+  error: string | null
 }
 
-// storeSlug is passed by the caller (from URL params) so future API calls can
-// fetch the correct store: GET /api/stores/:storeSlug
 export function useStoreInfo(storeSlug: string): StoreInfo {
   const [loading, setLoading] = useState(true)
-  const [info, setInfo] = useState<Omit<StoreInfo, 'loading'>>({
+  const [error, setError] = useState<string | null>(null)
+  const [info, setInfo] = useState<Omit<StoreInfo, 'loading' | 'error'>>({
+    storeId: null,
     storeName: '',
     storeDescription: '',
     whatsappNumber: '',
     logoUrl: '',
     categories: [],
+    products: [],
   })
 
   useEffect(() => {
     if (!storeSlug) return
-    // TODO: replace with GET /api/stores/${storeSlug} and GET /api/categories?storeSlug=${storeSlug}
-    setInfo({
-      storeName: 'PrintLab 3D',
-      storeDescription: 'Impressão 3D de alta qualidade em PLA, ABS e Resina. Action figures, props e peças técnicas sob encomenda.',
-      whatsappNumber: '5511999998877',
-      logoUrl: '',
-      categories: [
-        { id: 1, name: 'Action Figures', isGlobal: true, userId: 1 },
-        { id: 2, name: 'Props', isGlobal: true, userId: 1 },
-        { id: 3, name: 'Peças Técnicas', isGlobal: true, userId: 1 },
-        { id: 4, name: 'Miniaturas', isGlobal: true, userId: 1 },
-      ],
-    })
-    setLoading(false)
+
+    setLoading(true)
+    setError(null)
+
+    async function fetchStore() {
+      // 1 – Resolve store by slug
+      const { data: storeUser } = await apiClient.get<StoreUser>(
+        `/api/users/store/${storeSlug}`,
+      )
+
+      // 2 – Fetch products and categories in parallel
+      const [products, categories] = await Promise.all([
+        listPublicProducts(storeUser.id),
+        listCategories(),
+      ])
+
+      // Only show categories that have at least one visible product in this store
+      const usedCategoryIds = new Set(
+        products.filter((p) => p.isVisible).map((p) => p.categoryId),
+      )
+      const filteredCategories = categories.filter((c) => usedCategoryIds.has(c.id))
+
+      setInfo({
+        storeId: storeUser.id,
+        storeName: storeUser.storeName,
+        storeDescription: storeUser.storeDescription,
+        whatsappNumber: storeUser.whatsappNumber,
+        logoUrl: storeUser.logoUrl,
+        categories: filteredCategories,
+        products,
+      })
+    }
+
+    fetchStore()
+      .catch((err) => {
+        console.error('[useStoreInfo]', err)
+        setError('Não foi possível carregar a loja. Verifique o endereço e tente novamente.')
+      })
+      .finally(() => setLoading(false))
   }, [storeSlug])
 
-  return { ...info, loading }
+  return { ...info, loading, error }
 }

@@ -7,14 +7,23 @@ import ProductCard from '../components/ProductCard'
 import ProductModal from '../components/ProductModal'
 import ProductSkeleton from '../components/ProductSkeleton'
 import { useStoreInfo } from '../hooks/useStoreInfo'
-import { mockProducts, featuredProductIds } from '../data/mockProducts'
 import type { Product } from '../types'
 
 const SKELETON_COUNT = 8
 
 export default function StorePage() {
   const { storeSlug = '' } = useParams<{ storeSlug: string }>()
-  const { storeName, storeDescription, whatsappNumber, logoUrl, categories, loading } = useStoreInfo(storeSlug)
+  const {
+    storeName,
+    storeDescription,
+    whatsappNumber,
+    logoUrl,
+    categories,
+    products,
+    loading,
+    error,
+  } = useStoreInfo(storeSlug)
+
   const [searchParams] = useSearchParams()
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
 
@@ -24,21 +33,35 @@ export default function StorePage() {
 
   const activeCategory = categories.find((c) => c.id === activeCategoryId)
 
+  const visibleProducts = useMemo(
+    () => products.filter((p) => p.isVisible),
+    [products],
+  )
+
   const featuredProducts = useMemo(
-    () => mockProducts.filter((p) => featuredProductIds.includes(p.id) && p.isVisible),
-    [],
+    () => visibleProducts.slice(0, 3),
+    [visibleProducts],
   )
 
   const catalogProducts = useMemo(() => {
-    const visible = mockProducts.filter((p) => p.isVisible)
     return activeCategoryId === null
-      ? visible
-      : visible.filter((p) => p.categoryId === activeCategoryId)
-  }, [activeCategoryId])
+      ? visibleProducts
+      : visibleProducts.filter((p) => p.categoryId === activeCategoryId)
+  }, [visibleProducts, activeCategoryId])
 
   const selectedCategoryName = selectedProduct
     ? (categories.find((c) => c.id === selectedProduct.categoryId)?.name ?? '')
     : ''
+
+  // Store not found or network error
+  if (!loading && error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32 px-6 text-center">
+        <p className="text-zinc-400 text-sm mb-2">{error}</p>
+        <p className="text-zinc-600 text-xs">vitrine3d.com/{storeSlug}</p>
+      </div>
+    )
+  }
 
   return (
     <>
@@ -47,7 +70,7 @@ export default function StorePage() {
         storeName={storeName || 'Carregando…'}
         storeDescription={storeDescription}
         logoUrl={logoUrl}
-        productCount={mockProducts.filter((p) => p.isVisible).length}
+        productCount={visibleProducts.length}
         categories={categories}
       />
 
@@ -56,8 +79,8 @@ export default function StorePage() {
 
       {/* ── Content ── */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        {/* Hero */}
-        {!loading && activeCategoryId === null && (
+        {/* Hero — only on the "all products" view */}
+        {!loading && activeCategoryId === null && featuredProducts.length > 0 && (
           <HeroSection
             products={featuredProducts}
             whatsappNumber={whatsappNumber}

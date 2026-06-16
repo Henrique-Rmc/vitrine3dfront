@@ -25,17 +25,6 @@ const FEATURES = [
     title: 'Orçamentos via WhatsApp',
     description: 'Clientes solicitam cotações diretamente pelo WhatsApp, sem intermediários.',
   },
-  {
-    icon: (
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
-      />
-    ),
-    title: 'Importação do MakerWorld',
-    description: 'Adicione produtos com um clique colando a URL do modelo — nome, descrição e imagem preenchidos automaticamente.',
-  },
 ]
 
 export default function PlatformLandingPage() {
@@ -45,7 +34,7 @@ export default function PlatformLandingPage() {
       <header className="w-full px-6 py-4 flex items-center justify-between max-w-5xl mx-auto">
         <span className="text-lg font-bold tracking-tight">Vitrine3D</span>
         <Link
-          to="/admin/register"
+          to="/admin/register/login"
           className="text-sm text-zinc-400 hover:text-zinc-100 transition-colors"
         >
           Entrar

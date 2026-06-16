@@ -48,8 +48,6 @@ A visual, Mobile-First web application where 3D printing professionals can showc
 - Image URLs returned by the backend (MinIO) must be rendered directly in `src` attributes.
 - Use `SkeletonLoading` components for async data fetching to improve perceived performance.
 
-
-
 ## API Data Models (Contracts)
 
 The frontend components and forms must strictly use these data structures to ensure seamless integration with the API.
@@ -87,6 +85,77 @@ The frontend components and forms must strictly use these data structures to ens
 - `isVisible` (Boolean)
 - `categoryId` (Long)
 - `userId` (Long)
+
+
+# Endpoints da API
+
+**Configurações Globais**
+
+* **Base URL:** `http://localhost:8080`
+* **Header de Autenticação:** `Authorization: Bearer <token>`
+* **Swagger Completo:** `http://localhost:8080/api-docs`
+
+---
+
+## 1. Auth (Autenticação)
+
+| Método        | Endpoint            | Auth | Body / Params           |
+| :------------- | :------------------ | :--: | :---------------------- |
+| **POST** | `/api/auth/login` |  —  | `{ email, password }` |
+
+> **Resposta de Sucesso:** `{ token, id, email, userName, storeName, slug }`
+
+---
+
+## 2. Usuários
+
+| Método        | Endpoint                    | Auth | Body / Params                                                                                   |
+| :------------- | :-------------------------- | :--: | :---------------------------------------------------------------------------------------------- |
+| **POST** | `/api/users/register`     |  —  | `{ email, password, userName, storeName, whatsappNumber, storeDescription, stateId, cityId }` |
+| **GET**  | `/api/users/{id}`         |  —  | —                                                                                              |
+| **GET**  | `/api/users/store/{slug}` |  —  | —                                                                                              |
+| **PUT**  | `/api/users/{id}`         | JWT | `{ userName?, storeName?, whatsappNumber?, storeDescription?, stateId?, cityId? }`            |
+| **POST** | `/api/users/{id}/logo`    | JWT | `multipart/form-data`: `logo` (arquivo)                                                     |
+
+---
+
+## 3. Produtos
+
+| Método          | Endpoint                                 | Auth | Body / Params                                                           |
+| :--------------- | :--------------------------------------- | :--: | :---------------------------------------------------------------------- |
+| **GET**    | `/api/products/store/{storeId}/public` |  —  | —                                                                      |
+| **GET**    | `/api/products/store/{storeId}`        | JWT | —                                                                      |
+| **GET**    | `/api/products/{id}`                   |  —  | —                                                                      |
+| **POST**   | `/api/products`                        | JWT | `multipart/form-data`: `data` (JSON), `image` (arquivo, opcional) |
+| **PUT**    | `/api/products/{id}`                   | JWT | `multipart/form-data`: `data` (JSON), `image` (arquivo, opcional) |
+| **PATCH**  | `/api/products/{id}/visibility`        | JWT | —                                                                      |
+| **DELETE** | `/api/products/{id}`                   | JWT | —                                                                      |
+| **POST**   | `/api/products/scrape`                 | JWT | `{ url }`                                                             |
+
+> **Notas do Produto:**
+>
+> * **Campo `data` (POST/PUT produto):** `{ "name", "description", "material", "dimensions", "multicolor", "categoryId", "storeId" }`
+> * **Resposta do produto inclui:** `whatsappUrl` (link wa.me pronto para uso).
+
+---
+
+## 4. Categorias
+
+| Método          | Endpoint                 | Auth | Body / Params                     |
+| :--------------- | :----------------------- | :--: | :-------------------------------- |
+| **GET**    | `/api/categories`      |  —  | —                                |
+| **POST**   | `/api/categories`      | JWT | `{ name, isGlobal?, storeId? }` |
+| **PUT**    | `/api/categories/{id}` | JWT | `{ name }`                      |
+| **DELETE** | `/api/categories/{id}` | JWT | —                                |
+
+---
+
+## 5. Localização
+
+| Método       | Endpoint                              | Auth | Body / Params |
+| :------------ | :------------------------------------ | :--: | :------------ |
+| **GET** | `/api/locations/states`             |  —  | —            |
+| **GET** | `/api/locations/states/{id}/cities` |  —  | —            |
 
 ## Key Integration Features
 

@@ -8,12 +8,20 @@ export interface NavItem {
 
 interface AdminSidebarProps {
   navItems: NavItem[]
-  userEmail: string | undefined
+  userName: string | undefined
+  storeName: string | undefined
+  storeSlug: string | undefined
   onLogout: () => void
 }
 
-export default function AdminSidebar({ navItems, userEmail, onLogout }: AdminSidebarProps) {
-  const initial = userEmail?.[0]?.toUpperCase() ?? '?'
+export default function AdminSidebar({
+  navItems,
+  userName,
+  storeName,
+  storeSlug,
+  onLogout,
+}: AdminSidebarProps) {
+  const initial = (userName ?? '?')[0].toUpperCase()
 
   return (
     <aside className="hidden md:flex fixed left-0 top-0 h-full w-60 z-40 flex-col bg-zinc-900 border-r border-zinc-800">
@@ -56,15 +64,35 @@ export default function AdminSidebar({ navItems, userEmail, onLogout }: AdminSid
             {label}
           </NavLink>
         ))}
+
+        {/* View public store shortcut */}
+        {storeSlug && (
+          <Link
+            to={`/${storeSlug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-500 hover:text-zinc-100 hover:bg-zinc-800/60 transition-colors mt-2 border-t border-zinc-800/60 pt-4"
+          >
+            <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+            </svg>
+            Ver minha vitrine
+          </Link>
+        )}
       </nav>
 
       {/* User + Logout */}
       <div className="p-4 border-t border-zinc-800 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-200 shrink-0">
+          <div className="w-8 h-8 rounded-full bg-blue-600/30 border border-blue-600/40 flex items-center justify-center text-xs font-bold text-blue-300 shrink-0">
             {initial}
           </div>
-          <p className="flex-1 min-w-0 text-xs text-zinc-400 truncate">{userEmail}</p>
+          <div className="flex-1 min-w-0">
+            {storeName && (
+              <p className="text-xs font-semibold text-zinc-200 truncate">{storeName}</p>
+            )}
+            <p className="text-xs text-zinc-500 truncate">{userName}</p>
+          </div>
           <button
             onClick={onLogout}
             title="Logout"

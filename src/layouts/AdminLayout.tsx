@@ -61,7 +61,9 @@ export default function AdminLayout() {
       {/* Desktop persistent sidebar */}
       <AdminSidebar
         navItems={NAV_ITEMS}
-        userEmail={user?.email}
+        userName={user?.userName ?? user?.email}
+        storeName={user?.storeName}
+        storeSlug={user?.slug}
         onLogout={handleLogout}
       />
 
@@ -71,7 +73,7 @@ export default function AdminLayout() {
         <header className="md:hidden sticky top-0 z-30 bg-zinc-900 border-b border-zinc-800 h-14 px-4 flex items-center justify-between shrink-0">
           <span className="font-bold text-zinc-100 text-sm">Vitrine3D Admin</span>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-zinc-500 truncate max-w-32">{user?.email}</span>
+            <span className="text-xs text-zinc-400 font-medium truncate max-w-32">{user?.storeName ?? user?.email}</span>
             <button
               onClick={handleLogout}
               className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
@@ -114,6 +116,21 @@ export default function AdminLayout() {
             {label}
           </NavLink>
         ))}
+
+        {/* Ver vitrine — 4th item, mirrors the desktop sidebar link */}
+        {user?.slug && (
+          <a
+            href={`/${user.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 flex flex-col items-center justify-center gap-0.5 text-xs font-medium text-zinc-500 hover:text-zinc-300 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+            </svg>
+            Vitrine
+          </a>
+        )}
       </nav>
     </div>
   )

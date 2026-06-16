@@ -1,15 +1,16 @@
 import { useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
 interface MobileDrawerProps {
   isOpen: boolean
   onClose: () => void
 }
 
-// TODO: replace with useAuth() once wired to this component
-const isAuthenticated = false
-
 export default function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
+  const { isAuthenticated, logout, user } = useAuth()
+  const location = useLocation()
+  const isOnOwnStore = !!user?.slug && location.pathname === `/${user.slug}`
   // Close on Escape key (mobile)
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -79,11 +80,15 @@ export default function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
           ) : (
             <>
               <NavItem to="/admin/dashboard" onClose={onClose}>My Dashboard</NavItem>
-              <NavItem to="/my-store" onClose={onClose}>View My Store</NavItem>
+              {isOnOwnStore ? (
+                <NavItem to="/admin/products" onClose={onClose}>Meus produtos</NavItem>
+              ) : user?.slug ? (
+                <NavItem to={`/${user.slug}`} onClose={onClose}>Ver minha vitrine</NavItem>
+              ) : null}
               <NavItem to="/admin/settings" onClose={onClose}>Settings</NavItem>
               <button
                 onClick={() => {
-                  // TODO: call logout() from useAuth()
+                  logout()
                   onClose()
                 }}
                 className="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-red-400 hover:bg-red-950/40 transition-colors"

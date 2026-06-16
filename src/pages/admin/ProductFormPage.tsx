@@ -1,43 +1,21 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import type { Category } from '../../types'
 import {
   createProduct,
   updateProduct,
-  scrapeFromMakerWorld,
-  type CreateProductRequest,
+  getProduct,
+  type ProductFormData,
 } from '../../services/productService'
-import { listCategories } from '../../services/categoryService'
-import { mockProducts } from '../../data/mockProducts'
+import { listCategories, createCategory } from '../../services/categoryService'
+import { useAuth } from '../../context/AuthContext'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
 const MATERIALS = ['PLA', 'ABS', 'Resina', 'PETG', 'Flexível'] as const
 
-const EMPTY_FORM: CreateProductRequest = {
-  name: '',
-  description: '',
-  imageUrl: '',
-  material: 'PLA',
-  multicolor: false,
-  dimensions: '',
-  isVisible: true,
-  categoryId: 0,
-}
-
 const inputClass =
   'w-full rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-600 disabled:opacity-50 transition-colors'
-
-// ── Helpers ────────────────────────────────────────────────────────────────────
-
-function getInitialForm(productId: string | undefined): CreateProductRequest {
-  if (!productId) return EMPTY_FORM
-  const found = mockProducts.find((p) => p.id === Number(productId))
-  if (!found) return EMPTY_FORM
-  // TODO: replace with GET /api/products/:id once API is ready
-  const { id: _id, userId: _uid, ...fields } = found
-  return fields
-}
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 
@@ -108,71 +86,103 @@ function Toggle({
 export default function ProductFormPage() {
   const { id } = useParams<{ id?: string }>()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const isEditMode = !!id
+  const storeId = user?.id ?? 0
+
+  const emptyForm = (): ProductFormData => ({
+    name: '',
+    description: '',
+    imageUrl: '',
+    material: 'PLA',
+    multicolor: false,
+    dimensions: '',
+    isVisible: true,
+    categoryId: 0,
+    storeId,
+  })
 
   // Form data
-  const [form, setForm] = useState<CreateProductRequest>(() => getInitialForm(id))
+  const [form, setForm] = useState<ProductFormData>(emptyForm)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
 
   // Remote data
   const [categories, setCategories] = useState<Category[]>([])
   const [isLoadingCategories, setIsLoadingCategories] = useState(true)
+  const [isLoadingProduct, setIsLoadingProduct] = useState(isEditMode)
   const [notFound, setNotFound] = useState(false)
 
-  // MakerWorld import
-  const [makerWorldUrl, setMakerWorldUrl] = useState('')
-  const [isImporting, setIsImporting] = useState(false)
-  const [importFeedback, setImportFeedback] = useState<{ ok: boolean; msg: string } | null>(null)
+  // Inline category creation
+  const [showNewCategory, setShowNewCategory] = useState(false)
+  const [newCategoryName, setNewCategoryName] = useState('')
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false)
+  const [createCategoryError, setCreateCategoryError] = useState<string | null>(null)
 
   // Save
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [showSuccess, setShowSuccess] = useState(false)
 
-  const isDisabled = isSaving || isImporting
+  const imageInputRef = useRef<HTMLInputElement>(null)
+  const isDisabled = isSaving  || isLoadingProduct
 
   // ── Effects ──────────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    // Validate the product exists in edit mode
-    if (isEditMode) {
-      const found = mockProducts.find((p) => p.id === Number(id))
-      if (!found) { setNotFound(true); return }
-    }
-
+    // Load categories
     listCategories()
       .then(setCategories)
-      .catch(() => { /* categories optional — API may not be running yet */ })
+      .catch(() => undefined)
       .finally(() => setIsLoadingCategories(false))
+
+    // Load product data for edit mode
+    if (isEditMode) {
+      getProduct(Number(id))
+        .then((product) => {
+          const { id: _id, userId: _uid, whatsappUrl: _wa, ...fields } = product
+          setForm({ ...fields, storeId })
+          if (product.imageUrl) setImagePreview(product.imageUrl)
+        })
+        .catch(() => setNotFound(true))
+        .finally(() => setIsLoadingProduct(false))
+    }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Field handlers ───────────────────────────────────────────────────────────
 
-  function setField<K extends keyof CreateProductRequest>(
-    key: K,
-    value: CreateProductRequest[K],
-  ) {
+  function setField<K extends keyof ProductFormData>(key: K, value: ProductFormData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }))
     setSaveError(null)
   }
 
-  // ── MakerWorld ───────────────────────────────────────────────────────────────
+  function handleImageFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null
+    setImageFile(file)
+    if (file) {
+      setImagePreview(URL.createObjectURL(file))
+      setField('imageUrl', '') // file takes precedence over URL
+    }
+  }
 
-  async function handleImport() {
-    if (!makerWorldUrl.trim()) return
-    setIsImporting(true)
-    setImportFeedback(null)
+  // ── Inline category creation ─────────────────────────────────────────────────
+
+  async function handleCreateCategory(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const name = newCategoryName.trim()
+    if (!name) return
+    setIsCreatingCategory(true)
+    setCreateCategoryError(null)
     try {
-      const scraped = await scrapeFromMakerWorld(makerWorldUrl.trim())
-      setForm((prev) => ({
-        ...prev,
-        name: scraped.name,
-        description: scraped.description,
-        imageUrl: scraped.imageUrl,
-      }))
-      setImportFeedback({ ok: true, msg: 'Nome, descrição e imagem preenchidos automaticamente.' })
+      const created = await createCategory(name, storeId, false)
+      setCategories((prev) => [...prev, created])
+      setField('categoryId', created.id)
+      setShowNewCategory(false)
+      setNewCategoryName('')
     } catch {
-      setImportFeedback({ ok: false, msg: 'Falha ao importar. Verifique a URL e tente novamente.' })
+      setCreateCategoryError('Erro ao criar categoria. Tente novamente.')
     } finally {
-      setIsImporting(false)
+      setIsCreatingCategory(false)
     }
   }
 
@@ -180,27 +190,40 @@ export default function ProductFormPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.categoryId) {
-      setSaveError('Selecione uma categoria antes de salvar.')
-      return
-    }
+    if (!form.categoryId) { setSaveError('Selecione uma categoria antes de salvar.'); return }
     setIsSaving(true)
     setSaveError(null)
+    const startedAt = Date.now()
     try {
       if (isEditMode) {
-        await updateProduct(Number(id), form)
+        await updateProduct(Number(id), { ...form, storeId }, imageFile)
       } else {
-        await createProduct(form)
+        await createProduct({ ...form, storeId }, imageFile)
       }
-      navigate('/admin/products')
+      // Guarantee the loading screen is visible for at least 1 s
+      const elapsed = Date.now() - startedAt
+      if (elapsed < 1000) {
+        await new Promise<void>((r) => setTimeout(r, 1000 - elapsed))
+      }
+      setIsSaving(false)
+      setShowSuccess(true)
+      // Guarantee the success popup is visible for at least 1.7 s
+      setTimeout(() => navigate('/admin/products'), 1700)
     } catch {
       setSaveError('Erro ao salvar produto. Verifique sua conexão e tente novamente.')
-    } finally {
       setIsSaving(false)
     }
   }
 
-  // ── Not-found state ──────────────────────────────────────────────────────────
+  // ── Loading / not-found states ────────────────────────────────────────────────
+
+  if (isLoadingProduct) {
+    return (
+      <div className="flex justify-center py-24">
+        <span className="w-6 h-6 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" />
+      </div>
+    )
+  }
 
   if (notFound) {
     return (
@@ -219,6 +242,7 @@ export default function ProductFormPage() {
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
+    <>
     <div className="max-w-2xl">
 
       {/* Page header */}
@@ -242,65 +266,9 @@ export default function ProductFormPage() {
         </div>
       </div>
 
-      {/* MakerWorld import */}
-      <div className="mb-6 rounded-xl border border-blue-800/40 bg-blue-950/20 px-5 py-4">
-        <div className="flex items-center gap-2 mb-1">
-          <svg
-            className="w-5 h-5 text-blue-400 shrink-0"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.5}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
-            />
-          </svg>
-          <p className="text-sm font-semibold text-blue-300">Importar do MakerWorld</p>
-        </div>
-        <p className="text-xs text-zinc-500 mb-3 pl-7">
-          Cole a URL do modelo para preencher nome, descrição e imagem automaticamente.
-        </p>
-        <div className="flex gap-2">
-          <input
-            type="url"
-            value={makerWorldUrl}
-            disabled={isDisabled}
-            onChange={(e) => {
-              setMakerWorldUrl(e.target.value)
-              setImportFeedback(null)
-            }}
-            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleImport())}
-            placeholder="https://makerworld.com/en/models/..."
-            className={`flex-1 min-w-0 ${inputClass}`}
-          />
-          <button
-            type="button"
-            onClick={handleImport}
-            disabled={isDisabled || !makerWorldUrl.trim()}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors shrink-0"
-          >
-            {isImporting ? (
-              <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-            ) : (
-              'Importar'
-            )}
-          </button>
-        </div>
-        {importFeedback && (
-          <p className={`mt-2 text-xs pl-7 ${importFeedback.ok ? 'text-green-400' : 'text-red-400'}`}>
-            {importFeedback.ok ? '✓ ' : '✗ '}
-            {importFeedback.msg}
-          </p>
-        )}
-      </div>
-
       {/* Product form */}
       <form onSubmit={handleSubmit} className="space-y-4">
 
-        {/* Name */}
         <FormField label="Nome do produto" required>
           <input
             type="text"
@@ -313,7 +281,6 @@ export default function ProductFormPage() {
           />
         </FormField>
 
-        {/* Description */}
         <FormField label="Descrição">
           <textarea
             rows={3}
@@ -325,24 +292,55 @@ export default function ProductFormPage() {
           />
         </FormField>
 
-        {/* Image URL with inline preview */}
-        <FormField label="URL da imagem">
-          <div className="flex gap-2 items-center">
-            <input
-              type="url"
+        {/* Image — file upload OR URL (file takes precedence) */}
+        <FormField
+          label="Imagem do produto"
+          hint={imageFile ? `Arquivo: ${imageFile.name}` : 'Faça upload de um arquivo ou cole uma URL abaixo'}
+        >
+          <div className="space-y-2">
+            {/* File upload zone */}
+            <button
+              type="button"
               disabled={isDisabled}
-              value={form.imageUrl}
-              onChange={(e) => setField('imageUrl', e.target.value)}
-              placeholder="https://..."
-              className={`flex-1 min-w-0 ${inputClass}`}
+              onClick={() => imageInputRef.current?.click()}
+              className="w-full rounded-lg border-2 border-dashed border-zinc-700 hover:border-zinc-500 bg-zinc-800/40 hover:bg-zinc-800 transition-colors px-4 py-4 flex items-center gap-3 disabled:opacity-50"
+            >
+              {imagePreview ? (
+                <>
+                  <img
+                    src={imagePreview}
+                    alt=""
+                    className="w-12 h-12 rounded-lg object-cover border border-zinc-700 shrink-0"
+                    onError={(e) => { e.currentTarget.style.display = 'none' }}
+                  />
+                  <span className="text-sm text-blue-400">Trocar imagem</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-6 h-6 text-zinc-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                  </svg>
+                  <span className="text-sm text-zinc-400">Fazer upload de imagem</span>
+                </>
+              )}
+            </button>
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="sr-only"
+              onChange={handleImageFileChange}
             />
-            {form.imageUrl && (
-              <img
-                src={form.imageUrl}
-                alt=""
-                className="w-10 h-10 rounded-lg object-cover shrink-0 border border-zinc-700"
-                onError={(e) => { e.currentTarget.style.display = 'none' }}
-                onLoad={(e) => { e.currentTarget.style.display = 'block' }}
+
+            {/* URL input (used when no file is selected) */}
+            {!imageFile && (
+              <input
+                type="url"
+                disabled={isDisabled}
+                value={form.imageUrl}
+                onChange={(e) => { setField('imageUrl', e.target.value); setImagePreview(e.target.value || null) }}
+                placeholder="https://... (opcional se fizer upload acima)"
+                className={inputClass}
               />
             )}
           </div>
@@ -359,9 +357,7 @@ export default function ProductFormPage() {
               className={`${inputClass} cursor-pointer`}
               style={{ colorScheme: 'dark' }}
             >
-              {MATERIALS.map((m) => (
-                <option key={m} value={m}>{m}</option>
-              ))}
+              {MATERIALS.map((m) => <option key={m} value={m}>{m}</option>)}
             </select>
           </FormField>
 
@@ -399,10 +395,49 @@ export default function ProductFormPage() {
                   <option key={cat.id} value={cat.id}>{cat.name}</option>
                 ))}
               </select>
-              {categories.length === 0 && (
-                <p className="mt-1 text-xs text-zinc-500">
-                  Nenhuma categoria disponível. O servidor pode estar offline.
-                </p>
+
+              {/* Inline new-category form */}
+              {!showNewCategory ? (
+                <button
+                  type="button"
+                  onClick={() => { setShowNewCategory(true); setCreateCategoryError(null) }}
+                  className="mt-2 flex items-center gap-1.5 text-xs text-zinc-500 hover:text-blue-400 transition-colors"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                  Nova categoria
+                </button>
+              ) : (
+                <form onSubmit={handleCreateCategory} className="mt-2 flex gap-2">
+                  <input
+                    autoFocus
+                    type="text"
+                    value={newCategoryName}
+                    onChange={(e) => { setNewCategoryName(e.target.value); setCreateCategoryError(null) }}
+                    placeholder="Nome da nova categoria"
+                    className="flex-1 rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-600 transition-colors"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isCreatingCategory || !newCategoryName.trim()}
+                    className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white text-xs font-semibold transition-colors shrink-0"
+                  >
+                    {isCreatingCategory ? (
+                      <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin block" />
+                    ) : 'Criar'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowNewCategory(false); setNewCategoryName(''); setCreateCategoryError(null) }}
+                    className="px-3 py-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 text-xs transition-colors shrink-0"
+                  >
+                    Cancelar
+                  </button>
+                </form>
+              )}
+              {createCategoryError && (
+                <p className="mt-1 text-xs text-red-400">{createCategoryError}</p>
               )}
             </>
           )}
@@ -463,5 +498,46 @@ export default function ProductFormPage() {
         </div>
       </form>
     </div>
+
+    {/* ── Overlays (fixed, rendered outside the form container) ── */}
+
+    {/* Loading overlay */}
+    {isSaving && (
+      <div className="fixed inset-0 z-50 bg-zinc-950/85 backdrop-blur-sm flex flex-col items-center justify-center gap-5">
+        <div className="relative w-16 h-16">
+          <div className="absolute inset-0 rounded-full border-4 border-zinc-800" />
+          <div className="absolute inset-0 rounded-full border-4 border-t-blue-500 border-r-transparent border-b-transparent border-l-transparent animate-spin" />
+        </div>
+        <div className="text-center">
+          <p className="text-zinc-100 text-sm font-semibold">
+            {isEditMode ? 'Salvando alterações...' : 'Cadastrando produto...'}
+          </p>
+          <p className="text-xs text-zinc-500 mt-1">Por favor, aguarde</p>
+        </div>
+      </div>
+    )}
+
+    {/* ── Success popup ── */}
+    {showSuccess && (
+      <div className="fixed inset-0 z-50 bg-zinc-950/70 backdrop-blur-sm flex items-center justify-center">
+        <div className="bg-zinc-900 border border-green-800/50 rounded-2xl px-8 py-7 flex flex-col items-center gap-4 shadow-2xl mx-4">
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full bg-green-950/50 border-2 border-green-700/60 flex items-center justify-center">
+              <svg className="w-8 h-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+            </div>
+            <div className="absolute inset-0 w-16 h-16 rounded-full border-2 border-green-500/40 animate-ping" />
+          </div>
+          <div className="text-center">
+            <p className="text-zinc-100 font-semibold text-base">
+              {isEditMode ? 'Produto atualizado!' : 'Produto cadastrado!'}
+            </p>
+            <p className="text-zinc-500 text-sm mt-1">Redirecionando para seus produtos…</p>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   )
 }

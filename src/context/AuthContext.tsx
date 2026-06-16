@@ -15,6 +15,7 @@ interface AuthContextValue {
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
   logout: () => void
+  updateUser: (updates: Partial<Omit<User, 'password'>>) => void
 }
 
 // ── Context ───────────────────────────────────────────────────────────────────
@@ -52,8 +53,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
   }
 
+  function updateUser(updates: Partial<Omit<User, 'password'>>) {
+    setUser((prev) => {
+      if (!prev) return prev
+      const updated = { ...prev, ...updates }
+      localStorage.setItem(USER_KEY, JSON.stringify(updated))
+      return updated
+    })
+  }
+
   return (
-    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, isLoading, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   )
