@@ -17,14 +17,14 @@ export interface LoginResponse {
 interface LoginApiResponse {
   token: string
   type: string
-  storeId: number
+  storeId: string
   email: string
   storeName: string
 }
 
-// Full user profile returned by GET /api/users/{id}
-interface UserProfileResponse {
-  id: number
+// Full user/store profile — matches backend StoreResponse
+interface StoreApiResponse {
+  id: string
   email: string
   userName: string
   storeName: string
@@ -33,6 +33,11 @@ interface UserProfileResponse {
   logoUrl: string | null
   isActive: boolean
   slug: string
+  stateId?: number | null
+  stateName?: string | null
+  stateAbbreviation?: string | null
+  cityId?: number | null
+  cityName?: string | null
   createdAt?: string
   updatedAt?: string
 }
@@ -40,8 +45,8 @@ interface UserProfileResponse {
 export async function loginUser(credentials: LoginRequest): Promise<LoginResponse> {
   const { data } = await apiClient.post<LoginApiResponse>('/api/auth/login', credentials)
 
-  // Fetch full profile (public endpoint) to get userName, slug, whatsappNumber, etc.
-  const { data: profile } = await apiClient.get<UserProfileResponse>(`/api/users/${data.storeId}`)
+  // Fetch full profile (public endpoint) to get userName, slug, location, etc.
+  const { data: profile } = await apiClient.get<StoreApiResponse>(`/api/users/${data.storeId}`)
 
   return {
     token: data.token,
@@ -57,6 +62,11 @@ export async function loginUser(credentials: LoginRequest): Promise<LoginRespons
       createdAt: profile.createdAt ?? '',
       updatedAt: profile.updatedAt ?? '',
       isActive: profile.isActive,
+      stateId: profile.stateId ?? null,
+      stateName: profile.stateName ?? null,
+      stateAbbreviation: profile.stateAbbreviation ?? null,
+      cityId: profile.cityId ?? null,
+      cityName: profile.cityName ?? null,
     },
   }
 }
@@ -75,7 +85,7 @@ export interface RegisterRequest {
 }
 
 export interface RegisterApiResponse {
-  id: number
+  id: string
   email: string
   userName: string
   storeName: string
@@ -95,14 +105,16 @@ export interface UpdateProfileRequest {
 }
 
 export async function updateUserProfile(
-  userId: number,
+  userId: string,
   payload: UpdateProfileRequest,
-): Promise<void> {
-  await apiClient.put(`/api/users/${userId}`, payload)
+): Promise<StoreApiResponse> {
+  const { data } = await apiClient.put<StoreApiResponse>(`/api/users/${userId}`, payload)
+  return data
 }
 
-export async function uploadLogo(userId: number, file: File): Promise<void> {
+export async function uploadLogo(userId: string, file: File): Promise<StoreApiResponse> {
   const fd = new FormData()
   fd.append('logo', file)
-  await apiClient.post(`/api/users/${userId}/logo`, fd)
+  const { data } = await apiClient.post<StoreApiResponse>(`/api/users/${userId}/logo`, fd)
+  return data
 }

@@ -88,7 +88,7 @@ export default function ProductFormPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const isEditMode = !!id
-  const storeId = user?.id ?? 0
+  const storeId = user?.id ?? ''
 
   const emptyForm = (): ProductFormData => ({
     name: '',
@@ -100,6 +100,7 @@ export default function ProductFormPage() {
     isVisible: true,
     categoryId: 0,
     storeId,
+    price: null,
   })
 
   // Form data
@@ -112,6 +113,9 @@ export default function ProductFormPage() {
   const [isLoadingCategories, setIsLoadingCategories] = useState(true)
   const [isLoadingProduct, setIsLoadingProduct] = useState(isEditMode)
   const [notFound, setNotFound] = useState(false)
+
+  // Price
+  const [omitPrice, setOmitPrice] = useState(true)
 
   // Inline category creation
   const [showNewCategory, setShowNewCategory] = useState(false)
@@ -131,7 +135,7 @@ export default function ProductFormPage() {
 
   useEffect(() => {
     // Load categories
-    listCategories()
+    listCategories(storeId)
       .then(setCategories)
       .catch(() => undefined)
       .finally(() => setIsLoadingCategories(false))
@@ -140,8 +144,19 @@ export default function ProductFormPage() {
     if (isEditMode) {
       getProduct(Number(id))
         .then((product) => {
-          const { id: _id, userId: _uid, whatsappUrl: _wa, ...fields } = product
-          setForm({ ...fields, storeId })
+          setForm({
+            name: product.name,
+            description: product.description ?? '',
+            imageUrl: product.imageUrl ?? '',
+            material: product.material ?? 'PLA',
+            multicolor: product.multicolor,
+            dimensions: product.dimensions ?? '',
+            isVisible: product.isVisible,
+            categoryId: product.categoryId,
+            storeId,
+            price: product.price ?? null,
+          })
+          setOmitPrice(product.price == null)
           if (product.imageUrl) setImagePreview(product.imageUrl)
         })
         .catch(() => setNotFound(true))
@@ -167,14 +182,13 @@ export default function ProductFormPage() {
 
   // ── Inline category creation ─────────────────────────────────────────────────
 
-  async function handleCreateCategory(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
+  async function handleCreateCategory() {
     const name = newCategoryName.trim()
     if (!name) return
     setIsCreatingCategory(true)
     setCreateCategoryError(null)
     try {
-      const created = await createCategory(name, storeId, false)
+      const created = await createCategory(name)
       setCategories((prev) => [...prev, created])
       setField('categoryId', created.id)
       setShowNewCategory(false)
@@ -374,6 +388,39 @@ export default function ProductFormPage() {
           </FormField>
         </div>
 
+        {/* Price */}
+        <FormField label="Preço">
+          <label className="flex items-center gap-2 cursor-pointer select-none mb-2">
+            <input
+              type="checkbox"
+              checked={omitPrice}
+              onChange={(e) => {
+                setOmitPrice(e.target.checked)
+                if (e.target.checked) setField('price', null)
+              }}
+              className="w-3.5 h-3.5 rounded accent-blue-600"
+            />
+            <span className="text-sm text-zinc-400">Não informar preço</span>
+          </label>
+          {!omitPrice && (
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-zinc-500 pointer-events-none">
+                R$
+              </span>
+              <input
+                type="number"
+                min="0.01"
+                step="0.01"
+                disabled={isDisabled}
+                value={form.price ?? ''}
+                onChange={(e) => setField('price', e.target.value ? Number(e.target.value) : null)}
+                placeholder="0,00"
+                className={`${inputClass} pl-9`}
+              />
+            </div>
+          )}
+        </FormField>
+
         {/* Category */}
         <FormField label="Categoria" required>
           {isLoadingCategories ? (
@@ -384,19 +431,21 @@ export default function ProductFormPage() {
           ) : (
             <>
               <select
-                disabled={isDisabled || categories.length === 0}
+                disabled={isDisabled || categories.length === 0 || showNewCategory}
                 value={form.categoryId || ''}
                 onChange={(e) => setField('categoryId', Number(e.target.value))}
                 className={`${inputClass} cursor-pointer`}
                 style={{ colorScheme: 'dark' }}
               >
-                <option value="">Selecione uma categoria</option>
+                <option value="">
+                  {showNewCategory ? 'Definida pela nova categoria…' : 'Selecione uma categoria'}
+                </option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>{cat.name}</option>
                 ))}
               </select>
 
-              {/* Inline new-category form */}
+              {/* Inline new-category — uses div, NOT form, to avoid nested-form submit */}
               {!showNewCategory ? (
                 <button
                   type="button"
@@ -409,18 +458,20 @@ export default function ProductFormPage() {
                   Nova categoria
                 </button>
               ) : (
-                <form onSubmit={handleCreateCategory} className="mt-2 flex gap-2">
+                <div className="mt-2 flex gap-2">
                   <input
                     autoFocus
                     type="text"
                     value={newCategoryName}
                     onChange={(e) => { setNewCategoryName(e.target.value); setCreateCategoryError(null) }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleCreateCategory() } }}
                     placeholder="Nome da nova categoria"
                     className="flex-1 rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-600 transition-colors"
                   />
                   <button
-                    type="submit"
+                    type="button"
                     disabled={isCreatingCategory || !newCategoryName.trim()}
+                    onClick={handleCreateCategory}
                     className="px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white text-xs font-semibold transition-colors shrink-0"
                   >
                     {isCreatingCategory ? (
@@ -434,7 +485,7 @@ export default function ProductFormPage() {
                   >
                     Cancelar
                   </button>
-                </form>
+                </div>
               )}
               {createCategoryError && (
                 <p className="mt-1 text-xs text-red-400">{createCategoryError}</p>

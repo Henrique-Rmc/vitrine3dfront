@@ -3,13 +3,14 @@ import apiClient from './apiClient'
 export interface BrazilState {
   id: number
   name: string
-  code: string
+  abbreviation: string
 }
 
 export interface BrazilCity {
   id: number
   name: string
   stateId: number
+  stateAbbreviation?: string
 }
 
 export async function listStates(): Promise<BrazilState[]> {

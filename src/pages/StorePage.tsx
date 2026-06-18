@@ -20,8 +20,12 @@ export default function StorePage() {
     logoUrl,
     categories,
     products,
+    featuredProducts,
     loading,
     error,
+    hasMore,
+    isLoadingMore,
+    loadMore,
   } = useStoreInfo(storeSlug)
 
   const [searchParams] = useSearchParams()
@@ -38,11 +42,6 @@ export default function StorePage() {
     [products],
   )
 
-  const featuredProducts = useMemo(
-    () => visibleProducts.slice(0, 3),
-    [visibleProducts],
-  )
-
   const catalogProducts = useMemo(() => {
     return activeCategoryId === null
       ? visibleProducts
@@ -53,7 +52,6 @@ export default function StorePage() {
     ? (categories.find((c) => c.id === selectedProduct.categoryId)?.name ?? '')
     : ''
 
-  // Store not found or network error
   if (!loading && error) {
     return (
       <div className="flex flex-col items-center justify-center py-32 px-6 text-center">
@@ -79,7 +77,7 @@ export default function StorePage() {
 
       {/* ── Content ── */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        {/* Hero — only on the "all products" view */}
+        {/* Hero — only on the "all products" view, only when featured exist */}
         {!loading && activeCategoryId === null && featuredProducts.length > 0 && (
           <HeroSection
             products={featuredProducts}
@@ -97,6 +95,7 @@ export default function StorePage() {
             {!loading && (
               <span className="text-sm text-zinc-500">
                 {catalogProducts.length} produto{catalogProducts.length !== 1 ? 's' : ''}
+                {hasMore ? '+' : ''}
               </span>
             )}
           </div>
@@ -119,6 +118,26 @@ export default function StorePage() {
           {!loading && catalogProducts.length === 0 && (
             <div className="py-24 text-center">
               <p className="text-zinc-500 text-sm">Nenhum produto nesta categoria.</p>
+            </div>
+          )}
+
+          {/* Load more */}
+          {!loading && hasMore && activeCategoryId === null && (
+            <div className="flex justify-center mt-8">
+              <button
+                onClick={loadMore}
+                disabled={isLoadingMore}
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl border border-zinc-700 text-zinc-300 hover:text-zinc-100 hover:border-zinc-500 disabled:opacity-60 text-sm font-medium transition-colors"
+              >
+                {isLoadingMore ? (
+                  <>
+                    <span className="w-4 h-4 rounded-full border-2 border-zinc-400 border-t-transparent animate-spin" />
+                    Carregando…
+                  </>
+                ) : (
+                  'Ver mais produtos'
+                )}
+              </button>
             </div>
           )}
         </section>

@@ -40,7 +40,7 @@ function LoadingSkeleton() {
 
 export default function CategoriesPage() {
   const { user } = useAuth()
-  const storeId = user?.id ?? 0
+  const storeId = user?.id ?? ''
 
   const [categories, setCategories] = useState<Category[]>([])
   const [isLoading, setIsLoading]   = useState(true)
@@ -59,7 +59,7 @@ export default function CategoriesPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const data = await listCategories()
+        const data = await listCategories(storeId)
         setCategories(data)
       } catch {
         setLoadError('Não foi possível carregar as categorias. Verifique a conexão com o backend.')
@@ -77,7 +77,7 @@ export default function CategoriesPage() {
     setIsAdding(true)
     setAddError(null)
     try {
-      const created = await createCategory(name, storeId)
+      const created = await createCategory(name)
       setCategories((prev) => [...prev, created])
       setNewName('')
     } catch {
@@ -254,7 +254,7 @@ export default function CategoriesPage() {
                     </svg>
                   </button>
                 </div>
-              ) : !cat.isGlobal ? (
+              ) : !cat.isGlobal && cat.storeId === storeId ? (
                 <div className="flex gap-1 shrink-0">
                   <button
                     onClick={() => startEdit(cat)}

@@ -1,5 +1,5 @@
 export interface User {
-  id: number
+  id: string
   email: string
   userName: string
   storeName: string
@@ -10,25 +10,34 @@ export interface User {
   createdAt: string
   updatedAt: string
   isActive: boolean
+  stateId?: number | null
+  stateName?: string | null
+  stateAbbreviation?: string | null
+  cityId?: number | null
+  cityName?: string | null
 }
 
 export interface Category {
   id: number
   name: string
   isGlobal: boolean
-  userId: number
+  storeId: string
 }
 
 export interface Product {
   id: number
   name: string
-  description: string
-  imageUrl: string
-  material: string
+  description: string | null
+  imageUrl: string | null
+  material: string | null
   multicolor: boolean
-  dimensions: string
+  dimensions: string | null
   isVisible: boolean
   categoryId: number
-  userId: number
+  categoryName?: string | null
+  storeId: string
+  price?: number | null
   whatsappUrl?: string
+  featured?: boolean
+  clickCount?: number
 }

@@ -274,7 +274,7 @@ export default function RegisterForm() {
         password: form.password,
         userName: form.userName,
         storeName: form.storeName,
-        whatsappNumber: `+55${form.whatsappNumber.replace(/\D/g, '')}`,
+        whatsappNumber: `55${form.whatsappNumber.replace(/\D/g, '')}`,
         storeDescription: form.storeDescription,
         stateId: form.stateId!,
         ...(form.cityId !== null && { cityId: form.cityId }),
@@ -471,7 +471,7 @@ export default function RegisterForm() {
             </option>
             {states.map((s) => (
               <option key={s.id} value={s.id}>
-                {s.name} ({s.code})
+                {s.name} ({s.abbreviation})
               </option>
             ))}
           </select>

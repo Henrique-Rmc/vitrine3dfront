@@ -12,37 +12,66 @@ export interface ProductFormData {
   dimensions: string
   isVisible: boolean
   categoryId: number
-  storeId: number
+  storeId: string
+  price?: number | null
 }
 
-// Keep the old alias so DashboardPage still compiles without changes
+export interface PageResponse<T> {
+  content: T[]
+  page: number
+  size: number
+  totalElements: number
+  totalPages: number
+  last: boolean
+}
+
+// Keep the old alias so any remaining references still compile
 export type CreateProductRequest = ProductFormData
 
-// ── Private helper ─────────────────────────────────────────────────────────────
+// ── Private helper ────────────────────────────────────────────────────────────
 
-// Builds a multipart/form-data body.
-// imageUrl is included in the JSON `data` field unless a file is provided
-// (the file takes precedence and the backend sets imageUrl from MinIO).
 function buildFormData(payload: ProductFormData, imageFile?: File | null): FormData {
   const fd = new FormData()
-  const { imageUrl, ...rest } = payload
-  const dataJson = imageFile ? rest : { ...rest, imageUrl }
+  const { imageUrl, price, ...rest } = payload
+  const dataJson: Record<string, unknown> = imageFile ? { ...rest } : { ...rest, imageUrl }
+  if (price != null) dataJson.price = price
   fd.append('data', JSON.stringify(dataJson))
   if (imageFile) fd.append('image', imageFile)
   return fd
 }
 
-// ── Public storefront (no auth) ───────────────────────────────────────────────
+// ── Public storefront (no auth required) ─────────────────────────────────────
 
-export async function listPublicProducts(storeId: number): Promise<Product[]> {
-  const { data } = await apiClient.get<Product[]>(`/api/products/store/${storeId}/public`)
+export async function listPublicProducts(
+  storeId: string,
+  page = 0,
+  size = 15,
+): Promise<PageResponse<Product>> {
+  const { data } = await apiClient.get<PageResponse<Product>>(
+    `/api/products/store/${storeId}/public?page=${page}&size=${size}`,
+  )
   return data
+}
+
+export async function listFeaturedProducts(storeId: string): Promise<Product[]> {
+  const { data } = await apiClient.get<Product[]>(`/api/products/store/${storeId}/featured`)
+  return data
+}
+
+export async function registerWhatsAppClick(productId: number): Promise<void> {
+  await apiClient.post(`/api/products/${productId}/whatsapp-click`)
 }
 
 // ── Admin (JWT required) ──────────────────────────────────────────────────────
 
-export async function listProducts(storeId: number): Promise<Product[]> {
-  const { data } = await apiClient.get<Product[]>(`/api/products/store/${storeId}`)
+export async function listProducts(
+  storeId: string,
+  page = 0,
+  size = 50,
+): Promise<PageResponse<Product>> {
+  const { data } = await apiClient.get<PageResponse<Product>>(
+    `/api/products/store/${storeId}?page=${page}&size=${size}`,
+  )
   return data
 }
 
@@ -68,6 +97,11 @@ export async function updateProduct(
   return data
 }
 
+export async function patchFeatured(productId: number): Promise<Product> {
+  const { data } = await apiClient.patch<Product>(`/api/products/${productId}/featured`)
+  return data
+}
+
 export async function toggleProductVisibility(id: number): Promise<Product> {
   const { data } = await apiClient.patch<Product>(`/api/products/${id}/visibility`)
   return data
@@ -76,4 +110,3 @@ export async function toggleProductVisibility(id: number): Promise<Product> {
 export async function deleteProduct(id: number): Promise<void> {
   await apiClient.delete(`/api/products/${id}`)
 }
-

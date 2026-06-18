@@ -1,25 +1,18 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { listProducts, deleteProduct } from '../../services/productService'
+import { listProducts, patchFeatured, deleteProduct } from '../../services/productService'
 import type { Product } from '../../types'
 import ProductList from '../../components/ProductList'
 
-// ── localStorage helpers ──────────────────────────────────────────────────────
+// ── localStorage helpers (ordering only) ──────────────────────────────────────
 
-const featuredKey = (id: number) => `featured_${id}`
-const orderKey    = (id: number) => `order_${id}`
+const orderKey = (id: string) => `order_${id}`
 
-function readFeaturedIds(storeId: number): number[] {
-  try { return JSON.parse(localStorage.getItem(featuredKey(storeId)) ?? '[]') } catch { return [] }
-}
-function saveFeaturedIds(storeId: number, ids: number[]) {
-  localStorage.setItem(featuredKey(storeId), JSON.stringify(ids))
-}
-function readProductOrder(storeId: number): number[] {
+function readProductOrder(storeId: string): number[] {
   try { return JSON.parse(localStorage.getItem(orderKey(storeId)) ?? '[]') } catch { return [] }
 }
-function saveProductOrder(storeId: number, ids: number[]) {
+function saveProductOrder(storeId: string, ids: number[]) {
   localStorage.setItem(orderKey(storeId), JSON.stringify(ids))
 }
 function applyOrder(products: Product[], order: number[]): Product[] {
@@ -27,7 +20,7 @@ function applyOrder(products: Product[], order: number[]): Product[] {
   return [...products].sort((a, b) => {
     const ai = order.indexOf(a.id)
     const bi = order.indexOf(b.id)
-    if (ai === -1 && bi === -1) return b.id - a.id   // new products go to end
+    if (ai === -1 && bi === -1) return b.id - a.id
     if (ai === -1) return 1
     if (bi === -1) return -1
     return ai - bi
@@ -102,15 +95,19 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
 export default function ProductManagement() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const storeId = user?.id ?? 0
+  const storeId = user?.id ?? ''
 
-  const [products, setProducts]     = useState<Product[]>([])
-  const [isLoading, setIsLoading]   = useState(true)
-  const [loadError, setLoadError]   = useState<string | null>(null)
-  const [deletingId, setDeletingId] = useState<number | null>(null)
-  const [featuredIds, setFeaturedIds] = useState<number[]>(() =>
-    storeId ? readFeaturedIds(storeId) : [],
-  )
+  const [products, setProducts]           = useState<Product[]>([])
+  const [isLoading, setIsLoading]         = useState(true)
+  const [loadError, setLoadError]         = useState<string | null>(null)
+  const [deletingId, setDeletingId]       = useState<number | null>(null)
+  const [hasMore, setHasMore]             = useState(false)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+
+  const nextPageRef = useRef(1)
+
+  // featuredIds derived directly from product data
+  const featuredIds = products.filter((p) => p.featured).map((p) => p.id)
 
   // ── Load products ─────────────────────────────────────────────────────────
 
@@ -122,8 +119,10 @@ export default function ProductManagement() {
     setIsLoading(true)
     setLoadError(null)
     try {
-      const data = await listProducts(storeId)
-      setProducts(applyOrder(data, readProductOrder(storeId)))
+      const page = await listProducts(storeId, 0, 50)
+      nextPageRef.current = 1
+      setProducts(applyOrder(page.content, readProductOrder(storeId)))
+      setHasMore(!page.last)
     } catch {
       setLoadError('Não foi possível carregar os produtos. Verifique a conexão com o backend.')
     } finally {
@@ -135,16 +134,44 @@ export default function ProductManagement() {
     fetchProducts()
   }, [fetchProducts])
 
-  // ── Featured toggle ───────────────────────────────────────────────────────
+  // ── Load more ─────────────────────────────────────────────────────────────
 
-  function handleToggleFeatured(productId: number) {
-    setFeaturedIds((prev) => {
-      const next = prev.includes(productId)
-        ? prev.filter((id) => id !== productId)
-        : prev.length < 3 ? [...prev, productId] : prev
-      saveFeaturedIds(storeId, next)
-      return next
-    })
+  async function loadMoreProducts() {
+    if (isLoadingMore || !storeId) return
+    setIsLoadingMore(true)
+    try {
+      const page = await listProducts(storeId, nextPageRef.current, 50)
+      nextPageRef.current += 1
+      setProducts((prev) => applyOrder([...prev, ...page.content], readProductOrder(storeId)))
+      setHasMore(!page.last)
+    } catch {
+      setLoadError('Erro ao carregar mais produtos.')
+    } finally {
+      setIsLoadingMore(false)
+    }
+  }
+
+  // ── Featured toggle (API) ─────────────────────────────────────────────────
+
+  async function handleToggleFeatured(productId: number) {
+    setProducts((prev) =>
+      prev.map((p) => (p.id === productId ? { ...p, featured: !p.featured } : p)),
+    )
+    try {
+      const updated = await patchFeatured(productId)
+      setProducts((prev) =>
+        prev.map((p) => (p.id === productId ? { ...p, featured: updated.featured } : p)),
+      )
+    } catch (err: unknown) {
+      setProducts((prev) =>
+        prev.map((p) => (p.id === productId ? { ...p, featured: !p.featured } : p)),
+      )
+      const status = (err as { response?: { status?: number } })?.response?.status
+      if (status === 400) {
+        setLoadError('Máximo de 3 produtos em destaque atingido.')
+        setTimeout(() => setLoadError(null), 4000)
+      }
+    }
   }
 
   // ── Reorder ───────────────────────────────────────────────────────────────
@@ -185,6 +212,7 @@ export default function ProductManagement() {
           <h1 className="text-xl font-bold text-zinc-100">Meus Produtos</h1>
           <p className="text-sm text-zinc-500 mt-0.5">
             {products.length} produto{products.length !== 1 ? 's' : ''}
+            {hasMore ? '+' : ''}
           </p>
         </div>
 
@@ -227,6 +255,26 @@ export default function ProductManagement() {
         onToggleFeatured={handleToggleFeatured}
         onReorder={handleReorder}
       />
+
+      {/* Load more */}
+      {hasMore && (
+        <div className="flex justify-center mt-6">
+          <button
+            onClick={loadMoreProducts}
+            disabled={isLoadingMore}
+            className="flex items-center gap-2 px-6 py-2.5 rounded-xl border border-zinc-700 text-zinc-300 hover:text-zinc-100 hover:border-zinc-500 disabled:opacity-60 text-sm font-medium transition-colors"
+          >
+            {isLoadingMore ? (
+              <>
+                <span className="w-4 h-4 rounded-full border-2 border-zinc-400 border-t-transparent animate-spin" />
+                Carregando…
+              </>
+            ) : (
+              'Carregar mais'
+            )}
+          </button>
+        </div>
+      )}
     </div>
   )
 }

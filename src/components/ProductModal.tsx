@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import type { Product } from '../types'
 import { buildWhatsAppUrl } from '../utils/whatsapp'
+import { registerWhatsAppClick } from '../services/productService'
 
 const MATERIAL_BADGE: Record<string, string> = {
   PLA:    'bg-blue-900/80 text-blue-300 border-blue-700/60',
@@ -109,6 +110,15 @@ export default function ProductModal({
             <dd className={multicolor ? 'text-green-400 font-medium' : 'text-zinc-600'}>
               {multicolor ? '✓ Sim' : '— Não'}
             </dd>
+
+            {product.price != null && (
+              <>
+                <dt className="text-zinc-500 self-center">Preço</dt>
+                <dd className="text-zinc-100 font-semibold">
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)}
+                </dd>
+              </>
+            )}
           </dl>
 
           {/* Description */}
@@ -127,10 +137,11 @@ export default function ProductModal({
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => registerWhatsAppClick(product.id)}
               className="flex items-center justify-center gap-2.5 rounded-xl bg-green-600 hover:bg-green-500 active:bg-green-700 px-5 py-3.5 text-sm font-semibold text-white transition-colors"
             >
               <WhatsAppIcon />
-              Solicitar Orçamento via WhatsApp
+              {product.price != null ? 'Fazer Pedido via WhatsApp' : 'Solicitar Orçamento via WhatsApp'}
             </a>
           </div>
         </div>

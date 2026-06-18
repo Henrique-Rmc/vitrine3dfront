@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
 export default function LoginPage() {
@@ -104,7 +104,20 @@ export default function LoginPage() {
               'Entrar'
             )}
           </button>
+
+          <Link
+            to="/admin/register"
+            className="w-full flex items-center justify-center rounded-lg border border-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-zinc-100 font-medium py-2.5 transition-colors text-sm"
+          >
+            Criar Cadastro
+          </Link>
         </form>
+
+        <p className="mt-6 text-center text-sm text-zinc-600">
+          <Link to="/" className="hover:text-zinc-400 transition-colors">
+            ← Visitar página inicial
+          </Link>
+        </p>
       </div>
     </div>
   )

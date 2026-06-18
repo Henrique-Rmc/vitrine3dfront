@@ -34,7 +34,7 @@ export default function PlatformLandingPage() {
       <header className="w-full px-6 py-4 flex items-center justify-between max-w-5xl mx-auto">
         <span className="text-lg font-bold tracking-tight">Vitrine3D</span>
         <Link
-          to="/admin/register/login"
+          to="/admin/login"
           className="text-sm text-zinc-400 hover:text-zinc-100 transition-colors"
         >
           Entrar

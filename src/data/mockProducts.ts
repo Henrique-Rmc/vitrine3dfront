@@ -17,7 +17,7 @@ export const mockProducts: Product[] = [
     dimensions: '30 × 15 × 12 cm',
     isVisible: true,
     categoryId: 1,
-    userId: 1,
+    storeId: '00000000-0000-0000-0000-000000000001',
   },
   {
     id: 2,
@@ -29,7 +29,7 @@ export const mockProducts: Product[] = [
     dimensions: '25 × 10 × 8 cm',
     isVisible: true,
     categoryId: 1,
-    userId: 1,
+    storeId: '00000000-0000-0000-0000-000000000001',
   },
   {
     id: 3,
@@ -41,7 +41,7 @@ export const mockProducts: Product[] = [
     dimensions: '28 × 12 × 10 cm',
     isVisible: true,
     categoryId: 1,
-    userId: 1,
+    storeId: '00000000-0000-0000-0000-000000000001',
   },
   {
     id: 4,
@@ -53,7 +53,7 @@ export const mockProducts: Product[] = [
     dimensions: '22 × 18 × 10 cm',
     isVisible: true,
     categoryId: 1,
-    userId: 1,
+    storeId: '00000000-0000-0000-0000-000000000001',
   },
 
   // ── Props (categoryId: 2) ──────────────────────────────────────────────────
@@ -67,7 +67,7 @@ export const mockProducts: Product[] = [
     dimensions: '40 × 20 × 15 cm',
     isVisible: true,
     categoryId: 2,
-    userId: 1,
+    storeId: '00000000-0000-0000-0000-000000000001',
   },
   {
     id: 6,
@@ -79,7 +79,7 @@ export const mockProducts: Product[] = [
     dimensions: '32 × 5 × 5 cm',
     isVisible: true,
     categoryId: 2,
-    userId: 1,
+    storeId: '00000000-0000-0000-0000-000000000001',
   },
   {
     id: 7,
@@ -91,7 +91,7 @@ export const mockProducts: Product[] = [
     dimensions: '30 × 30 × 5 cm',
     isVisible: true,
     categoryId: 2,
-    userId: 1,
+    storeId: '00000000-0000-0000-0000-000000000001',
   },
 
   // ── Peças Técnicas (categoryId: 3) ────────────────────────────────────────
@@ -105,7 +105,7 @@ export const mockProducts: Product[] = [
     dimensions: '12 × 8 × 6 cm',
     isVisible: true,
     categoryId: 3,
-    userId: 1,
+    storeId: '00000000-0000-0000-0000-000000000001',
   },
   {
     id: 9,
@@ -117,7 +117,7 @@ export const mockProducts: Product[] = [
     dimensions: 'Ø 45 × 20 mm',
     isVisible: true,
     categoryId: 3,
-    userId: 1,
+    storeId: '00000000-0000-0000-0000-000000000001',
   },
   {
     id: 10,
@@ -129,7 +129,7 @@ export const mockProducts: Product[] = [
     dimensions: '8 × 5 × 4 cm',
     isVisible: true,
     categoryId: 3,
-    userId: 1,
+    storeId: '00000000-0000-0000-0000-000000000001',
   },
 
   // ── Miniaturas (categoryId: 4) ─────────────────────────────────────────────
@@ -143,7 +143,7 @@ export const mockProducts: Product[] = [
     dimensions: '8 × 6 × 5 cm',
     isVisible: true,
     categoryId: 4,
-    userId: 1,
+    storeId: '00000000-0000-0000-0000-000000000001',
   },
   {
     id: 12,
@@ -155,7 +155,7 @@ export const mockProducts: Product[] = [
     dimensions: 'Peças 3–8 cm de altura',
     isVisible: true,
     categoryId: 4,
-    userId: 1,
+    storeId: '00000000-0000-0000-0000-000000000001',
   },
 ]
 

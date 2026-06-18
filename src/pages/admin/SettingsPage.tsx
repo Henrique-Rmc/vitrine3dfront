@@ -38,8 +38,14 @@ export default function SettingsPage() {
     setIsSaving(true)
     setSaveError(null)
     try {
-      await updateUserProfile(user.id, form)
-      updateUser({ ...form })
+      const updated = await updateUserProfile(user.id, form)
+      updateUser({
+        userName: updated.userName,
+        storeName: updated.storeName,
+        whatsappNumber: updated.whatsappNumber,
+        storeDescription: updated.storeDescription,
+        logoUrl: updated.logoUrl ?? '',
+      })
       setIsSaving(false)
       setShowSuccess(true)
       setTimeout(() => setShowSuccess(false), 3000)
@@ -63,7 +69,8 @@ export default function SettingsPage() {
     setIsUploadingLogo(true)
     setLogoError(null)
     try {
-      await uploadLogo(user.id, logoFile)
+      const updated = await uploadLogo(user.id, logoFile)
+      updateUser({ logoUrl: updated.logoUrl ?? '' })
       setLogoFile(null)
       setLogoSuccess(true)
       setTimeout(() => setLogoSuccess(false), 3000)

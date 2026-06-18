@@ -22,12 +22,16 @@ apiClient.interceptors.request.use((config) => {
   return config
 })
 
-// On 401, clear session and redirect to login — except for the login endpoint itself
+// On 401, clear session and redirect to login — except for auth/register endpoints
+// (those handle their own errors and should never trigger a session redirect)
+const PUBLIC_ENDPOINTS = ['/auth/login', '/users/register']
+
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    const isLoginEndpoint = (error.config?.url as string | undefined)?.includes('/auth/login')
-    if (error.response?.status === 401 && !isLoginEndpoint) {
+    const url = (error.config?.url as string | undefined) ?? ''
+    const isPublicEndpoint = PUBLIC_ENDPOINTS.some((p) => url.includes(p))
+    if (error.response?.status === 401 && !isPublicEndpoint) {
       localStorage.removeItem(AUTH_TOKEN_KEY)
       localStorage.removeItem('auth_user')
       window.location.href = '/admin/login'

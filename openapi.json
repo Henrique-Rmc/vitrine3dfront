@@ -1,0 +1,1326 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "OpenAPI definition",
+    "version": "v0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Generated server url"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Produtos",
+      "description": "Gerenciamento de produtos da vitrine"
+    },
+    {
+      "name": "Usuários",
+      "description": "Cadastro e consulta de lojistas"
+    },
+    {
+      "name": "Localização",
+      "description": "Estados e cidades brasileiras para seleção no cadastro"
+    },
+    {
+      "name": "Autenticação",
+      "description": "Login e geração de token JWT"
+    },
+    {
+      "name": "Categorias",
+      "description": "Gerenciamento de categorias globais e por loja"
+    }
+  ],
+  "paths": {
+    "/api/users/{id}": {
+      "get": {
+        "tags": [
+          "Usuários"
+        ],
+        "summary": "Busca lojista por ID — perfil público",
+        "operationId": "getById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Usuários"
+        ],
+        "summary": "Atualiza dados do lojista",
+        "operationId": "update",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StoreUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/{id}": {
+      "get": {
+        "tags": [
+          "Produtos"
+        ],
+        "summary": "Busca produto por ID (inclui total de cliques no WhatsApp)",
+        "operationId": "getById_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Produtos"
+        ],
+        "summary": "Atualiza um produto (multipart: 'data' JSON + 'image' opcional)",
+        "operationId": "update_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductUpdateMultipartDoc"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Produtos"
+        ],
+        "summary": "Remove um produto por ID",
+        "operationId": "delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/categories/{id}": {
+      "put": {
+        "tags": [
+          "Categorias"
+        ],
+        "summary": "Atualiza nome de uma categoria da loja autenticada",
+        "operationId": "update_2",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Categorias"
+        ],
+        "summary": "Remove uma categoria da loja autenticada",
+        "operationId": "delete_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/users/{id}/logo": {
+      "post": {
+        "tags": [
+          "Usuários"
+        ],
+        "summary": "Faz upload do logo da loja",
+        "operationId": "uploadLogo",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "logo": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "logo"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/register": {
+      "post": {
+        "tags": [
+          "Usuários"
+        ],
+        "summary": "Cadastra um novo lojista",
+        "operationId": "register",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StoreRegisterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products": {
+      "post": {
+        "tags": [
+          "Produtos"
+        ],
+        "summary": "Cadastra um produto com imagem (multipart: 'data' JSON + 'image' arquivo)",
+        "operationId": "create",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductCreateMultipartDoc"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/{id}/whatsapp-click": {
+      "post": {
+        "tags": [
+          "Produtos"
+        ],
+        "summary": "Registra clique no botão de WhatsApp e retorna total de cliques",
+        "operationId": "registerWhatsappClick",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/scrape": {
+      "post": {
+        "tags": [
+          "Produtos"
+        ],
+        "summary": "Faz scraping de uma URL do MakerWorld e retorna dados do modelo",
+        "operationId": "scrape",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScrapeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/MakerWorldScrapedDataDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/categories": {
+      "get": {
+        "tags": [
+          "Categorias"
+        ],
+        "summary": "Lista apenas categorias globais (público)",
+        "operationId": "findPublic",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CategoryResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Categorias"
+        ],
+        "summary": "Cria uma nova categoria para a loja autenticada",
+        "operationId": "create_1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "Autenticação"
+        ],
+        "summary": "Autentica o lojista e retorna um token JWT",
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/{id}/visibility": {
+      "patch": {
+        "tags": [
+          "Produtos"
+        ],
+        "summary": "Toggle de visibilidade do produto",
+        "operationId": "toggleVisibility",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/{id}/featured": {
+      "patch": {
+        "tags": [
+          "Produtos"
+        ],
+        "summary": "Toggle de destaque do produto (máx. 3 por loja)",
+        "operationId": "toggleFeatured",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/store/{slug}": {
+      "get": {
+        "tags": [
+          "Usuários"
+        ],
+        "summary": "Perfil público da loja por slug",
+        "operationId": "getBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/store/{storeId}": {
+      "get": {
+        "tags": [
+          "Produtos"
+        ],
+        "summary": "Lista todos os produtos de uma loja — painel do lojista (paginado, 15/página)",
+        "operationId": "listAll",
+        "parameters": [
+          {
+            "name": "storeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 15
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageResponseProductResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/store/{storeId}/public": {
+      "get": {
+        "tags": [
+          "Produtos"
+        ],
+        "summary": "Lista produtos visíveis de uma loja — vitrine pública (paginado, 15/página)",
+        "operationId": "listPublic",
+        "parameters": [
+          {
+            "name": "storeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 15
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageResponseProductResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/store/{storeId}/featured": {
+      "get": {
+        "tags": [
+          "Produtos"
+        ],
+        "summary": "Lista produtos em destaque de uma loja (vitrine pública)",
+        "operationId": "listFeatured",
+        "parameters": [
+          {
+            "name": "storeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/locations/states": {
+      "get": {
+        "tags": [
+          "Localização"
+        ],
+        "summary": "Lista todos os estados brasileiros ordenados por nome",
+        "operationId": "listStates",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StateResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/locations/states/{stateId}/cities": {
+      "get": {
+        "tags": [
+          "Localização"
+        ],
+        "summary": "Lista cidades de um estado ordenadas por nome",
+        "operationId": "listCitiesByState",
+        "parameters": [
+          {
+            "name": "stateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CityResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/categories/store/{storeId}": {
+      "get": {
+        "tags": [
+          "Categorias"
+        ],
+        "summary": "Lista categorias globais + categorias da loja (público)",
+        "operationId": "findByStore",
+        "parameters": [
+          {
+            "name": "storeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CategoryResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "StoreUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "userName": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 2
+          },
+          "storeName": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 2
+          },
+          "whatsappNumber": {
+            "type": "string",
+            "pattern": "\\d{10,15}"
+          },
+          "storeDescription": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 0
+          },
+          "stateId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "cityId": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "StoreResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "userName": {
+            "type": "string"
+          },
+          "storeName": {
+            "type": "string"
+          },
+          "whatsappNumber": {
+            "type": "string"
+          },
+          "storeDescription": {
+            "type": "string"
+          },
+          "logoUrl": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "stateId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "stateName": {
+            "type": "string"
+          },
+          "stateAbbreviation": {
+            "type": "string"
+          },
+          "cityId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "cityName": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          }
+        }
+      },
+      "ProductUpdateMultipartDoc": {
+        "type": "object",
+        "description": "Multipart para atualização de produto",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ProductUpdateRequest",
+            "description": "Campos a atualizar"
+          },
+          "image": {
+            "type": "string",
+            "format": "binary",
+            "description": "Nova imagem (opcional)"
+          }
+        }
+      },
+      "ProductUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 2
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 0
+          },
+          "material": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 0
+          },
+          "multicolor": {
+            "type": "boolean"
+          },
+          "dimensions": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 0
+          },
+          "categoryId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "isVisible": {
+            "type": "boolean"
+          },
+          "featured": {
+            "type": "boolean"
+          },
+          "price": {
+            "type": "number",
+            "minimum": 0.01
+          }
+        }
+      },
+      "ProductResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "imageUrl": {
+            "type": "string"
+          },
+          "material": {
+            "type": "string"
+          },
+          "multicolor": {
+            "type": "boolean"
+          },
+          "dimensions": {
+            "type": "string"
+          },
+          "isVisible": {
+            "type": "boolean"
+          },
+          "featured": {
+            "type": "boolean"
+          },
+          "price": {
+            "type": "number"
+          },
+          "categoryId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "categoryName": {
+            "type": "string"
+          },
+          "storeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "whatsappUrl": {
+            "type": "string"
+          },
+          "clickCount": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "CategoryCreateRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 2
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "CategoryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "isGlobal": {
+            "type": "boolean"
+          },
+          "storeId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "StoreRegisterRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 150,
+            "minLength": 0
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 8
+          },
+          "userName": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 2
+          },
+          "storeName": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 2
+          },
+          "whatsappNumber": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\d{10,15}"
+          },
+          "storeDescription": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 0
+          },
+          "stateId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "cityId": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "storeName",
+          "userName",
+          "whatsappNumber"
+        ]
+      },
+      "ProductCreateMultipartDoc": {
+        "type": "object",
+        "description": "Multipart para criação de produto",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ProductCreateRequest",
+            "description": "Dados do produto"
+          },
+          "image": {
+            "type": "string",
+            "format": "binary",
+            "description": "Imagem do produto (opcional)"
+          }
+        }
+      },
+      "ProductCreateRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 2
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 0
+          },
+          "material": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 0
+          },
+          "multicolor": {
+            "type": "boolean"
+          },
+          "dimensions": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 0
+          },
+          "categoryId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "storeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "price": {
+            "type": "number",
+            "minimum": 0.01
+          }
+        },
+        "required": [
+          "categoryId",
+          "multicolor",
+          "name",
+          "storeId"
+        ]
+      },
+      "ScrapeRequest": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "MakerWorldScrapedDataDTO": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "imageUrl": {
+            "type": "string"
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "minLength": 1
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "storeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "storeName": {
+            "type": "string"
+          }
+        }
+      },
+      "PageResponseProductResponse": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "last": {
+            "type": "boolean"
+          }
+        }
+      },
+      "StateResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "abbreviation": {
+            "type": "string"
+          }
+        }
+      },
+      "CityResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "stateId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "stateAbbreviation": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,5 +1,6 @@
 import type { Product } from '../types'
 import { buildWhatsAppUrl } from '../utils/whatsapp'
+import { registerWhatsAppClick } from '../services/productService'
 
 const MATERIAL_BADGE: Record<string, string> = {
   PLA:    'bg-blue-900/80 text-blue-300 border-blue-700/60',
@@ -53,17 +54,23 @@ export default function ProductCard({ product, whatsappNumber, onOpenModal }: Pr
           <p className="text-[11px] text-zinc-500 leading-none">{dimensions}</p>
         )}
 
+        {product.price != null && (
+          <p className="text-sm font-semibold text-zinc-100">
+            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)}
+          </p>
+        )}
+
         {/* Stop propagation so clicking CTA goes to WhatsApp, not the modal */}
         <a
           href={whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => { e.stopPropagation(); registerWhatsAppClick(product.id) }}
           className="mt-auto flex items-center justify-center gap-1.5 rounded-lg bg-green-600 hover:bg-green-500 active:bg-green-700 px-3 py-2 text-xs font-semibold text-white transition-colors"
-          aria-label={`Solicitar orçamento para ${name} via WhatsApp`}
+          aria-label={`${product.price != null ? 'Fazer pedido' : 'Solicitar orçamento'} para ${name} via WhatsApp`}
         >
           <WhatsAppIcon />
-          Solicitar Orçamento
+          {product.price != null ? 'Fazer Pedido' : 'Solicitar Orçamento'}
         </a>
       </div>
     </article>

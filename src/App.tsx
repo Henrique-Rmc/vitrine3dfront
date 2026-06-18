@@ -37,7 +37,6 @@ export default function App() {
           <Route element={<PublicOnlyRoute />}>
             <Route path="/admin/login" element={<LoginPage />} />
             <Route path="/admin/register" element={<RegisterPage />} />
-            <Route path="/" element={<RegisterPage />} />
           </Route>
 
           {/* ── Admin: protected (requires auth) ── */}
