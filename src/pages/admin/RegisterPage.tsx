@@ -3,33 +3,30 @@ import RegisterForm from './RegisterForm'
 
 export default function RegisterPage() {
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-[#faf8f5] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-lg">
-        {/* Header */}
         <div className="text-center mb-8">
           <Link
             to="/"
-            className="inline-block text-2xl font-bold text-zinc-100 hover:text-white transition-colors mb-6"
+            className="inline-block mb-4"
           >
-            Vitrine3D
+            <span className="font-display text-2xl font-bold text-[#1c1813]">Vitrine Artesã</span>
           </Link>
-          <h1 className="text-2xl font-bold text-zinc-100">Criar conta</h1>
-          <p className="text-sm text-zinc-500 mt-1">
-            Comece a vender em minutos. Sem taxas de adesão.
+          <h1 className="text-2xl font-bold text-[#1c1813]">Criar minha vitrine</h1>
+          <p className="text-sm text-[#9c8e84] mt-1">
+            Comece a apresentar seus produtos em minutos. Gratuito.
           </p>
         </div>
 
-        {/* Form card */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl px-6 py-8 sm:px-8">
+        <div className="bg-white border border-[#e8e2d8] rounded-2xl px-6 py-8 sm:px-8 shadow-sm">
           <RegisterForm />
         </div>
 
-        {/* Login link */}
-        <p className="text-center text-sm text-zinc-500 mt-6">
+        <p className="text-center text-sm text-[#9c8e84] mt-6">
           Já tem uma conta?{' '}
           <Link
             to="/admin/login"
-            className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
+            className="text-[#c9922c] hover:text-[#b07d1e] font-medium transition-colors"
           >
             Entrar
           </Link>

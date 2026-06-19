@@ -2,6 +2,7 @@
 
 @theme {
   --font-sans: 'Inter', 'Roboto', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Playfair Display', Georgia, ui-serif, serif;
 }
 
 @keyframes modal-backdrop-in {
@@ -14,12 +15,23 @@
   to   { opacity: 1; transform: scale(1)    translateY(0);    }
 }
 
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position:  200% 0; }
+}
+
 @layer base {
   html {
-    @apply bg-zinc-950 text-zinc-100 antialiased;
+    @apply bg-[#faf8f5] text-[#1c1813] antialiased;
   }
 
   body {
     @apply min-h-screen;
   }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #ede8df 25%, #f4f1eb 50%, #ede8df 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
 }

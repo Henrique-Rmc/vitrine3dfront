@@ -3,12 +3,12 @@ import { buildWhatsAppUrl } from '../utils/whatsapp'
 import { registerWhatsAppClick } from '../services/productService'
 
 const MATERIAL_BADGE: Record<string, string> = {
-  PLA:    'bg-blue-900/80 text-blue-300 border-blue-700/60',
-  ABS:    'bg-orange-900/80 text-orange-300 border-orange-700/60',
-  Resina: 'bg-purple-900/80 text-purple-300 border-purple-700/60',
-  PETG:   'bg-teal-900/80 text-teal-300 border-teal-700/60',
+  PLA:    'bg-amber-50 text-amber-700 border-amber-200',
+  ABS:    'bg-slate-100 text-slate-600 border-slate-200',
+  Resina: 'bg-violet-50 text-violet-700 border-violet-200',
+  PETG:   'bg-teal-50 text-teal-700 border-teal-200',
 }
-const defaultBadge = 'bg-zinc-800/80 text-zinc-300 border-zinc-700/60'
+const defaultBadge = 'bg-stone-100 text-stone-500 border-stone-200'
 
 interface ProductCardProps {
   product: Product
@@ -17,56 +17,62 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, whatsappNumber, onOpenModal }: ProductCardProps) {
-  const { name, imageUrl, material, multicolor, dimensions } = product
-  const badgeStyle = MATERIAL_BADGE[material] ?? defaultBadge
+  const { name, imageUrl, material, multicolor } = product
+  const badgeStyle = MATERIAL_BADGE[material ?? ''] ?? defaultBadge
   const whatsappUrl = buildWhatsAppUrl(whatsappNumber, name)
 
   return (
     <article
-      className="group flex flex-col rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden shadow-lg hover:border-zinc-600 transition-colors cursor-pointer"
+      className="group bg-white border border-[#e8e2d8] rounded-xl overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col"
       onClick={() => onOpenModal(product)}
     >
       {/* Image */}
-      <div className="relative aspect-square overflow-hidden bg-zinc-800">
-        <img
-          src={imageUrl}
-          alt={name}
-          loading="lazy"
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-        />
+      <div className="relative aspect-square overflow-hidden bg-[#f4f1eb]">
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={name}
+            loading="lazy"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <svg className="w-10 h-10 text-[#d4cec5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+            </svg>
+          </div>
+        )}
 
-        <span className={`absolute bottom-2 left-2 rounded-full border backdrop-blur-sm px-2 py-0.5 text-[10px] font-semibold ${badgeStyle}`}>
-          {material}
-        </span>
-
+        {/* Multicolor pill */}
         {multicolor && (
-          <span className="absolute top-2 right-2 rounded-full bg-zinc-900/80 backdrop-blur-sm px-2 py-0.5 text-[10px] font-semibold text-zinc-100 border border-zinc-700/60">
+          <span className="absolute top-2 right-2 rounded-full bg-white/90 backdrop-blur-sm px-2 py-0.5 text-[10px] font-medium text-[#6b5d52] border border-[#e8e2d8]">
             Multicolor
           </span>
         )}
       </div>
 
-      {/* Info */}
-      <div className="flex flex-col flex-1 gap-2 p-3">
-        <h3 className="text-sm font-semibold text-zinc-100 leading-snug line-clamp-2">{name}</h3>
-
-        {dimensions && (
-          <p className="text-[11px] text-zinc-500 leading-none">{dimensions}</p>
+      {/* Content */}
+      <div className="p-3 flex flex-col gap-2 flex-1">
+        {material && (
+          <span className={`self-start rounded-full border px-2 py-0.5 text-[10px] font-semibold ${badgeStyle}`}>
+            {material}
+          </span>
         )}
 
+        <h3 className="text-sm font-semibold text-[#1c1813] leading-snug line-clamp-2 flex-1">{name}</h3>
+
         {product.price != null && (
-          <p className="text-sm font-semibold text-zinc-100">
+          <p className="text-sm font-bold text-[#c9922c]">
             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)}
           </p>
         )}
 
-        {/* Stop propagation so clicking CTA goes to WhatsApp, not the modal */}
         <a
           href={whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"
           onClick={(e) => { e.stopPropagation(); registerWhatsAppClick(product.id) }}
-          className="mt-auto flex items-center justify-center gap-1.5 rounded-lg bg-green-600 hover:bg-green-500 active:bg-green-700 px-3 py-2 text-xs font-semibold text-white transition-colors"
+          className="flex items-center justify-center gap-1.5 rounded-lg bg-green-600 hover:bg-green-500 active:bg-green-700 px-2.5 py-2 text-[11px] font-semibold text-white transition-colors"
           aria-label={`${product.price != null ? 'Fazer pedido' : 'Solicitar orçamento'} para ${name} via WhatsApp`}
         >
           <WhatsAppIcon />

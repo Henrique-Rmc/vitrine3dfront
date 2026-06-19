@@ -16,30 +16,21 @@ export default function CategoryBar({ categories }: CategoryBarProps) {
   }
 
   const chip = (active: boolean) =>
-    `px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors border ${
+    `px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 border ${
       active
-        ? 'bg-blue-600 border-blue-600 text-white'
-        : 'border-zinc-700 text-zinc-400 bg-transparent hover:border-zinc-500 hover:text-zinc-100'
+        ? 'bg-[#1c1813] border-[#1c1813] text-white shadow-sm'
+        : 'border-[#e8e2d8] text-[#6b5d52] bg-white hover:border-[#d4cec5] hover:text-[#1c1813]'
     }`
 
   return (
-    /* top-16 = 64px sticky Header height */
-    <div className="sticky top-16 z-40 bg-zinc-950/95 backdrop-blur-sm border-b border-zinc-800">
+    <div className="sticky top-16 z-40 bg-white/95 backdrop-blur-sm border-b border-[#e8e2d8]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex gap-2 overflow-x-auto scrollbar-none py-3">
-          <button
-            onClick={() => select(null)}
-            className={chip(activeCategoryId === null)}
-          >
+        <div className="flex gap-2 overflow-x-auto scrollbar-none py-3.5">
+          <button onClick={() => select(null)} className={chip(activeCategoryId === null)}>
             Todos
           </button>
-
           {categories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => select(cat.id)}
-              className={chip(activeCategoryId === cat.id)}
-            >
+            <button key={cat.id} onClick={() => select(cat.id)} className={chip(activeCategoryId === cat.id)}>
               {cat.name}
             </button>
           ))}

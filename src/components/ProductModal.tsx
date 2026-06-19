@@ -4,12 +4,12 @@ import { buildWhatsAppUrl } from '../utils/whatsapp'
 import { registerWhatsAppClick } from '../services/productService'
 
 const MATERIAL_BADGE: Record<string, string> = {
-  PLA:    'bg-blue-900/80 text-blue-300 border-blue-700/60',
-  ABS:    'bg-orange-900/80 text-orange-300 border-orange-700/60',
-  Resina: 'bg-purple-900/80 text-purple-300 border-purple-700/60',
-  PETG:   'bg-teal-900/80 text-teal-300 border-teal-700/60',
+  PLA:    'bg-amber-50 text-amber-700 border-amber-200',
+  ABS:    'bg-slate-100 text-slate-600 border-slate-200',
+  Resina: 'bg-violet-50 text-violet-700 border-violet-200',
+  PETG:   'bg-teal-50 text-teal-700 border-teal-200',
 }
-const defaultBadge = 'bg-zinc-800/80 text-zinc-300 border-zinc-700/60'
+const defaultBadge = 'bg-stone-100 text-stone-500 border-stone-200'
 
 interface ProductModalProps {
   product: Product
@@ -18,23 +18,16 @@ interface ProductModalProps {
   onClose: () => void
 }
 
-export default function ProductModal({
-  product,
-  whatsappNumber,
-  categoryName,
-  onClose,
-}: ProductModalProps) {
+export default function ProductModal({ product, whatsappNumber, categoryName, onClose }: ProductModalProps) {
   const { name, imageUrl, material, multicolor, dimensions, description } = product
-  const badgeStyle = MATERIAL_BADGE[material] ?? defaultBadge
+  const badgeStyle = MATERIAL_BADGE[material ?? ''] ?? defaultBadge
   const whatsappUrl = buildWhatsAppUrl(whatsappNumber, name)
 
-  // Lock body scroll while open
   useEffect(() => {
     document.body.style.overflow = 'hidden'
     return () => { document.body.style.overflow = '' }
   }, [])
 
-  // Close on Escape key
   useEffect(() => {
     function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', onKey)
@@ -42,96 +35,96 @@ export default function ProductModal({
   }, [onClose])
 
   return (
-    /* Backdrop — click-outside closes */
     <div
       role="dialog"
       aria-modal="true"
       aria-label={name}
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-6 bg-black/70 backdrop-blur-sm animate-[modal-backdrop-in_0.2s_ease-out]"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-6 bg-[#1c1813]/40 backdrop-blur-sm animate-[modal-backdrop-in_0.2s_ease-out]"
       onClick={onClose}
     >
-      {/* Panel */}
       <div
-        className="relative w-full sm:max-w-2xl max-h-[92dvh] sm:max-h-[85vh] flex flex-col sm:flex-row overflow-hidden bg-zinc-900 border border-zinc-800 rounded-t-2xl sm:rounded-2xl shadow-2xl animate-[modal-panel-in_0.2s_ease-out]"
+        className="relative w-full sm:max-w-2xl max-h-[92dvh] sm:max-h-[85vh] flex flex-col sm:flex-row overflow-hidden bg-white border border-[#e8e2d8] rounded-t-2xl sm:rounded-2xl shadow-2xl animate-[modal-panel-in_0.2s_ease-out]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ── Image side ── */}
-        <div className="relative w-full aspect-square sm:w-72 sm:aspect-auto shrink-0 bg-zinc-800">
-          <img
-            src={imageUrl}
-            alt={name}
-            className="h-full w-full object-cover"
-          />
+        {/* Image side */}
+        <div className="relative w-full aspect-square sm:w-72 sm:aspect-auto shrink-0 bg-[#f4f1eb]">
+          {imageUrl ? (
+            <img src={imageUrl} alt={name} className="h-full w-full object-cover" />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <svg className="w-16 h-16 text-[#d4cec5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+              </svg>
+            </div>
+          )}
 
-          {/* Multicolor pill */}
           {multicolor && (
-            <span className="absolute top-3 left-3 rounded-full bg-zinc-900/80 backdrop-blur-sm px-2.5 py-1 text-[11px] font-semibold text-zinc-100 border border-zinc-700/60">
+            <span className="absolute top-3 left-3 rounded-full bg-white/90 backdrop-blur-sm px-2.5 py-1 text-[11px] font-medium text-[#6b5d52] border border-[#e8e2d8]">
               Multicolor
             </span>
           )}
 
-          {/* Close button — absolute on image */}
           <button
             onClick={onClose}
             aria-label="Fechar"
-            className="absolute top-3 right-3 rounded-full bg-zinc-900/80 backdrop-blur-sm p-1.5 text-zinc-300 hover:text-white border border-zinc-700/60 transition-colors"
+            className="absolute top-3 right-3 rounded-full bg-white/90 backdrop-blur-sm p-1.5 text-[#9c8e84] hover:text-[#1c1813] border border-[#e8e2d8] transition-colors"
           >
             <XIcon />
           </button>
         </div>
 
-        {/* ── Details side ── */}
+        {/* Details side */}
         <div className="flex flex-col gap-5 p-5 sm:p-6 overflow-y-auto flex-1">
-          {/* Name + category */}
           <div>
-            <h2 className="text-xl font-bold text-zinc-100 leading-tight">{name}</h2>
+            <h2 className="text-xl font-bold text-[#1c1813] leading-tight">{name}</h2>
             {categoryName && (
-              <span className="text-xs text-zinc-500 mt-1 block">{categoryName}</span>
+              <span className="text-xs text-[#9c8e84] mt-1 block">{categoryName}</span>
             )}
           </div>
 
-          {/* Specs */}
-          <dl className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-3 text-sm border-t border-zinc-800 pt-4">
-            <dt className="text-zinc-500 self-center">Material</dt>
-            <dd>
-              <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${badgeStyle}`}>
-                {material}
-              </span>
-            </dd>
-
-            {dimensions && (
+          <dl className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-3 text-sm border-t border-[#f0ece5] pt-4">
+            {material && (
               <>
-                <dt className="text-zinc-500 self-center">Dimensões</dt>
-                <dd className="text-zinc-200 font-mono text-xs">{dimensions}</dd>
+                <dt className="text-[#9c8e84] self-center">Material</dt>
+                <dd>
+                  <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${badgeStyle}`}>
+                    {material}
+                  </span>
+                </dd>
               </>
             )}
 
-            <dt className="text-zinc-500 self-center">Multicolor</dt>
-            <dd className={multicolor ? 'text-green-400 font-medium' : 'text-zinc-600'}>
+            {dimensions && (
+              <>
+                <dt className="text-[#9c8e84] self-center">Dimensões</dt>
+                <dd className="text-[#6b5d52] font-mono text-xs">{dimensions}</dd>
+              </>
+            )}
+
+            <dt className="text-[#9c8e84] self-center">Multicolor</dt>
+            <dd className={multicolor ? 'text-green-600 font-medium' : 'text-[#c4b8ae]'}>
               {multicolor ? '✓ Sim' : '— Não'}
             </dd>
 
             {product.price != null && (
               <>
-                <dt className="text-zinc-500 self-center">Preço</dt>
-                <dd className="text-zinc-100 font-semibold">
+                <dt className="text-[#9c8e84] self-center">Preço</dt>
+                <dd className="text-[#c9922c] font-bold text-base">
                   {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)}
                 </dd>
               </>
             )}
           </dl>
 
-          {/* Description */}
           {description && (
-            <div className="border-t border-zinc-800 pt-4">
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-500 mb-2">
+            <div className="border-t border-[#f0ece5] pt-4">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-[#9c8e84] mb-2">
                 Descrição
               </p>
-              <p className="text-sm text-zinc-300 leading-relaxed">{description}</p>
+              <p className="text-sm text-[#6b5d52] leading-relaxed">{description}</p>
             </div>
           )}
 
-          {/* CTA */}
           <div className="mt-auto pt-2">
             <a
               href={whatsappUrl}

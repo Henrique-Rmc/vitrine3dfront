@@ -1,11 +1,12 @@
 export default function ProductSkeleton() {
   return (
-    <div className="flex flex-col rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden animate-pulse">
-      <div className="aspect-square bg-zinc-800" />
-      <div className="p-4 space-y-3">
-        <div className="h-4 bg-zinc-800 rounded w-3/4" />
-        <div className="h-3 bg-zinc-800 rounded w-1/2" />
-        <div className="h-10 bg-zinc-800 rounded-lg mt-2" />
+    <div className="bg-white border border-[#e8e2d8] rounded-xl overflow-hidden shadow-sm flex flex-col">
+      <div className="aspect-square skeleton" />
+      <div className="p-3 flex flex-col gap-2">
+        <div className="h-4 w-14 skeleton rounded-full" />
+        <div className="h-4 w-3/4 skeleton rounded-md" />
+        <div className="h-4 w-1/3 skeleton rounded-md" />
+        <div className="h-9 skeleton rounded-lg mt-1" />
       </div>
     </div>
   )

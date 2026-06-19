@@ -6,17 +6,13 @@ export interface ProductListProps {
   onEdit: (product: Product) => void
   onDelete: (id: number) => void
   deletingId?: number | null
-  /** IDs of products marked as featured (up to 3) */
   featuredIds?: number[]
   onToggleFeatured?: (id: number) => void
-  /** When provided, rows become draggable and call this on drop */
   onReorder?: (newProducts: Product[]) => void
 }
 
-// ── Icons ─────────────────────────────────────────────────────────────────────
-
 const DragHandle = () => (
-  <svg className="w-4 h-4 text-zinc-600 cursor-grab active:cursor-grabbing shrink-0" viewBox="0 0 16 16" fill="currentColor">
+  <svg className="w-4 h-4 text-[#d4cec5] cursor-grab active:cursor-grabbing shrink-0" viewBox="0 0 16 16" fill="currentColor">
     <circle cx="5.5" cy="4"  r="1.2" /><circle cx="10.5" cy="4"  r="1.2" />
     <circle cx="5.5" cy="8"  r="1.2" /><circle cx="10.5" cy="8"  r="1.2" />
     <circle cx="5.5" cy="12" r="1.2" /><circle cx="10.5" cy="12" r="1.2" />
@@ -25,7 +21,7 @@ const DragHandle = () => (
 
 const StarIcon = ({ filled }: { filled: boolean }) => (
   <svg
-    className={`w-4 h-4 transition-colors ${filled ? 'text-yellow-400' : 'text-zinc-600'}`}
+    className={`w-4 h-4 transition-colors ${filled ? 'text-[#c9922c]' : 'text-[#d4cec5]'}`}
     viewBox="0 0 24 24"
     fill={filled ? 'currentColor' : 'none'}
     stroke="currentColor"
@@ -47,23 +43,21 @@ const TrashIcon = () => (
   </svg>
 )
 
-// ── Small reusable pieces ─────────────────────────────────────────────────────
-
-const MATERIAL_COLORS: Record<string, string> = {
-  PLA:      'bg-blue-950/60 text-blue-400 border-blue-800/40',
-  ABS:      'bg-orange-950/60 text-orange-400 border-orange-800/40',
-  Resina:   'bg-purple-950/60 text-purple-400 border-purple-800/40',
-  PETG:     'bg-teal-950/60 text-teal-400 border-teal-800/40',
-  Flexível: 'bg-green-950/60 text-green-400 border-green-800/40',
+const MATERIAL_BADGE: Record<string, string> = {
+  PLA:      'bg-amber-50 text-amber-700 border-amber-200',
+  ABS:      'bg-slate-100 text-slate-600 border-slate-200',
+  Resina:   'bg-violet-50 text-violet-700 border-violet-200',
+  PETG:     'bg-teal-50 text-teal-700 border-teal-200',
+  Flexível: 'bg-green-50 text-green-700 border-green-200',
 }
 
 function Thumbnail({ src, alt }: { src: string; alt: string }) {
   return (
-    <div className="w-12 h-12 rounded-lg overflow-hidden bg-zinc-800 shrink-0 flex items-center justify-center">
+    <div className="w-12 h-12 rounded-lg overflow-hidden bg-[#f4f1eb] shrink-0 flex items-center justify-center border border-[#e8e2d8]">
       {src ? (
         <img src={src} alt={alt} className="w-full h-full object-cover" />
       ) : (
-        <svg className="w-5 h-5 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <svg className="w-5 h-5 text-[#d4cec5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
         </svg>
       )}
@@ -72,9 +66,9 @@ function Thumbnail({ src, alt }: { src: string; alt: string }) {
 }
 
 function MaterialBadge({ material }: { material: string }) {
-  const colors = MATERIAL_COLORS[material] ?? 'bg-zinc-800 text-zinc-400 border-zinc-700'
+  const colors = MATERIAL_BADGE[material] ?? 'bg-stone-100 text-stone-500 border-stone-200'
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${colors}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border ${colors}`}>
       {material}
     </span>
   )
@@ -82,23 +76,20 @@ function MaterialBadge({ material }: { material: string }) {
 
 function StatusBadge({ isVisible }: { isVisible: boolean }) {
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium border ${isVisible ? 'bg-green-950/60 text-green-400 border-green-800/40' : 'bg-zinc-800 text-zinc-500 border-zinc-700'}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${isVisible ? 'bg-green-400' : 'bg-zinc-500'}`} />
+    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold border ${
+      isVisible
+        ? 'bg-green-50 text-green-700 border-green-200'
+        : 'bg-stone-100 text-stone-500 border-stone-200'
+    }`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${isVisible ? 'bg-green-500' : 'bg-stone-400'}`} />
       {isVisible ? 'Visível' : 'Oculto'}
     </span>
   )
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
-
 export default function ProductList({
-  products,
-  onEdit,
-  onDelete,
-  deletingId,
-  featuredIds = [],
-  onToggleFeatured,
-  onReorder,
+  products, onEdit, onDelete, deletingId,
+  featuredIds = [], onToggleFeatured, onReorder,
 }: ProductListProps) {
   const [draggedId, setDraggedId] = useState<number | null>(null)
   const [dragOverId, setDragOverId] = useState<number | null>(null)
@@ -119,9 +110,7 @@ export default function ProductList({
   }
 
   function onDrop(targetId: number) {
-    if (!onReorder || draggedId === null || draggedId === targetId) {
-      resetDrag(); return
-    }
+    if (!onReorder || draggedId === null || draggedId === targetId) { resetDrag(); return }
     const next = [...products]
     const from = next.findIndex((p) => p.id === draggedId)
     const to   = next.findIndex((p) => p.id === targetId)
@@ -131,20 +120,15 @@ export default function ProductList({
     resetDrag()
   }
 
-  function resetDrag() {
-    setDraggedId(null)
-    setDragOverId(null)
-  }
+  function resetDrag() { setDraggedId(null); setDragOverId(null) }
 
   if (products.length === 0) {
     return (
-      <div className="rounded-xl border border-zinc-800 py-16 text-center">
-        <p className="text-sm text-zinc-500">Nenhum produto encontrado.</p>
+      <div className="rounded-xl border border-[#e8e2d8] py-16 text-center bg-white shadow-sm">
+        <p className="text-sm text-[#9c8e84]">Nenhum produto encontrado.</p>
       </div>
     )
   }
-
-  // ── Desktop table (sm+) ───────────────────────────────────────────────────
 
   const desktopRow = (product: Product, idx: number) => {
     const isFeatured = featuredIds.includes(product.id)
@@ -161,32 +145,30 @@ export default function ProductList({
         onDrop={sortable      ? () => onDrop(product.id) : undefined}
         onDragEnd={sortable   ? resetDrag : undefined}
         className={[
-          'hover:bg-zinc-900/40 transition-all',
-          idx < products.length - 1 ? 'border-b border-zinc-800/60' : '',
+          'hover:bg-[#faf8f5] transition-all',
+          idx < products.length - 1 ? 'border-b border-[#f0ece5]' : '',
           deletingId === product.id ? 'opacity-50' : '',
-          isDragged ? 'opacity-30 bg-zinc-800/60' : '',
-          isOver    ? 'border-t-2 border-blue-500' : '',
+          isDragged ? 'opacity-30 bg-[#f4f1eb]' : '',
+          isOver    ? 'border-t-2 border-[#c9922c]' : '',
         ].join(' ')}
       >
         {sortable && (
-          <td className="pl-3 pr-1 py-3 w-8">
-            <DragHandle />
-          </td>
+          <td className="pl-3 pr-1 py-3 w-8"><DragHandle /></td>
         )}
         <td className="px-4 py-3 w-16">
           <Thumbnail src={product.imageUrl} alt={product.name} />
         </td>
         <td className="px-4 py-3">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="font-medium text-zinc-100">{product.name}</p>
+            <p className="font-medium text-[#1c1813]">{product.name}</p>
             {isFeatured && (
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-yellow-500 bg-yellow-950/50 border border-yellow-800/40 px-1.5 py-0.5 rounded">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-[#c9922c] bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full">
                 Destaque
               </span>
             )}
           </div>
           {product.dimensions && (
-            <p className="text-xs text-zinc-500 mt-0.5 font-mono">{product.dimensions}</p>
+            <p className="text-xs text-[#9c8e84] mt-0.5 font-mono">{product.dimensions}</p>
           )}
         </td>
         <td className="px-4 py-3">
@@ -201,17 +183,11 @@ export default function ProductList({
               <button
                 onClick={() => onToggleFeatured?.(product.id)}
                 disabled={!isFeatured && !canStar}
-                title={
-                  isFeatured ? 'Remover destaque'
-                    : canStar ? 'Adicionar ao destaque (máx. 3)'
-                    : 'Limite de 3 em destaque atingido'
-                }
+                title={isFeatured ? 'Remover destaque' : canStar ? 'Adicionar ao destaque (máx. 3)' : 'Limite atingido'}
                 className={`p-2 rounded-lg transition-colors ${
-                  isFeatured
-                    ? 'text-yellow-400 hover:bg-yellow-950/40'
-                    : canStar
-                    ? 'text-zinc-600 hover:text-yellow-400 hover:bg-yellow-950/30'
-                    : 'text-zinc-700 cursor-not-allowed'
+                  isFeatured ? 'text-[#c9922c] hover:bg-amber-50'
+                    : canStar ? 'text-[#d4cec5] hover:text-[#c9922c] hover:bg-amber-50'
+                    : 'text-[#e8e2d8] cursor-not-allowed'
                 }`}
               >
                 <StarIcon filled={isFeatured} />
@@ -221,7 +197,7 @@ export default function ProductList({
               onClick={() => onEdit(product)}
               disabled={!!deletingId}
               title="Editar"
-              className="p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded-lg text-[#9c8e84] hover:text-[#1c1813] hover:bg-[#f4f1eb] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <EditIcon />
             </button>
@@ -229,10 +205,10 @@ export default function ProductList({
               onClick={() => onDelete(product.id)}
               disabled={deletingId === product.id}
               title="Excluir"
-              className="p-2 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-red-950/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded-lg text-[#9c8e84] hover:text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {deletingId === product.id
-                ? <span className="w-4 h-4 rounded-full border-2 border-red-400 border-t-transparent animate-spin block" />
+                ? <span className="w-4 h-4 rounded-full border-2 border-red-300 border-t-red-600 animate-spin block" />
                 : <TrashIcon />}
             </button>
           </div>
@@ -240,8 +216,6 @@ export default function ProductList({
       </tr>
     )
   }
-
-  // ── Mobile card (< sm) ────────────────────────────────────────────────────
 
   const mobileCard = (product: Product) => {
     const isFeatured = featuredIds.includes(product.id)
@@ -260,8 +234,8 @@ export default function ProductList({
         className={[
           'flex items-center gap-2.5 px-3 py-3 transition-all',
           deletingId === product.id ? 'opacity-50' : '',
-          isDragged ? 'opacity-30 bg-zinc-800/60' : '',
-          isOver    ? 'border-t-2 border-blue-500' : '',
+          isDragged ? 'opacity-30 bg-[#f4f1eb]' : '',
+          isOver    ? 'border-t-2 border-[#c9922c]' : '',
         ].join(' ')}
       >
         {sortable && <DragHandle />}
@@ -269,7 +243,7 @@ export default function ProductList({
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <p className="text-sm font-medium text-zinc-100 truncate">{product.name}</p>
+            <p className="text-sm font-medium text-[#1c1813] truncate">{product.name}</p>
             {isFeatured && <StarIcon filled />}
           </div>
           <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
@@ -284,28 +258,22 @@ export default function ProductList({
               onClick={() => onToggleFeatured?.(product.id)}
               disabled={!isFeatured && !canStar}
               className={`p-2 rounded-lg transition-colors ${
-                isFeatured ? 'text-yellow-400 hover:bg-yellow-950/40'
-                  : canStar ? 'text-zinc-600 hover:text-yellow-400'
-                  : 'text-zinc-700 cursor-not-allowed'
+                isFeatured ? 'text-[#c9922c] hover:bg-amber-50'
+                  : canStar ? 'text-[#d4cec5] hover:text-[#c9922c]'
+                  : 'text-[#e8e2d8] cursor-not-allowed'
               }`}
             >
               <StarIcon filled={isFeatured} />
             </button>
           )}
-          <button
-            onClick={() => onEdit(product)}
-            disabled={!!deletingId}
-            className="p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 disabled:opacity-50 transition-colors"
-          >
+          <button onClick={() => onEdit(product)} disabled={!!deletingId}
+            className="p-2 rounded-lg text-[#9c8e84] hover:text-[#1c1813] hover:bg-[#f4f1eb] disabled:opacity-50 transition-colors">
             <EditIcon />
           </button>
-          <button
-            onClick={() => onDelete(product.id)}
-            disabled={deletingId === product.id}
-            className="p-2 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-red-950/30 disabled:opacity-50 transition-colors"
-          >
+          <button onClick={() => onDelete(product.id)} disabled={deletingId === product.id}
+            className="p-2 rounded-lg text-[#9c8e84] hover:text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors">
             {deletingId === product.id
-              ? <span className="w-4 h-4 rounded-full border-2 border-red-400 border-t-transparent animate-spin block" />
+              ? <span className="w-4 h-4 rounded-full border-2 border-red-300 border-t-red-600 animate-spin block" />
               : <TrashIcon />}
           </button>
         </div>
@@ -314,18 +282,18 @@ export default function ProductList({
   }
 
   return (
-    <div className="rounded-xl border border-zinc-800 overflow-hidden">
+    <div className="rounded-xl border border-[#e8e2d8] overflow-hidden bg-white shadow-sm">
       {/* Desktop table */}
       <div className="hidden sm:block overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-zinc-900/60 border-b border-zinc-800">
+            <tr className="bg-[#faf8f5] border-b border-[#e8e2d8]">
               {sortable && <th className="w-8" />}
-              <th className="text-left px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wide w-16">Imagem</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wide">Nome</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wide">Material</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wide">Status</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wide">Ações</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-[#9c8e84] uppercase tracking-wide w-16">Imagem</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-[#9c8e84] uppercase tracking-wide">Nome</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-[#9c8e84] uppercase tracking-wide">Material</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-[#9c8e84] uppercase tracking-wide">Status</th>
+              <th className="text-right px-4 py-3 text-xs font-semibold text-[#9c8e84] uppercase tracking-wide">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -335,7 +303,7 @@ export default function ProductList({
       </div>
 
       {/* Mobile cards */}
-      <div className="sm:hidden divide-y divide-zinc-800">
+      <div className="sm:hidden divide-y divide-[#f0ece5]">
         {products.map((product) => mobileCard(product))}
       </div>
     </div>
