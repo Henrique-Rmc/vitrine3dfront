@@ -19,6 +19,7 @@ export default function StorePage() {
     whatsappNumber,
     logoUrl,
     categories,
+    materials,
     products,
     featuredProducts,
     loading,
@@ -35,7 +36,12 @@ export default function StorePage() {
     ? Number(searchParams.get('category'))
     : null
 
+  const activeMaterialId = searchParams.get('material')
+    ? Number(searchParams.get('material'))
+    : null
+
   const activeCategory = categories.find((c) => c.id === activeCategoryId)
+  const activeMaterial = materials.find((m) => m.id === activeMaterialId)
 
   const visibleProducts = useMemo(
     () => products.filter((p) => p.isVisible),
@@ -43,14 +49,23 @@ export default function StorePage() {
   )
 
   const catalogProducts = useMemo(() => {
-    return activeCategoryId === null
-      ? visibleProducts
-      : visibleProducts.filter((p) => p.categoryId === activeCategoryId)
-  }, [visibleProducts, activeCategoryId])
+    return visibleProducts.filter((p) => {
+      if (activeCategoryId !== null && p.categoryId !== activeCategoryId) return false
+      if (activeMaterialId !== null && p.materialId !== activeMaterialId) return false
+      return true
+    })
+  }, [visibleProducts, activeCategoryId, activeMaterialId])
 
   const selectedCategoryName = selectedProduct
     ? (categories.find((c) => c.id === selectedProduct.categoryId)?.name ?? '')
     : ''
+
+  function sectionTitle() {
+    if (activeCategory && activeMaterial) return `${activeCategory.name} · ${activeMaterial.name}`
+    if (activeCategory) return activeCategory.name
+    if (activeMaterial) return activeMaterial.name
+    return 'Todos os Produtos'
+  }
 
   if (!loading && error) {
     return (
@@ -72,13 +87,19 @@ export default function StorePage() {
         categories={categories}
       />
 
-      {/* Category bar */}
-      {!loading && <CategoryBar categories={categories} />}
+      {/* Category + material bar */}
+      {!loading && (
+        <CategoryBar
+          categories={categories}
+          materials={materials}
+          products={visibleProducts}
+        />
+      )}
 
       {/* Content */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        {/* Hero */}
-        {!loading && activeCategoryId === null && featuredProducts.length > 0 && (
+        {/* Hero — only on unfiltered view */}
+        {!loading && activeCategoryId === null && activeMaterialId === null && featuredProducts.length > 0 && (
           <HeroSection
             products={featuredProducts}
             whatsappNumber={whatsappNumber}
@@ -89,9 +110,7 @@ export default function StorePage() {
         {/* Catalog */}
         <section>
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-base font-bold text-[#1c1813]">
-              {activeCategory ? activeCategory.name : 'Todos os Produtos'}
-            </h2>
+            <h2 className="text-base font-bold text-[#1c1813]">{sectionTitle()}</h2>
             {!loading && (
               <span className="text-sm text-[#9c8e84]">
                 {catalogProducts.length} produto{catalogProducts.length !== 1 ? 's' : ''}
@@ -117,12 +136,12 @@ export default function StorePage() {
 
           {!loading && catalogProducts.length === 0 && (
             <div className="py-24 text-center">
-              <p className="text-[#9c8e84] text-sm">Nenhum produto nesta categoria.</p>
+              <p className="text-[#9c8e84] text-sm">Nenhum produto encontrado com esses filtros.</p>
             </div>
           )}
 
-          {/* Load more */}
-          {!loading && hasMore && activeCategoryId === null && (
+          {/* Load more — only on unfiltered view to avoid pagination/filter mismatch */}
+          {!loading && hasMore && activeCategoryId === null && activeMaterialId === null && (
             <div className="flex justify-center mt-10">
               <button
                 onClick={loadMore}

@@ -1,27 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { listProducts, patchFeatured, deleteProduct } from '../../services/productService'
+import { listProducts, patchFeatured, deleteProduct, reorderProducts } from '../../services/productService'
 import type { Product } from '../../types'
 import ProductList from '../../components/ProductList'
-
-const orderKey = (id: string) => `order_${id}`
-function readProductOrder(storeId: string): number[] {
-  try { return JSON.parse(localStorage.getItem(orderKey(storeId)) ?? '[]') } catch { return [] }
-}
-function saveProductOrder(storeId: string, ids: number[]) {
-  localStorage.setItem(orderKey(storeId), JSON.stringify(ids))
-}
-function applyOrder(products: Product[], order: number[]): Product[] {
-  if (order.length === 0) return products
-  return [...products].sort((a, b) => {
-    const ai = order.indexOf(a.id), bi = order.indexOf(b.id)
-    if (ai === -1 && bi === -1) return b.id - a.id
-    if (ai === -1) return 1
-    if (bi === -1) return -1
-    return ai - bi
-  })
-}
 
 function LoadingSkeleton() {
   return (
@@ -91,6 +73,12 @@ export default function ProductManagement() {
   const [hasMore, setHasMore]             = useState(false)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
 
+  // Reorder mode state
+  const [reorderMode, setReorderMode]         = useState(false)
+  const [pendingOrder, setPendingOrder]       = useState<Product[]>([])
+  const [isSavingOrder, setIsSavingOrder]     = useState(false)
+  const [reorderError, setReorderError]       = useState<string | null>(null)
+
   const nextPageRef = useRef(1)
   const featuredIds = products.filter((p) => p.featured).map((p) => p.id)
 
@@ -101,7 +89,7 @@ export default function ProductManagement() {
     try {
       const page = await listProducts(storeId, 0, 50)
       nextPageRef.current = 1
-      setProducts(applyOrder(page.content, readProductOrder(storeId)))
+      setProducts(page.content)
       setHasMore(!page.last)
     } catch {
       setLoadError('Não foi possível carregar os produtos. Verifique a conexão com o backend.')
@@ -118,7 +106,7 @@ export default function ProductManagement() {
     try {
       const page = await listProducts(storeId, nextPageRef.current, 50)
       nextPageRef.current += 1
-      setProducts((prev) => applyOrder([...prev, ...page.content], readProductOrder(storeId)))
+      setProducts((prev) => [...prev, ...page.content])
       setHasMore(!page.last)
     } catch {
       setLoadError('Erro ao carregar mais produtos.')
@@ -144,7 +132,6 @@ export default function ProductManagement() {
 
   function handleReorder(newProducts: Product[]) {
     setProducts(newProducts)
-    saveProductOrder(storeId, newProducts.map((p) => p.id))
   }
 
   async function handleDelete(id: number) {
@@ -160,6 +147,47 @@ export default function ProductManagement() {
     }
   }
 
+  function enterReorderMode() {
+    setPendingOrder([...products])
+    setReorderMode(true)
+    setReorderError(null)
+  }
+
+  function cancelReorder() {
+    setReorderMode(false)
+    setPendingOrder([])
+    setReorderError(null)
+  }
+
+  async function saveReorder() {
+    setIsSavingOrder(true)
+    setReorderError(null)
+    try {
+      await reorderProducts(pendingOrder.map((p) => p.id))
+      setProducts(pendingOrder)
+      setReorderMode(false)
+      setPendingOrder([])
+    } catch {
+      setReorderError('Erro ao salvar a ordem. Tente novamente.')
+    } finally {
+      setIsSavingOrder(false)
+    }
+  }
+
+  function moveProduct(id: number, direction: 'up' | 'down') {
+    setPendingOrder((prev) => {
+      const idx = prev.findIndex((p) => p.id === id)
+      if (idx < 0) return prev
+      const next = [...prev]
+      const swapIdx = direction === 'up' ? idx - 1 : idx + 1
+      if (swapIdx < 0 || swapIdx >= next.length) return prev
+      ;[next[idx], next[swapIdx]] = [next[swapIdx], next[idx]]
+      return next
+    })
+  }
+
+  const displayProducts = reorderMode ? pendingOrder : products
+
   if (isLoading) return <LoadingSkeleton />
   if (!loadError && products.length === 0) return <EmptyState onAdd={() => navigate('/admin/products/new')} />
 
@@ -173,16 +201,64 @@ export default function ProductManagement() {
           </p>
         </div>
 
-        <button
-          onClick={() => navigate('/admin/products/new')}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#1c1813] hover:bg-[#2c2620] text-white text-sm font-semibold transition-colors shrink-0"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-          Adicionar Produto
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          {reorderMode ? (
+            <>
+              <button
+                onClick={cancelReorder}
+                disabled={isSavingOrder}
+                className="px-4 py-2.5 rounded-lg border border-[#e8e2d8] text-[#6b5d52] hover:bg-[#f4f1eb] text-sm font-medium transition-colors disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={saveReorder}
+                disabled={isSavingOrder}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#1c1813] hover:bg-[#2c2620] text-white text-sm font-semibold transition-colors disabled:opacity-60"
+              >
+                {isSavingOrder ? (
+                  <>
+                    <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                    Salvando…
+                  </>
+                ) : (
+                  'Salvar Ordem'
+                )}
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={enterReorderMode}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-[#e8e2d8] text-[#6b5d52] hover:text-[#1c1813] hover:border-[#d4cec5] hover:bg-[#f4f1eb] text-sm font-medium transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
+                </svg>
+                Ordenar
+              </button>
+              <button
+                onClick={() => navigate('/admin/products/new')}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#1c1813] hover:bg-[#2c2620] text-white text-sm font-semibold transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                Adicionar Produto
+              </button>
+            </>
+          )}
+        </div>
       </div>
+
+      {reorderMode && (
+        <div className="mb-4 flex items-center gap-2 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+          <svg className="w-4 h-4 shrink-0 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
+          </svg>
+          Use as setas ↑↓ para reposicionar os produtos. Clique em <strong className="ml-1">Salvar Ordem</strong> para confirmar.
+        </div>
+      )}
 
       {loadError && (
         <div className="mb-4 flex items-center justify-between gap-3 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
@@ -193,7 +269,13 @@ export default function ProductManagement() {
         </div>
       )}
 
-      {featuredIds.length > 0 && (
+      {reorderError && (
+        <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+          {reorderError}
+        </div>
+      )}
+
+      {featuredIds.length > 0 && !reorderMode && (
         <p className="mb-3 text-xs text-[#9c8e84]">
           <span className="text-[#c9922c]">★</span>{' '}
           {featuredIds.length}/3 produto{featuredIds.length !== 1 ? 's' : ''} em destaque
@@ -201,16 +283,19 @@ export default function ProductManagement() {
       )}
 
       <ProductList
-        products={products}
+        products={displayProducts}
         onEdit={(product) => navigate(`/admin/products/edit/${product.id}`)}
         onDelete={handleDelete}
         deletingId={deletingId}
         featuredIds={featuredIds}
         onToggleFeatured={handleToggleFeatured}
         onReorder={handleReorder}
+        reorderMode={reorderMode}
+        onMoveUp={(id) => moveProduct(id, 'up')}
+        onMoveDown={(id) => moveProduct(id, 'down')}
       />
 
-      {hasMore && (
+      {hasMore && !reorderMode && (
         <div className="flex justify-center mt-6">
           <button
             onClick={loadMoreProducts}

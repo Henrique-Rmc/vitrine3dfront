@@ -7,8 +7,7 @@ export interface ProductFormData {
   name: string
   description: string
   imageUrl: string
-  material: string
-  multicolor: boolean
+  materialId: number | null
   dimensions: string
   isVisible: boolean
   categoryId: number
@@ -25,7 +24,7 @@ export interface PageResponse<T> {
   last: boolean
 }
 
-// Keep the old alias so any remaining references still compile
+// Keep old alias so any remaining references compile
 export type CreateProductRequest = ProductFormData
 
 // ── Private helper ────────────────────────────────────────────────────────────
@@ -95,6 +94,10 @@ export async function updateProduct(
 ): Promise<Product> {
   const { data } = await apiClient.put<Product>(`/api/products/${id}`, buildFormData(payload, imageFile))
   return data
+}
+
+export async function reorderProducts(orderedIds: number[]): Promise<void> {
+  await apiClient.put('/api/products/reorder', orderedIds)
 }
 
 export async function patchFeatured(productId: number): Promise<Product> {

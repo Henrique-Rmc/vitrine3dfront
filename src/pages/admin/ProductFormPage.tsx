@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import type { Category } from '../../types'
+import type { Category, Material } from '../../types'
 import {
   createProduct,
   updateProduct,
@@ -8,9 +8,8 @@ import {
   type ProductFormData,
 } from '../../services/productService'
 import { listCategories, createCategory } from '../../services/categoryService'
+import { listMaterials, createMaterial } from '../../services/materialService'
 import { useAuth } from '../../context/AuthContext'
-
-const MATERIALS = ['PLA', 'ABS', 'Resina', 'PETG', 'Flexível'] as const
 
 const inputClass =
   'w-full rounded-lg bg-[#f4f1eb] border border-[#e8e2d8] px-3 py-2.5 text-sm text-[#1c1813] placeholder-[#c4b8ae] focus:outline-none focus:ring-2 focus:ring-[#c9922c]/40 focus:border-[#c9922c]/60 disabled:opacity-50 transition-colors'
@@ -74,8 +73,8 @@ export default function ProductFormPage() {
   const storeId = user?.id ?? ''
 
   const emptyForm = (): ProductFormData => ({
-    name: '', description: '', imageUrl: '', material: 'PLA',
-    multicolor: false, dimensions: '', isVisible: true, categoryId: 0, storeId, price: null,
+    name: '', description: '', imageUrl: '',
+    materialId: null, dimensions: '', isVisible: true, categoryId: 0, storeId, price: null,
   })
 
   const [form, setForm] = useState<ProductFormData>(emptyForm)
@@ -83,7 +82,9 @@ export default function ProductFormPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null)
 
   const [categories, setCategories] = useState<Category[]>([])
+  const [materials, setMaterials]   = useState<Material[]>([])
   const [isLoadingCategories, setIsLoadingCategories] = useState(true)
+  const [isLoadingMaterials, setIsLoadingMaterials]   = useState(true)
   const [isLoadingProduct, setIsLoadingProduct] = useState(isEditMode)
   const [notFound, setNotFound] = useState(false)
 
@@ -93,6 +94,11 @@ export default function ProductFormPage() {
   const [newCategoryName, setNewCategoryName] = useState('')
   const [isCreatingCategory, setIsCreatingCategory] = useState(false)
   const [createCategoryError, setCreateCategoryError] = useState<string | null>(null)
+
+  const [showNewMaterial, setShowNewMaterial] = useState(false)
+  const [newMaterialName, setNewMaterialName] = useState('')
+  const [isCreatingMaterial, setIsCreatingMaterial] = useState(false)
+  const [createMaterialError, setCreateMaterialError] = useState<string | null>(null)
 
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -107,14 +113,23 @@ export default function ProductFormPage() {
       .catch(() => undefined)
       .finally(() => setIsLoadingCategories(false))
 
+    listMaterials(storeId)
+      .then(setMaterials)
+      .catch(() => undefined)
+      .finally(() => setIsLoadingMaterials(false))
+
     if (isEditMode) {
       getProduct(Number(id))
         .then((product) => {
           setForm({
-            name: product.name, description: product.description ?? '',
-            imageUrl: product.imageUrl ?? '', material: product.material ?? 'PLA',
-            multicolor: product.multicolor, dimensions: product.dimensions ?? '',
-            isVisible: product.isVisible, categoryId: product.categoryId, storeId,
+            name: product.name,
+            description: product.description ?? '',
+            imageUrl: product.imageUrl ?? '',
+            materialId: product.materialId ?? null,
+            dimensions: product.dimensions ?? '',
+            isVisible: product.isVisible,
+            categoryId: product.categoryId,
+            storeId,
             price: product.price ?? null,
           })
           setOmitPrice(product.price == null)
@@ -151,6 +166,24 @@ export default function ProductFormPage() {
       setCreateCategoryError('Erro ao criar categoria. Tente novamente.')
     } finally {
       setIsCreatingCategory(false)
+    }
+  }
+
+  async function handleCreateMaterial() {
+    const name = newMaterialName.trim()
+    if (!name) return
+    setIsCreatingMaterial(true)
+    setCreateMaterialError(null)
+    try {
+      const created = await createMaterial(name)
+      setMaterials((prev) => [...prev, created])
+      setField('materialId', created.id)
+      setShowNewMaterial(false)
+      setNewMaterialName('')
+    } catch {
+      setCreateMaterialError('Erro ao criar material. Tente novamente.')
+    } finally {
+      setIsCreatingMaterial(false)
     }
   }
 
@@ -279,22 +312,118 @@ export default function ProductFormPage() {
           </FormField>
 
           <div className="grid grid-cols-2 gap-3">
-            <FormField label="Material" required>
-              <select required disabled={isDisabled} value={form.material}
-                onChange={(e) => setField('material', e.target.value)}
-                className={`${inputClass} cursor-pointer`}>
-                {MATERIALS.map((m) => <option key={m} value={m}>{m}</option>)}
-              </select>
+            {/* Categoria */}
+            <FormField label="Categoria" required>
+              {isLoadingCategories ? (
+                <div className="flex items-center gap-2 h-10 px-3">
+                  <span className="w-4 h-4 rounded-full border-2 border-[#e8e2d8] border-t-[#9c8e84] animate-spin" />
+                  <span className="text-sm text-[#9c8e84]">Carregando…</span>
+                </div>
+              ) : (
+                <>
+                  <select
+                    disabled={isDisabled || categories.length === 0 || showNewCategory}
+                    value={form.categoryId || ''}
+                    onChange={(e) => setField('categoryId', Number(e.target.value))}
+                    className={`${inputClass} cursor-pointer`}>
+                    <option value="">{showNewCategory ? 'Definida abaixo…' : 'Selecione'}</option>
+                    {categories.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+                  </select>
+                  {!showNewCategory ? (
+                    <button type="button"
+                      onClick={() => { setShowNewCategory(true); setCreateCategoryError(null) }}
+                      className="mt-2 flex items-center gap-1.5 text-xs text-[#9c8e84] hover:text-[#c9922c] transition-colors">
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                      </svg>
+                      Nova categoria
+                    </button>
+                  ) : (
+                    <div className="mt-2 flex gap-2">
+                      <input autoFocus type="text" value={newCategoryName}
+                        onChange={(e) => { setNewCategoryName(e.target.value); setCreateCategoryError(null) }}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleCreateCategory() } }}
+                        placeholder="Nome da categoria"
+                        className="flex-1 rounded-lg bg-[#f4f1eb] border border-[#e8e2d8] px-3 py-2 text-sm text-[#1c1813] placeholder-[#c4b8ae] focus:outline-none focus:ring-2 focus:ring-[#c9922c]/40 transition-colors" />
+                      <button type="button" disabled={isCreatingCategory || !newCategoryName.trim()}
+                        onClick={handleCreateCategory}
+                        className="px-3 py-2 rounded-lg bg-[#1c1813] hover:bg-[#2c2620] disabled:opacity-60 text-white text-xs font-semibold transition-colors shrink-0">
+                        {isCreatingCategory ? (
+                          <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin block" />
+                        ) : 'Criar'}
+                      </button>
+                      <button type="button"
+                        onClick={() => { setShowNewCategory(false); setNewCategoryName(''); setCreateCategoryError(null) }}
+                        className="px-3 py-2 rounded-lg text-[#9c8e84] hover:text-[#1c1813] hover:bg-[#f4f1eb] text-xs transition-colors shrink-0">
+                        ✕
+                      </button>
+                    </div>
+                  )}
+                  {createCategoryError && <p className="mt-1 text-xs text-red-600">{createCategoryError}</p>}
+                </>
+              )}
             </FormField>
 
-            <FormField label="Dimensões" required hint="ex: 15 × 10 × 8 cm">
-              <input type="text" required disabled={isDisabled}
-                value={form.dimensions}
-                onChange={(e) => setField('dimensions', e.target.value)}
-                placeholder="15 × 10 × 8 cm"
-                className={inputClass} />
+            {/* Material */}
+            <FormField label="Material">
+              {isLoadingMaterials ? (
+                <div className="flex items-center gap-2 h-10 px-3">
+                  <span className="w-4 h-4 rounded-full border-2 border-[#e8e2d8] border-t-[#9c8e84] animate-spin" />
+                  <span className="text-sm text-[#9c8e84]">Carregando…</span>
+                </div>
+              ) : (
+                <>
+                  <select
+                    disabled={isDisabled || showNewMaterial}
+                    value={form.materialId ?? ''}
+                    onChange={(e) => setField('materialId', e.target.value ? Number(e.target.value) : null)}
+                    className={`${inputClass} cursor-pointer`}>
+                    <option value="">{showNewMaterial ? 'Definido abaixo…' : 'Sem material'}</option>
+                    {materials.map((mat) => <option key={mat.id} value={mat.id}>{mat.name}</option>)}
+                  </select>
+                  {!showNewMaterial ? (
+                    <button type="button"
+                      onClick={() => { setShowNewMaterial(true); setCreateMaterialError(null) }}
+                      className="mt-2 flex items-center gap-1.5 text-xs text-[#9c8e84] hover:text-[#c9922c] transition-colors">
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                      </svg>
+                      Novo material
+                    </button>
+                  ) : (
+                    <div className="mt-2 flex gap-2">
+                      <input autoFocus type="text" value={newMaterialName}
+                        onChange={(e) => { setNewMaterialName(e.target.value); setCreateMaterialError(null) }}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleCreateMaterial() } }}
+                        placeholder="Nome do material"
+                        className="flex-1 rounded-lg bg-[#f4f1eb] border border-[#e8e2d8] px-3 py-2 text-sm text-[#1c1813] placeholder-[#c4b8ae] focus:outline-none focus:ring-2 focus:ring-[#c9922c]/40 transition-colors" />
+                      <button type="button" disabled={isCreatingMaterial || !newMaterialName.trim()}
+                        onClick={handleCreateMaterial}
+                        className="px-3 py-2 rounded-lg bg-[#1c1813] hover:bg-[#2c2620] disabled:opacity-60 text-white text-xs font-semibold transition-colors shrink-0">
+                        {isCreatingMaterial ? (
+                          <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin block" />
+                        ) : 'Criar'}
+                      </button>
+                      <button type="button"
+                        onClick={() => { setShowNewMaterial(false); setNewMaterialName(''); setCreateMaterialError(null) }}
+                        className="px-3 py-2 rounded-lg text-[#9c8e84] hover:text-[#1c1813] hover:bg-[#f4f1eb] text-xs transition-colors shrink-0">
+                        ✕
+                      </button>
+                    </div>
+                  )}
+                  {createMaterialError && <p className="mt-1 text-xs text-red-600">{createMaterialError}</p>}
+                </>
+              )}
             </FormField>
           </div>
+
+          <FormField label="Dimensões" hint="ex: 15 × 10 × 8 cm">
+            <input type="text" disabled={isDisabled}
+              value={form.dimensions}
+              onChange={(e) => setField('dimensions', e.target.value)}
+              placeholder="15 × 10 × 8 cm"
+              className={inputClass} />
+          </FormField>
 
           <FormField label="Preço">
             <label className="flex items-center gap-2 cursor-pointer select-none mb-2">
@@ -314,61 +443,7 @@ export default function ProductFormPage() {
             )}
           </FormField>
 
-          <FormField label="Categoria" required>
-            {isLoadingCategories ? (
-              <div className="flex items-center gap-2 h-10 px-3">
-                <span className="w-4 h-4 rounded-full border-2 border-[#e8e2d8] border-t-[#9c8e84] animate-spin" />
-                <span className="text-sm text-[#9c8e84]">Carregando categorias…</span>
-              </div>
-            ) : (
-              <>
-                <select
-                  disabled={isDisabled || categories.length === 0 || showNewCategory}
-                  value={form.categoryId || ''}
-                  onChange={(e) => setField('categoryId', Number(e.target.value))}
-                  className={`${inputClass} cursor-pointer`}>
-                  <option value="">{showNewCategory ? 'Definida pela nova categoria…' : 'Selecione uma categoria'}</option>
-                  {categories.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
-                </select>
-
-                {!showNewCategory ? (
-                  <button type="button"
-                    onClick={() => { setShowNewCategory(true); setCreateCategoryError(null) }}
-                    className="mt-2 flex items-center gap-1.5 text-xs text-[#9c8e84] hover:text-[#c9922c] transition-colors">
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    Nova categoria
-                  </button>
-                ) : (
-                  <div className="mt-2 flex gap-2">
-                    <input autoFocus type="text" value={newCategoryName}
-                      onChange={(e) => { setNewCategoryName(e.target.value); setCreateCategoryError(null) }}
-                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleCreateCategory() } }}
-                      placeholder="Nome da nova categoria"
-                      className="flex-1 rounded-lg bg-[#f4f1eb] border border-[#e8e2d8] px-3 py-2 text-sm text-[#1c1813] placeholder-[#c4b8ae] focus:outline-none focus:ring-2 focus:ring-[#c9922c]/40 transition-colors" />
-                    <button type="button" disabled={isCreatingCategory || !newCategoryName.trim()}
-                      onClick={handleCreateCategory}
-                      className="px-3 py-2 rounded-lg bg-[#1c1813] hover:bg-[#2c2620] disabled:opacity-60 text-white text-xs font-semibold transition-colors shrink-0">
-                      {isCreatingCategory ? (
-                        <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin block" />
-                      ) : 'Criar'}
-                    </button>
-                    <button type="button"
-                      onClick={() => { setShowNewCategory(false); setNewCategoryName(''); setCreateCategoryError(null) }}
-                      className="px-3 py-2 rounded-lg text-[#9c8e84] hover:text-[#1c1813] hover:bg-[#f4f1eb] text-xs transition-colors shrink-0">
-                      Cancelar
-                    </button>
-                  </div>
-                )}
-                {createCategoryError && <p className="mt-1 text-xs text-red-600">{createCategoryError}</p>}
-              </>
-            )}
-          </FormField>
-
-          <div className="flex flex-col sm:flex-row gap-5 py-2">
-            <Toggle label="Multicolorido" description="Produto em mais de uma cor"
-              checked={form.multicolor} disabled={isDisabled} onChange={(v) => setField('multicolor', v)} />
+          <div className="py-2">
             <Toggle label="Visível na loja" description="Clientes podem ver este produto"
               checked={form.isVisible} disabled={isDisabled} onChange={(v) => setField('isVisible', v)} />
           </div>

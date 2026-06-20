@@ -12,6 +12,7 @@ import DashboardPage from './pages/admin/DashboardPage'
 import ProductManagement from './pages/admin/ProductManagement'
 import ProductFormPage from './pages/admin/ProductFormPage'
 import CategoriesPage from './pages/admin/CategoriesPage'
+import MaterialsPage from './pages/admin/MaterialsPage'
 import SettingsPage from './pages/admin/SettingsPage'
 
 function PublicOnlyRoute() {
@@ -47,6 +48,7 @@ export default function App() {
               <Route path="/admin/products/new" element={<ProductFormPage />} />
               <Route path="/admin/products/edit/:id" element={<ProductFormPage />} />
               <Route path="/admin/categories" element={<CategoriesPage />} />
+              <Route path="/admin/materials" element={<MaterialsPage />} />
               <Route path="/admin/settings" element={<SettingsPage />} />
             </Route>
           </Route>

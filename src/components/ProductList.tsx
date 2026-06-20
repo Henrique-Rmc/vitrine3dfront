@@ -9,6 +9,9 @@ export interface ProductListProps {
   featuredIds?: number[]
   onToggleFeatured?: (id: number) => void
   onReorder?: (newProducts: Product[]) => void
+  reorderMode?: boolean
+  onMoveUp?: (id: number) => void
+  onMoveDown?: (id: number) => void
 }
 
 const DragHandle = () => (
@@ -65,7 +68,8 @@ function Thumbnail({ src, alt }: { src: string; alt: string }) {
   )
 }
 
-function MaterialBadge({ material }: { material: string }) {
+function MaterialBadge({ material }: { material: string | null | undefined }) {
+  if (!material) return null
   const colors = MATERIAL_BADGE[material] ?? 'bg-stone-100 text-stone-500 border-stone-200'
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border ${colors}`}>
@@ -90,12 +94,13 @@ function StatusBadge({ isVisible }: { isVisible: boolean }) {
 export default function ProductList({
   products, onEdit, onDelete, deletingId,
   featuredIds = [], onToggleFeatured, onReorder,
+  reorderMode = false, onMoveUp, onMoveDown,
 }: ProductListProps) {
   const [draggedId, setDraggedId] = useState<number | null>(null)
   const [dragOverId, setDragOverId] = useState<number | null>(null)
 
-  const sortable    = !!onReorder
-  const hasFeatured = !!onToggleFeatured
+  const sortable    = !!onReorder && !reorderMode
+  const hasFeatured = !!onToggleFeatured && !reorderMode
   const MAX_FEATURED = 3
 
   function startDrag(e: React.DragEvent, id: number) {
@@ -172,13 +177,37 @@ export default function ProductList({
           )}
         </td>
         <td className="px-4 py-3">
-          <MaterialBadge material={product.material} />
+          <MaterialBadge material={product.materialName} />
         </td>
         <td className="px-4 py-3">
           <StatusBadge isVisible={product.isVisible} />
         </td>
         <td className="px-4 py-3">
           <div className="flex items-center justify-end gap-1">
+            {reorderMode && (
+              <>
+                <button
+                  onClick={() => onMoveUp?.(product.id)}
+                  disabled={idx === 0}
+                  title="Mover para cima"
+                  className="p-2 rounded-lg text-[#9c8e84] hover:text-[#1c1813] hover:bg-[#f4f1eb] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => onMoveDown?.(product.id)}
+                  disabled={idx === products.length - 1}
+                  title="Mover para baixo"
+                  className="p-2 rounded-lg text-[#9c8e84] hover:text-[#1c1813] hover:bg-[#f4f1eb] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </button>
+              </>
+            )}
             {hasFeatured && (
               <button
                 onClick={() => onToggleFeatured?.(product.id)}
@@ -247,12 +276,34 @@ export default function ProductList({
             {isFeatured && <StarIcon filled />}
           </div>
           <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-            <MaterialBadge material={product.material} />
+            <MaterialBadge material={product.materialName} />
             <StatusBadge isVisible={product.isVisible} />
           </div>
         </div>
 
         <div className="flex items-center gap-0.5 shrink-0">
+          {reorderMode && (
+            <>
+              <button
+                onClick={() => onMoveUp?.(product.id)}
+                disabled={products.indexOf(product) === 0}
+                className="p-2 rounded-lg text-[#9c8e84] hover:text-[#1c1813] hover:bg-[#f4f1eb] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+                </svg>
+              </button>
+              <button
+                onClick={() => onMoveDown?.(product.id)}
+                disabled={products.indexOf(product) === products.length - 1}
+                className="p-2 rounded-lg text-[#9c8e84] hover:text-[#1c1813] hover:bg-[#f4f1eb] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+              </button>
+            </>
+          )}
           {hasFeatured && (
             <button
               onClick={() => onToggleFeatured?.(product.id)}

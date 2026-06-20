@@ -12,6 +12,10 @@
   ],
   "tags": [
     {
+      "name": "Materiais",
+      "description": "Gerenciamento de materiais globais e por loja"
+    },
+    {
       "name": "Produtos",
       "description": "Gerenciamento de produtos da vitrine"
     },
@@ -200,13 +204,104 @@
         }
       }
     },
+    "/api/products/reorder": {
+      "put": {
+        "tags": [
+          "Produtos"
+        ],
+        "summary": "Reordena produtos da loja (requer autenticação)",
+        "description": "Recebe uma lista de IDs de produtos na nova ordem desejada. O sortOrder de cada produto é atualizado para o índice correspondente na lista (0, 1, 2...). Todos os produtos devem pertencer à loja autenticada.",
+        "operationId": "reorder",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "example": [42, 7, 15, 3]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/materials/{id}": {
+      "put": {
+        "tags": [
+          "Materiais"
+        ],
+        "summary": "Atualiza nome de um material da loja autenticada",
+        "operationId": "update_2",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MaterialCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Materiais"
+        ],
+        "summary": "Remove um material da loja autenticada",
+        "operationId": "delete_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/categories/{id}": {
       "put": {
         "tags": [
           "Categorias"
         ],
         "summary": "Atualiza nome de uma categoria da loja autenticada",
-        "operationId": "update_2",
+        "operationId": "update_3",
         "parameters": [
           {
             "name": "id",
@@ -246,7 +341,7 @@
           "Categorias"
         ],
         "summary": "Remove uma categoria da loja autenticada",
-        "operationId": "delete_1",
+        "operationId": "delete_2",
         "parameters": [
           {
             "name": "id",
@@ -440,13 +535,66 @@
         }
       }
     },
+    "/api/materials": {
+      "get": {
+        "tags": [
+          "Materiais"
+        ],
+        "summary": "Lista apenas materiais globais (público)",
+        "operationId": "findPublic",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MaterialResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Materiais"
+        ],
+        "summary": "Cria um novo material para a loja autenticada",
+        "operationId": "create_1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MaterialCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/categories": {
       "get": {
         "tags": [
           "Categorias"
         ],
         "summary": "Lista apenas categorias globais (público)",
-        "operationId": "findPublic",
+        "operationId": "findPublic_1",
         "responses": {
           "200": {
             "description": "OK",
@@ -468,7 +616,7 @@
           "Categorias"
         ],
         "summary": "Cria uma nova categoria para a loja autenticada",
-        "operationId": "create_1",
+        "operationId": "create_2",
         "requestBody": {
           "content": {
             "application/json": {
@@ -593,7 +741,7 @@
         "tags": [
           "Usuários"
         ],
-        "summary": "Perfil público da loja por slug",
+        "summary": "Perfil público da loja por slug. Retorna 301 se o slug for histórico.",
         "operationId": "getBySlug",
         "parameters": [
           {
@@ -634,6 +782,66 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 15
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageResponseProductResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/store/{storeId}/search": {
+      "get": {
+        "tags": [
+          "Produtos"
+        ],
+        "summary": "Busca produtos visíveis com filtros combinados (público)",
+        "operationId": "search",
+        "parameters": [
+          {
+            "name": "storeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ProductFilter"
             }
           },
           {
@@ -758,6 +966,41 @@
         }
       }
     },
+    "/api/materials/store/{storeId}": {
+      "get": {
+        "tags": [
+          "Materiais"
+        ],
+        "summary": "Lista materiais globais + materiais da loja (público)",
+        "operationId": "findByStore",
+        "parameters": [
+          {
+            "name": "storeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MaterialResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/locations/states": {
       "get": {
         "tags": [
@@ -823,7 +1066,7 @@
           "Categorias"
         ],
         "summary": "Lista categorias globais + categorias da loja (público)",
-        "operationId": "findByStore",
+        "operationId": "findByStore_1",
         "parameters": [
           {
             "name": "storeId",
@@ -965,20 +1208,16 @@
             "maxLength": 2000,
             "minLength": 0
           },
-          "material": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 0
-          },
-          "multicolor": {
-            "type": "boolean"
-          },
           "dimensions": {
             "type": "string",
             "maxLength": 100,
             "minLength": 0
           },
           "categoryId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "materialId": {
             "type": "integer",
             "format": "int64"
           },
@@ -1010,12 +1249,6 @@
           "imageUrl": {
             "type": "string"
           },
-          "material": {
-            "type": "string"
-          },
-          "multicolor": {
-            "type": "boolean"
-          },
           "dimensions": {
             "type": "string"
           },
@@ -1035,6 +1268,13 @@
           "categoryName": {
             "type": "string"
           },
+          "materialId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "materialName": {
+            "type": "string"
+          },
           "storeId": {
             "type": "string",
             "format": "uuid"
@@ -1045,6 +1285,38 @@
           "clickCount": {
             "type": "integer",
             "format": "int64"
+          }
+        }
+      },
+      "MaterialCreateRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 2
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "MaterialResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "isGlobal": {
+            "type": "boolean"
+          },
+          "storeId": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },
@@ -1159,20 +1431,16 @@
             "maxLength": 2000,
             "minLength": 0
           },
-          "material": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 0
-          },
-          "multicolor": {
-            "type": "boolean"
-          },
           "dimensions": {
             "type": "string",
             "maxLength": 100,
             "minLength": 0
           },
           "categoryId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "materialId": {
             "type": "integer",
             "format": "int64"
           },
@@ -1187,7 +1455,6 @@
         },
         "required": [
           "categoryId",
-          "multicolor",
           "name",
           "storeId"
         ]
@@ -1284,6 +1551,28 @@
           },
           "last": {
             "type": "boolean"
+          }
+        }
+      },
+      "ProductFilter": {
+        "type": "object",
+        "properties": {
+          "keyword": {
+            "type": "string"
+          },
+          "categoryId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "materialId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "minPrice": {
+            "type": "number"
+          },
+          "maxPrice": {
+            "type": "number"
           }
         }
       },

@@ -24,13 +24,20 @@ export interface Category {
   storeId: string
 }
 
+export interface Material {
+  id: number
+  name: string
+  isGlobal: boolean
+  storeId: string
+}
+
 export interface Product {
   id: number
   name: string
   description: string | null
   imageUrl: string | null
-  material: string | null
-  multicolor: boolean
+  materialId: number | null
+  materialName: string | null
   dimensions: string | null
   isVisible: boolean
   categoryId: number
