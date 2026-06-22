@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import StoreProfileHeader from '../components/StoreProfileHeader'
 import CategoryBar from '../components/CategoryBar'
 import HeroSection from '../components/HeroSection'
@@ -13,6 +14,7 @@ const SKELETON_COUNT = 8
 
 export default function StorePage() {
   const { storeSlug = '' } = useParams<{ storeSlug: string }>()
+  const { isAuthenticated } = useAuth()
   const {
     storeName,
     storeDescription,
@@ -48,13 +50,19 @@ export default function StorePage() {
     [products],
   )
 
+  const featuredProductIds = useMemo(
+    () => new Set(featuredProducts.map((p) => p.id)),
+    [featuredProducts],
+  )
+
   const catalogProducts = useMemo(() => {
     return visibleProducts.filter((p) => {
+      if (activeCategoryId === null && activeMaterialId === null && featuredProductIds.has(p.id)) return false
       if (activeCategoryId !== null && p.categoryId !== activeCategoryId) return false
       if (activeMaterialId !== null && p.materialId !== activeMaterialId) return false
       return true
     })
-  }, [visibleProducts, activeCategoryId, activeMaterialId])
+  }, [visibleProducts, activeCategoryId, activeMaterialId, featuredProductIds])
 
   const selectedCategoryName = selectedProduct
     ? (categories.find((c) => c.id === selectedProduct.categoryId)?.name ?? '')
@@ -162,8 +170,8 @@ export default function StorePage() {
         </section>
       </div>
 
-      {/* WhatsApp floating button — mobile only */}
-      {!loading && whatsappNumber && (
+      {/* WhatsApp floating button — mobile only, hidden for logged-in admins */}
+      {!loading && whatsappNumber && !isAuthenticated && (
         <div className="fixed bottom-6 right-4 z-40 sm:hidden">
           <a
             href={`https://wa.me/${whatsappNumber}`}

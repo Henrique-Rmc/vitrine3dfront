@@ -19,8 +19,8 @@ interface ProductModalProps {
 }
 
 export default function ProductModal({ product, whatsappNumber, categoryName, onClose }: ProductModalProps) {
-  const { name, imageUrl, material, multicolor, dimensions, description } = product
-  const badgeStyle = MATERIAL_BADGE[material ?? ''] ?? defaultBadge
+  const { name, imageUrl, materialName, dimensions, description } = product
+  const badgeStyle = MATERIAL_BADGE[materialName ?? ''] ?? defaultBadge
   const whatsappUrl = buildWhatsAppUrl(whatsappNumber, name)
 
   useEffect(() => {
@@ -58,12 +58,6 @@ export default function ProductModal({ product, whatsappNumber, categoryName, on
             </div>
           )}
 
-          {multicolor && (
-            <span className="absolute top-3 left-3 rounded-full bg-white/90 backdrop-blur-sm px-2.5 py-1 text-[11px] font-medium text-[#6b5d52] border border-[#e8e2d8]">
-              Multicolor
-            </span>
-          )}
-
           <button
             onClick={onClose}
             aria-label="Fechar"
@@ -83,12 +77,12 @@ export default function ProductModal({ product, whatsappNumber, categoryName, on
           </div>
 
           <dl className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-3 text-sm border-t border-[#f0ece5] pt-4">
-            {material && (
+            {materialName && (
               <>
                 <dt className="text-[#9c8e84] self-center">Material</dt>
                 <dd>
                   <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${badgeStyle}`}>
-                    {material}
+                    {materialName}
                   </span>
                 </dd>
               </>
@@ -100,11 +94,6 @@ export default function ProductModal({ product, whatsappNumber, categoryName, on
                 <dd className="text-[#6b5d52] font-mono text-xs">{dimensions}</dd>
               </>
             )}
-
-            <dt className="text-[#9c8e84] self-center">Multicolor</dt>
-            <dd className={multicolor ? 'text-green-600 font-medium' : 'text-[#c4b8ae]'}>
-              {multicolor ? '✓ Sim' : '— Não'}
-            </dd>
 
             {product.price != null && (
               <>

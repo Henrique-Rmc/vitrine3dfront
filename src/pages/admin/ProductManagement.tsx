@@ -131,7 +131,7 @@ export default function ProductManagement() {
   }
 
   function handleReorder(newProducts: Product[]) {
-    setProducts(newProducts)
+    setPendingOrder(newProducts)
   }
 
   async function handleDelete(id: number) {
@@ -214,7 +214,7 @@ export default function ProductManagement() {
               <button
                 onClick={saveReorder}
                 disabled={isSavingOrder}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#1c1813] hover:bg-[#2c2620] text-white text-sm font-semibold transition-colors disabled:opacity-60"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#c9922c] hover:bg-[#b8821e] text-white text-sm font-semibold transition-colors disabled:opacity-60"
               >
                 {isSavingOrder ? (
                   <>
@@ -275,8 +275,8 @@ export default function ProductManagement() {
         </div>
       )}
 
-      {featuredIds.length > 0 && !reorderMode && (
-        <p className="mb-3 text-xs text-[#9c8e84]">
+      {!reorderMode && (
+        <p className="mb-3 text-[1.2rem] text-[#9c8e84]">
           <span className="text-[#c9922c]">★</span>{' '}
           {featuredIds.length}/3 produto{featuredIds.length !== 1 ? 's' : ''} em destaque
         </p>

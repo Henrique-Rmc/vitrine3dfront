@@ -99,7 +99,7 @@ export default function ProductList({
   const [draggedId, setDraggedId] = useState<number | null>(null)
   const [dragOverId, setDragOverId] = useState<number | null>(null)
 
-  const sortable    = !!onReorder && !reorderMode
+  const sortable    = !!onReorder && reorderMode
   const hasFeatured = !!onToggleFeatured && !reorderMode
   const MAX_FEATURED = 3
 

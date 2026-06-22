@@ -55,7 +55,7 @@ export default function MainLayout() {
         </main>
 
         <footer className="mt-16 border-t border-[#e8e2d8] py-8 text-center text-sm text-[#c4b8ae]">
-          © {new Date().getFullYear()} Vitrine Artesã &mdash; Conectando criadores ao seu público
+          © {new Date().getFullYear()} VitreIn &mdash; Conectando criadores ao seu público
         </footer>
       </div>
 

@@ -1,4 +1,5 @@
 import { NavLink, Link } from 'react-router-dom'
+import Logo from './Logo'
 
 export interface NavItem {
   to: string
@@ -27,11 +28,8 @@ export default function AdminSidebar({
     <aside className="hidden md:flex fixed left-0 top-0 h-full w-60 z-40 flex-col bg-white border-r border-[#e8e2d8]">
       {/* Brand */}
       <div className="h-16 flex items-center gap-2.5 px-5 border-b border-[#e8e2d8] shrink-0">
-        <Link
-          to="/"
-          className="text-base font-bold text-[#1c1813] hover:text-[#2c2620] transition-colors tracking-tight"
-        >
-          Vitrine Artesã
+        <Link to="/" className="hover:opacity-80 transition-opacity">
+          <Logo height={26} />
         </Link>
         <span className="text-[10px] font-semibold uppercase tracking-widest text-[#9c8e84] bg-[#f4f1eb] px-1.5 py-0.5 rounded">
           Admin

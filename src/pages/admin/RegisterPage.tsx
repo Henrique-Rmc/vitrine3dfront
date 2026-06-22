@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import RegisterForm from './RegisterForm'
+import Logo from '../../components/Logo'
 
 export default function RegisterPage() {
   return (
@@ -10,7 +11,7 @@ export default function RegisterPage() {
             to="/"
             className="inline-block mb-4"
           >
-            <span className="font-display text-2xl font-bold text-[#1c1813]">Vitrine Artesã</span>
+            <Logo height={40} />
           </Link>
           <h1 className="text-2xl font-bold text-[#1c1813]">Criar minha vitrine</h1>
           <p className="text-sm text-[#9c8e84] mt-1">

@@ -2,6 +2,7 @@ import { useNavigate, Outlet, NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import AdminSidebar from '../components/AdminSidebar'
 import type { NavItem } from '../components/AdminSidebar'
+import Logo from '../components/Logo'
 
 const NAV_ITEMS: NavItem[] = [
   {
@@ -59,7 +60,7 @@ export default function AdminLayout() {
       <div className="flex-1 flex flex-col min-w-0 md:ml-60">
         {/* Mobile top bar */}
         <header className="md:hidden sticky top-0 z-30 bg-white border-b border-[#e8e2d8] h-14 px-4 flex items-center justify-between shrink-0 shadow-sm">
-          <span className="font-bold text-[#1c1813] text-sm tracking-tight">Vitrine Artesã</span>
+          <Logo height={22} />
           <div className="flex items-center gap-3">
             <span className="text-xs text-[#9c8e84] font-medium truncate max-w-32">{user?.storeName ?? user?.email}</span>
             <button

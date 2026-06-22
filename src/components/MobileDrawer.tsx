@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import Logo from './Logo'
 
 interface MobileDrawerProps {
   isOpen: boolean
@@ -48,7 +49,7 @@ export default function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 h-16 border-b border-[#e8e2d8] shrink-0">
-          <span className="text-xl font-bold text-[#1c1813] tracking-tight">Vitrine Artesã</span>
+          <Logo height={24} />
           <button
             onClick={onClose}
             className="p-2 rounded-lg text-[#9c8e84] hover:text-[#1c1813] hover:bg-[#f4f1eb] transition-colors"
@@ -91,7 +92,7 @@ export default function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
 
         {/* Footer */}
         <div className="p-4 border-t border-[#e8e2d8]">
-          <p className="text-xs text-[#c4b8ae] text-center">Vitrine Artesã &copy; {new Date().getFullYear()}</p>
+          <p className="text-xs text-[#c4b8ae] text-center">VitreIn &copy; {new Date().getFullYear()}</p>
         </div>
       </aside>
     </>

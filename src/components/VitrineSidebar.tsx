@@ -1,5 +1,6 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import Logo from './Logo'
 
 const ADMIN_NAV = [
   {
@@ -44,8 +45,8 @@ export default function VitrineSidebar() {
       <aside className="hidden md:flex fixed left-0 top-0 h-full w-60 z-40 flex-col bg-white border-r border-[#e8e2d8]">
         {/* Brand */}
         <div className="h-16 flex items-center gap-2.5 px-5 border-b border-[#e8e2d8] shrink-0">
-          <Link to="/" className="text-base font-bold text-[#1c1813] hover:text-[#2c2620] transition-colors tracking-tight">
-            Vitrine Artesã
+          <Link to="/" className="hover:opacity-80 transition-opacity">
+            <Logo height={26} />
           </Link>
           <span className="text-[10px] font-semibold uppercase tracking-widest text-[#9c8e84] bg-[#f4f1eb] px-1.5 py-0.5 rounded">
             Admin
@@ -114,8 +115,8 @@ export default function VitrineSidebar() {
     <aside className="hidden md:flex fixed left-0 top-0 h-full w-60 z-40 flex-col bg-white border-r border-[#e8e2d8]">
       {/* Brand */}
       <div className="h-16 flex items-center px-5 border-b border-[#e8e2d8] shrink-0">
-        <Link to="/" className="text-base font-bold text-[#1c1813] hover:text-[#2c2620] transition-colors tracking-tight">
-          Vitrine Artesã
+        <Link to="/" className="hover:opacity-80 transition-opacity">
+          <Logo height={26} />
         </Link>
       </div>
 
@@ -152,7 +153,7 @@ export default function VitrineSidebar() {
       {/* Footer */}
       <div className="p-4 border-t border-[#e8e2d8] shrink-0">
         <p className="text-[10px] text-[#c4b8ae] text-center">
-          Vitrine Artesã &copy; {new Date().getFullYear()}
+          VitreIn &copy; {new Date().getFullYear()}
         </p>
       </div>
     </aside>

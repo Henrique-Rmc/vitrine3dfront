@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import Logo from '../components/Logo'
 
 const DEMO_STORE_SLUG = 'printlab3d'
 
@@ -41,9 +42,7 @@ export default function PlatformLandingPage() {
       {/* Nav */}
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-[#e8e2d8]">
         <div className="max-w-5xl mx-auto px-5 sm:px-8 h-14 flex items-center justify-between gap-4">
-          <span className="font-display text-xl font-bold text-[#1c1813] tracking-tight">
-            Vitrine Artesã
-          </span>
+          <Logo height={28} />
           <div className="flex items-center gap-3">
             <Link to="/admin/login"
               className="text-sm text-[#9c8e84] hover:text-[#1c1813] transition-colors font-medium">
@@ -161,7 +160,7 @@ export default function PlatformLandingPage() {
       </main>
 
       <footer className="border-t border-[#e8e2d8] py-6 text-center text-xs text-[#c4b8ae]">
-        Vitrine Artesã &mdash; {new Date().getFullYear()}
+        VitreIn &mdash; {new Date().getFullYear()}
       </footer>
     </div>
   )

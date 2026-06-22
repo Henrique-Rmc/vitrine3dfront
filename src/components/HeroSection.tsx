@@ -23,8 +23,6 @@ export default function HeroSection({ products, whatsappNumber, onOpenModal }: H
 
   if (products.length === 0) return null
 
-  const [main, ...rest] = products
-
   function onScroll() {
     const el = trackRef.current
     if (!el) return
@@ -45,25 +43,20 @@ export default function HeroSection({ products, whatsappNumber, onOpenModal }: H
   }
 
   return (
-    <section className="mb-10">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9c8e84] mb-4">
+    <section className="mb-8">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9c8e84] mb-3">
         Em Destaque
       </p>
 
-      {/* Mobile: snap carousel */}
+      {/* Mobile: snap carousel — cards at 60% width, larger que os padrão de 50% grid */}
       <div
         ref={trackRef}
         onScroll={onScroll}
         className="lg:hidden flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-none"
       >
         {products.map((p) => (
-          <div key={p.id} className="snap-start shrink-0 w-[78%]">
-            <HeroCard
-              product={p}
-              whatsappNumber={whatsappNumber}
-              large
-              onOpenModal={onOpenModal}
-            />
+          <div key={p.id} className="snap-start shrink-0 w-[60%]">
+            <HeroCard product={p} whatsappNumber={whatsappNumber} onOpenModal={onOpenModal} />
           </div>
         ))}
       </div>
@@ -86,22 +79,10 @@ export default function HeroSection({ products, whatsappNumber, onOpenModal }: H
         </div>
       )}
 
-      {/* Desktop: bento grid */}
-      <div className="hidden lg:grid gap-4 grid-cols-2 grid-rows-2">
-        <HeroCard
-          product={main}
-          whatsappNumber={whatsappNumber}
-          large
-          className="row-span-2"
-          onOpenModal={onOpenModal}
-        />
-        {rest.slice(0, 2).map((p) => (
-          <HeroCard
-            key={p.id}
-            product={p}
-            whatsappNumber={whatsappNumber}
-            onOpenModal={onOpenModal}
-          />
+      {/* Desktop: linha de cards maiores que os padrão (3 cols vs 4 cols no grid normal) */}
+      <div className="hidden lg:grid gap-4 grid-cols-3">
+        {products.slice(0, 3).map((p) => (
+          <HeroCard key={p.id} product={p} whatsappNumber={whatsappNumber} onOpenModal={onOpenModal} />
         ))}
       </div>
     </section>
@@ -111,23 +92,21 @@ export default function HeroSection({ products, whatsappNumber, onOpenModal }: H
 interface HeroCardProps {
   product: Product
   whatsappNumber: string
-  large?: boolean
-  className?: string
   onOpenModal: (product: Product) => void
 }
 
-function HeroCard({ product, whatsappNumber, large = false, className = '', onOpenModal }: HeroCardProps) {
-  const { name, imageUrl, material, description } = product
-  const badgeStyle = MATERIAL_BADGE[material ?? ''] ?? defaultBadge
+function HeroCard({ product, whatsappNumber, onOpenModal }: HeroCardProps) {
+  const { name, imageUrl, materialName, description } = product
+  const badgeStyle = MATERIAL_BADGE[materialName ?? ''] ?? defaultBadge
   const whatsappUrl = buildWhatsAppUrl(whatsappNumber, name)
 
   return (
     <article
-      className={`group bg-white border border-[#e8e2d8] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col ${className}`}
+      className="group bg-white border border-[#e8e2d8] rounded-xl overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col"
       onClick={() => onOpenModal(product)}
     >
-      {/* Image */}
-      <div className={`relative overflow-hidden bg-[#f4f1eb] ${large ? 'aspect-3/4 lg:aspect-auto lg:flex-1' : 'aspect-video'}`}>
+      {/* Imagem quadrada — mesmo padrão do ProductCard */}
+      <div className="relative aspect-square overflow-hidden bg-[#f4f1eb]">
         {imageUrl ? (
           <img
             src={imageUrl}
@@ -143,33 +122,33 @@ function HeroCard({ product, whatsappNumber, large = false, className = '', onOp
         )}
       </div>
 
-      {/* Content */}
-      <div className="p-4 sm:p-5 flex flex-col gap-3">
-        <div>
-          {material && (
-            <span className={`inline-block rounded-full border px-2.5 py-0.5 text-[10px] font-semibold mb-2 ${badgeStyle}`}>
-              {material}
-            </span>
-          )}
-          <h3 className={`font-bold text-[#1c1813] leading-tight ${large ? 'text-xl' : 'text-base'}`}>
-            {name}
-          </h3>
-          {product.price != null && (
-            <p className={`text-[#c9922c] font-bold mt-1 ${large ? 'text-lg' : 'text-base'}`}>
-              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)}
-            </p>
-          )}
-          {large && description && (
-            <p className="text-sm text-[#6b5d52] line-clamp-2 mt-1.5">{description}</p>
-          )}
-        </div>
+      {/* Conteúdo — mesma estrutura do ProductCard, mas com texto maior */}
+      <div className="p-4 flex flex-col gap-2.5 flex-1">
+        {materialName && (
+          <span className={`self-start rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${badgeStyle}`}>
+            {materialName}
+          </span>
+        )}
+
+        <h3 className="text-base font-semibold text-[#1c1813] leading-snug line-clamp-2 flex-1">{name}</h3>
+
+        {description && (
+          <p className="text-xs text-[#6b5d52] line-clamp-2">{description}</p>
+        )}
+
+        {product.price != null && (
+          <p className="text-base font-bold text-[#c9922c]">
+            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)}
+          </p>
+        )}
 
         <a
           href={whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"
           onClick={(e) => { e.stopPropagation(); registerWhatsAppClick(product.id) }}
-          className="inline-flex items-center gap-2 rounded-lg bg-green-600 hover:bg-green-500 active:bg-green-700 px-4 py-2.5 text-sm font-semibold text-white transition-colors"
+          className="flex items-center justify-center gap-2 rounded-lg bg-green-600 hover:bg-green-500 active:bg-green-700 px-3 py-2.5 text-sm font-semibold text-white transition-colors"
+          aria-label={`${product.price != null ? 'Fazer pedido' : 'Solicitar orçamento'} para ${name} via WhatsApp`}
         >
           <WhatsAppIcon />
           {product.price != null ? 'Fazer Pedido' : 'Solicitar Orçamento'}

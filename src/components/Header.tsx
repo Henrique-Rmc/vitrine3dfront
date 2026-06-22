@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import Logo from './Logo'
 
 interface HeaderProps {
   mobileMenuOpen: boolean
@@ -11,10 +12,8 @@ export default function Header({ mobileMenuOpen, toggleMobileMenu, showHamburger
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-[#e8e2d8]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <Link to="/" className="shrink-0">
-            <span className="text-xl font-bold text-[#1c1813] tracking-tight">
-              Vitrine Artesã
-            </span>
+          <Link to="/" className="shrink-0 hover:opacity-80 transition-opacity">
+            <Logo height={30} />
           </Link>
 
           <button

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import Logo from '../../components/Logo'
 
 export default function LoginPage() {
   const { login } = useAuth()
@@ -38,7 +39,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-block mb-4">
-            <span className="font-display text-2xl font-bold text-[#1c1813]">Vitrine Artesã</span>
+            <Logo height={40} />
           </Link>
           <h1 className="text-xl font-bold text-[#1c1813]">Entrar no painel</h1>
           <p className="text-sm text-[#9c8e84] mt-1">Acesso restrito ao proprietário da loja</p>

@@ -17,8 +17,8 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, whatsappNumber, onOpenModal }: ProductCardProps) {
-  const { name, imageUrl, material, multicolor } = product
-  const badgeStyle = MATERIAL_BADGE[material ?? ''] ?? defaultBadge
+  const { name, imageUrl, materialName } = product
+  const badgeStyle = MATERIAL_BADGE[materialName ?? ''] ?? defaultBadge
   const whatsappUrl = buildWhatsAppUrl(whatsappNumber, name)
 
   return (
@@ -43,19 +43,13 @@ export default function ProductCard({ product, whatsappNumber, onOpenModal }: Pr
           </div>
         )}
 
-        {/* Multicolor pill */}
-        {multicolor && (
-          <span className="absolute top-2 right-2 rounded-full bg-white/90 backdrop-blur-sm px-2 py-0.5 text-[10px] font-medium text-[#6b5d52] border border-[#e8e2d8]">
-            Multicolor
-          </span>
-        )}
       </div>
 
       {/* Content */}
       <div className="p-3 flex flex-col gap-2 flex-1">
-        {material && (
+        {materialName && (
           <span className={`self-start rounded-full border px-2 py-0.5 text-[10px] font-semibold ${badgeStyle}`}>
-            {material}
+            {materialName}
           </span>
         )}
 
