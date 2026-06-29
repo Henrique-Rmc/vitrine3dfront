@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { registerUser, uploadLogo } from '../../services/authService'
 import { listStates, listCitiesByState, type BrazilState, type BrazilCity } from '../../services/locationService'
+import { compressImage } from '../../services/imageOptimizationService'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -143,6 +144,7 @@ export default function RegisterForm() {
 
   const [logoFile, setLogoFile]             = useState<File | null>(null)
   const [logoPreview, setLogoPreview]       = useState<string | null>(null)
+  const [isOptimizingLogo, setIsOptimizingLogo] = useState(false)
   const [showPassword, setShowPassword]     = useState(false)
   const [isCustomCity, setIsCustomCity]     = useState(false)
   const [customCityName, setCustomCityName] = useState('')
@@ -205,10 +207,18 @@ export default function RegisterForm() {
     }
   }
 
-  function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null
-    setLogoFile(file)
-    setLogoPreview(file ? URL.createObjectURL(file) : null)
+    if (!file) return
+    setIsOptimizingLogo(true)
+    setLogoPreview(URL.createObjectURL(file))
+    try {
+      const compressed = await compressImage(file)
+      setLogoFile(compressed)
+      setLogoPreview(URL.createObjectURL(compressed))
+    } finally {
+      setIsOptimizingLogo(false)
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -394,11 +404,16 @@ export default function RegisterForm() {
       <FormField label="Logo da loja" hint="PNG, JPG ou WebP · pode ser adicionado depois nas Configurações">
         <button
           type="button"
-          disabled={isLoading}
+          disabled={isLoading || isOptimizingLogo}
           onClick={() => fileInputRef.current?.click()}
           className="w-full rounded-lg border-2 border-dashed border-[#e8e2d8] hover:border-[#d4cec5] bg-[#f4f1eb]/60 hover:bg-[#f4f1eb] transition-colors px-4 py-5 flex flex-col items-center gap-2 disabled:opacity-50"
         >
-          {logoPreview ? (
+          {isOptimizingLogo ? (
+            <>
+              <span className="w-6 h-6 rounded-full border-2 border-[#e8e2d8] border-t-[#c9922c] animate-spin" />
+              <span className="text-xs text-[#9c8e84]">Optimizing image...</span>
+            </>
+          ) : logoPreview ? (
             <>
               <img src={logoPreview} alt="Logo preview" className="w-14 h-14 rounded-full object-cover border-2 border-[#e8e2d8]" />
               <span className="text-xs text-[#9c8e84]">{logoFile?.name}</span>

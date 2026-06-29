@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { updateUserProfile, uploadLogo } from '../../services/authService'
+import { compressImage } from '../../services/imageOptimizationService'
 
 const inputClass =
   'w-full rounded-lg bg-[#f4f1eb] border border-[#e8e2d8] px-3 py-2.5 text-sm text-[#1c1813] placeholder-[#c4b8ae] focus:outline-none focus:ring-2 focus:ring-[#c9922c]/40 focus:border-[#c9922c]/60 transition-colors'
@@ -22,6 +23,7 @@ export default function SettingsPage() {
   const logoInputRef                    = useRef<HTMLInputElement>(null)
   const [logoFile, setLogoFile]         = useState<File | null>(null)
   const [logoPreview, setLogoPreview]   = useState<string | null>(user?.logoUrl || null)
+  const [isOptimizingLogo, setIsOptimizingLogo] = useState(false)
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
   const [logoSuccess, setLogoSuccess]   = useState(false)
   const [logoError, setLogoError]       = useState<string | null>(null)
@@ -54,13 +56,20 @@ export default function SettingsPage() {
     }
   }
 
-  function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    setLogoFile(file)
-    setLogoPreview(URL.createObjectURL(file))
+    setIsOptimizingLogo(true)
     setLogoError(null)
     setLogoSuccess(false)
+    setLogoPreview(URL.createObjectURL(file))
+    try {
+      const compressed = await compressImage(file)
+      setLogoFile(compressed)
+      setLogoPreview(URL.createObjectURL(compressed))
+    } finally {
+      setIsOptimizingLogo(false)
+    }
   }
 
   async function handleLogoUpload() {
@@ -173,13 +182,23 @@ export default function SettingsPage() {
               <input ref={logoInputRef} type="file" accept="image/*" onChange={handleLogoChange} className="hidden" />
               <button
                 type="button"
+                disabled={isOptimizingLogo || isUploadingLogo}
                 onClick={() => logoInputRef.current?.click()}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[#e8e2d8] text-[#6b5d52] hover:text-[#1c1813] hover:border-[#d4cec5] text-sm transition-colors bg-white"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[#e8e2d8] text-[#6b5d52] hover:text-[#1c1813] hover:border-[#d4cec5] text-sm transition-colors bg-white disabled:opacity-50"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                </svg>
-                {logoFile ? logoFile.name : 'Escolher imagem'}
+                {isOptimizingLogo ? (
+                  <>
+                    <span className="w-4 h-4 rounded-full border-2 border-[#e8e2d8] border-t-[#c9922c] animate-spin shrink-0" />
+                    Optimizing image...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                    </svg>
+                    {logoFile ? logoFile.name : 'Escolher imagem'}
+                  </>
+                )}
               </button>
 
               {logoFile && (

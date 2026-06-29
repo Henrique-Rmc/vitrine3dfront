@@ -131,7 +131,7 @@ export default function ProductManagement() {
   }
 
   function handleReorder(newProducts: Product[]) {
-    setPendingOrder(newProducts)
+    setProducts(newProducts)
   }
 
   async function handleDelete(id: number) {
@@ -162,12 +162,16 @@ export default function ProductManagement() {
   async function saveReorder() {
     setIsSavingOrder(true)
     setReorderError(null)
+    const orderedIds = pendingOrder.map((p) => p.id)
+    console.log('[reorder] Enviando IDs:', orderedIds)
     try {
-      await reorderProducts(pendingOrder.map((p) => p.id))
+      await reorderProducts(orderedIds)
+      console.log('[reorder] Sucesso — backend confirmou a nova ordem')
       setProducts(pendingOrder)
       setReorderMode(false)
       setPendingOrder([])
-    } catch {
+    } catch (err) {
+      console.error('[reorder] Erro na chamada:', err)
       setReorderError('Erro ao salvar a ordem. Tente novamente.')
     } finally {
       setIsSavingOrder(false)
@@ -214,7 +218,7 @@ export default function ProductManagement() {
               <button
                 onClick={saveReorder}
                 disabled={isSavingOrder}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#c9922c] hover:bg-[#b8821e] text-white text-sm font-semibold transition-colors disabled:opacity-60"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#1c1813] hover:bg-[#2c2620] text-white text-sm font-semibold transition-colors disabled:opacity-60"
               >
                 {isSavingOrder ? (
                   <>

@@ -10,6 +10,7 @@ import {
 import { listCategories, createCategory } from '../../services/categoryService'
 import { listMaterials, createMaterial } from '../../services/materialService'
 import { useAuth } from '../../context/AuthContext'
+import { compressImage } from '../../services/imageOptimizationService'
 
 const inputClass =
   'w-full rounded-lg bg-[#f4f1eb] border border-[#e8e2d8] px-3 py-2.5 text-sm text-[#1c1813] placeholder-[#c4b8ae] focus:outline-none focus:ring-2 focus:ring-[#c9922c]/40 focus:border-[#c9922c]/60 disabled:opacity-50 transition-colors'
@@ -80,6 +81,7 @@ export default function ProductFormPage() {
   const [form, setForm] = useState<ProductFormData>(emptyForm)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [isOptimizingImage, setIsOptimizingImage] = useState(false)
 
   const [categories, setCategories] = useState<Category[]>([])
   const [materials, setMaterials]   = useState<Material[]>([])
@@ -145,10 +147,19 @@ export default function ProductFormPage() {
     setSaveError(null)
   }
 
-  function handleImageFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleImageFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null
-    setImageFile(file)
-    if (file) { setImagePreview(URL.createObjectURL(file)); setField('imageUrl', '') }
+    if (!file) return
+    setIsOptimizingImage(true)
+    setImagePreview(URL.createObjectURL(file))
+    setField('imageUrl', '')
+    try {
+      const compressed = await compressImage(file)
+      setImageFile(compressed)
+      setImagePreview(URL.createObjectURL(compressed))
+    } finally {
+      setIsOptimizingImage(false)
+    }
   }
 
   async function handleCreateCategory() {
@@ -274,16 +285,21 @@ export default function ProductFormPage() {
 
           <FormField
             label="Imagem do produto"
-            hint={imageFile ? `Arquivo: ${imageFile.name}` : 'Faça upload de um arquivo ou cole uma URL abaixo'}
+            hint={isOptimizingImage ? undefined : imageFile ? `Arquivo: ${imageFile.name}` : 'Faça upload de um arquivo ou cole uma URL abaixo'}
           >
             <div className="space-y-2">
               <button
                 type="button"
-                disabled={isDisabled}
+                disabled={isDisabled || isOptimizingImage}
                 onClick={() => imageInputRef.current?.click()}
                 className="w-full rounded-lg border-2 border-dashed border-[#e8e2d8] hover:border-[#d4cec5] bg-[#f4f1eb]/60 hover:bg-[#f4f1eb] transition-colors px-4 py-4 flex items-center gap-3 disabled:opacity-50"
               >
-                {imagePreview ? (
+                {isOptimizingImage ? (
+                  <>
+                    <span className="w-6 h-6 rounded-full border-2 border-[#e8e2d8] border-t-[#c9922c] animate-spin shrink-0" />
+                    <span className="text-sm text-[#9c8e84]">Optimizing image...</span>
+                  </>
+                ) : imagePreview ? (
                   <>
                     <img src={imagePreview} alt="" className="w-12 h-12 rounded-lg object-cover border border-[#e8e2d8] shrink-0"
                       onError={(e) => { e.currentTarget.style.display = 'none' }} />
