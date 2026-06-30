@@ -113,9 +113,20 @@ export default function CategoriesPage() {
     <div className="max-w-2xl">
       <div className="mb-6">
         <h1 className="text-xl font-bold text-[#1c1813]">Categorias</h1>
-        <p className="text-sm text-[#9c8e84] mt-0.5">
-          Organize seus produtos para facilitar a navegação dos clientes.
-        </p>
+        <div className="mt-2 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-900 leading-relaxed">
+          <p className="font-semibold mb-1">O que é uma Categoria?</p>
+          <p>
+            É o <strong>grupo geral</strong> em que o seu produto se encaixa — a primeira coisa que o cliente
+            usa para encontrar o que procura na sua vitrine.
+          </p>
+          <p className="mt-1.5">
+            <span className="font-medium">Exemplo:</span> Se você vende uma luminária de resina e um vaso
+            decorativo de madeira, ambos podem estar na categoria <strong>"Decoração para Casa"</strong>. Já
+            um colar feito em impressão 3D ficaria em <strong>"Acessórios"</strong>. A categoria não diz
+            <em> como</em> o produto foi feito — ela diz <em>para que serve</em>. Para o material
+            utilizado, use os <strong>Tipos</strong>.
+          </p>
+        </div>
       </div>
 
       <form onSubmit={handleAdd} className="flex gap-2 mb-6">

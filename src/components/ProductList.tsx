@@ -101,7 +101,7 @@ export default function ProductList({
 
   const sortable    = !!onReorder && !reorderMode
   const hasFeatured = !!onToggleFeatured && !reorderMode
-  const MAX_FEATURED = 3
+  const MAX_FEATURED = 5
 
   function startDrag(e: React.DragEvent, id: number) {
     setDraggedId(id)

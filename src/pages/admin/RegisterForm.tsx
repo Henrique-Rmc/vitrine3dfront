@@ -149,6 +149,7 @@ export default function RegisterForm() {
   const [isCustomCity, setIsCustomCity]     = useState(false)
   const [customCityName, setCustomCityName] = useState('')
   const [isLoading, setIsLoading]           = useState(false)
+  const [acceptedTerms, setAcceptedTerms]   = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -229,6 +230,9 @@ export default function RegisterForm() {
     }
     if (!form.stateId) clientErrors.stateId = 'Selecione o estado.'
     if (!form.cityId && !customCityName.trim()) clientErrors.cityId = 'Selecione ou informe a cidade.'
+    if (!acceptedTerms) {
+      clientErrors.global = 'Você precisa aceitar os Termos de Uso para criar uma conta.'
+    }
     if (Object.keys(clientErrors).length) { setFormErrors(clientErrors); return }
 
     setFormErrors({})
@@ -431,9 +435,33 @@ export default function RegisterForm() {
         <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={handleLogoChange} />
       </FormField>
 
+      <label className="flex items-start gap-3 cursor-pointer group">
+        <input
+          type="checkbox"
+          checked={acceptedTerms}
+          onChange={(e) => {
+            setAcceptedTerms(e.target.checked)
+            if (e.target.checked) setFormErrors((prev) => { const next = { ...prev }; delete next.global; return next })
+          }}
+          className="mt-0.5 w-4 h-4 shrink-0 rounded border-[#d4cec5] text-[#c9922c] accent-[#c9922c] cursor-pointer"
+        />
+        <span className="text-xs text-[#6b5d52] leading-relaxed">
+          Li e concordo com os{' '}
+          <a href="/termos-de-uso" target="_blank" rel="noopener noreferrer" className="text-[#c9922c] hover:underline font-medium">
+            Termos de Uso
+          </a>{' '}
+          e a{' '}
+          <a href="/privacidade" target="_blank" rel="noopener noreferrer" className="text-[#c9922c] hover:underline font-medium">
+            Política de Privacidade
+          </a>
+          {', '}
+          e confirmo que possuo os direitos de comercialização de todos os produtos que irei expor.
+        </span>
+      </label>
+
       <button
         type="submit"
-        disabled={isLoading}
+        disabled={isLoading || !acceptedTerms}
         className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#1c1813] hover:bg-[#2c2620] disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-2.5 transition-colors mt-2"
       >
         {isLoading ? (

@@ -160,7 +160,7 @@ export default function PlatformLandingPage() {
       </main>
 
       <footer className="border-t border-[#e8e2d8] py-6 text-center text-xs text-[#c4b8ae]">
-        VitreIn &mdash; {new Date().getFullYear()}
+        Vitrin &mdash; {new Date().getFullYear()}
       </footer>
     </div>
   )

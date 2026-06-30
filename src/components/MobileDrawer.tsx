@@ -92,7 +92,7 @@ export default function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
 
         {/* Footer */}
         <div className="p-4 border-t border-[#e8e2d8]">
-          <p className="text-xs text-[#c4b8ae] text-center">VitreIn &copy; {new Date().getFullYear()}</p>
+          <p className="text-xs text-[#c4b8ae] text-center">Vitrin &copy; {new Date().getFullYear()}</p>
         </div>
       </aside>
     </>

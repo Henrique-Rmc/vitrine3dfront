@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useCallback } from 'react'
 import type { Product } from '../types'
 import { buildWhatsAppUrl } from '../utils/whatsapp'
 import { registerWhatsAppClick } from '../services/productService'
@@ -19,9 +19,15 @@ interface HeroSectionProps {
 
 export default function HeroSection({ products, whatsappNumber, onOpenModal }: HeroSectionProps) {
   const [activeIndex, setActiveIndex] = useState(0)
-  const trackRef = useRef<HTMLDivElement>(null)
+  const trackRef    = useRef<HTMLDivElement>(null)
+  const isDragging  = useRef(false)
+  const startX      = useRef(0)
+  const scrollStart = useRef(0)
+  const wasDragged  = useRef(false)
 
   if (products.length === 0) return null
+
+  // ── Scroll helpers ──────────────────────────────────────────────────────────
 
   function onScroll() {
     const el = trackRef.current
@@ -42,28 +48,115 @@ export default function HeroSection({ products, whatsappNumber, onOpenModal }: H
     el.scrollTo({ left: card.offsetLeft, behavior: 'smooth' })
   }
 
+  function scrollBy(direction: 'prev' | 'next') {
+    const el = trackRef.current
+    const card = el?.children[0] as HTMLElement | undefined
+    if (!el || !card) return
+    const step = card.offsetWidth + 16
+    el.scrollBy({ left: direction === 'next' ? step : -step, behavior: 'smooth' })
+  }
+
+  // ── Mouse drag (desktop) ────────────────────────────────────────────────────
+
+  function onMouseDown(e: React.MouseEvent<HTMLDivElement>) {
+    const el = trackRef.current
+    if (!el) return
+    isDragging.current  = true
+    wasDragged.current  = false
+    startX.current      = e.pageX - el.getBoundingClientRect().left
+    scrollStart.current = el.scrollLeft
+    el.style.cursor     = 'grabbing'
+  }
+
+  const onMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDragging.current) return
+    const el = trackRef.current
+    if (!el) return
+    const dist = e.pageX - el.getBoundingClientRect().left - startX.current
+    if (Math.abs(dist) > 4) wasDragged.current = true
+    el.scrollLeft = scrollStart.current - dist
+  }, [])
+
+  function stopDrag() {
+    const el = trackRef.current
+    if (!el) return
+    isDragging.current = false
+    el.style.cursor    = ''
+  }
+
+  function handleCardClick(product: Product) {
+    if (wasDragged.current) return
+    onOpenModal(product)
+  }
+
+  const canPrev = activeIndex > 0
+  const canNext = activeIndex < products.length - 1
+
   return (
     <section className="mb-8">
       <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9c8e84] mb-3">
         Em Destaque
       </p>
 
-      {/* Mobile: snap carousel — cards at 60% width, larger que os padrão de 50% grid */}
-      <div
-        ref={trackRef}
-        onScroll={onScroll}
-        className="lg:hidden flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-none"
-      >
-        {products.map((p) => (
-          <div key={p.id} className="snap-start shrink-0 w-[60%]">
-            <HeroCard product={p} whatsappNumber={whatsappNumber} onOpenModal={onOpenModal} />
-          </div>
-        ))}
+      {/* Carousel wrapper — arrows positioned absolute on left/right, centered vertically */}
+      <div className="relative">
+
+        {/* Left arrow — desktop only */}
+        {products.length > 1 && (
+          <button
+            onClick={() => scrollBy('prev')}
+            disabled={!canPrev}
+            aria-label="Anterior"
+            className="hidden lg:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10 w-8 h-8 items-center justify-center rounded-full bg-white border border-[#e8e2d8] shadow-md text-[#6b5d52] hover:text-[#1c1813] hover:border-[#d4cec5] hover:shadow-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+          </button>
+        )}
+
+        {/* Track */}
+        <div
+          ref={trackRef}
+          onScroll={onScroll}
+          onMouseDown={onMouseDown}
+          onMouseMove={onMouseMove}
+          onMouseUp={stopDrag}
+          onMouseLeave={stopDrag}
+          className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-none select-none cursor-grab active:cursor-grabbing"
+        >
+          {products.map((p) => (
+            <div
+              key={p.id}
+              className="snap-start shrink-0 w-[60%] lg:w-[calc((100%-48px)/3.5)] self-stretch"
+            >
+              <HeroCard
+                product={p}
+                whatsappNumber={whatsappNumber}
+                onOpenModal={handleCardClick}
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Right arrow — desktop only */}
+        {products.length > 1 && (
+          <button
+            onClick={() => scrollBy('next')}
+            disabled={!canNext}
+            aria-label="Próximo"
+            className="hidden lg:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10 w-8 h-8 items-center justify-center rounded-full bg-white border border-[#e8e2d8] shadow-md text-[#6b5d52] hover:text-[#1c1813] hover:border-[#d4cec5] hover:shadow-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+          </button>
+        )}
       </div>
 
-      {/* Dot indicators */}
+      {/* Dots */}
       {products.length > 1 && (
-        <div className="lg:hidden flex justify-center items-center gap-1.5 mt-3">
+        <div className="flex justify-center items-center gap-1.5 mt-3">
           {products.map((_, i) => (
             <button
               key={i}
@@ -78,13 +171,6 @@ export default function HeroSection({ products, whatsappNumber, onOpenModal }: H
           ))}
         </div>
       )}
-
-      {/* Desktop: linha de cards maiores que os padrão (3 cols vs 4 cols no grid normal) */}
-      <div className="hidden lg:grid gap-4 grid-cols-3">
-        {products.slice(0, 3).map((p) => (
-          <HeroCard key={p.id} product={p} whatsappNumber={whatsappNumber} onOpenModal={onOpenModal} />
-        ))}
-      </div>
     </section>
   )
 }
@@ -97,24 +183,25 @@ interface HeroCardProps {
 
 function HeroCard({ product, whatsappNumber, onOpenModal }: HeroCardProps) {
   const { name, imageUrl, materialName, description } = product
-  const badgeStyle = MATERIAL_BADGE[materialName ?? ''] ?? defaultBadge
+  const badgeStyle  = MATERIAL_BADGE[materialName ?? ''] ?? defaultBadge
   const whatsappUrl = buildWhatsAppUrl(whatsappNumber, name)
 
   return (
     <article
-      className="group bg-white border border-[#e8e2d8] rounded-xl overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col"
+      className="h-full group bg-white border border-[#e8e2d8] rounded-xl overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col"
       onClick={() => onOpenModal(product)}
     >
-      {/* Imagem quadrada — mesmo padrão do ProductCard */}
-      <div className="relative aspect-square overflow-hidden bg-[#f4f1eb]">
+      {/* Imagem — altura fixa para todos os cards, independente do conteúdo */}
+      <div className="shrink-0 aspect-square overflow-hidden bg-[#f4f1eb]">
         {imageUrl ? (
           <img
             src={imageUrl}
             alt={name}
+            draggable={false}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="h-full flex items-center justify-center">
             <svg className="w-12 h-12 text-[#d4cec5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
             </svg>
@@ -122,7 +209,7 @@ function HeroCard({ product, whatsappNumber, onOpenModal }: HeroCardProps) {
         )}
       </div>
 
-      {/* Conteúdo — mesma estrutura do ProductCard, mas com texto maior */}
+      {/* Conteúdo — ocupa o restante da altura do card */}
       <div className="p-4 flex flex-col gap-2.5 flex-1">
         {materialName && (
           <span className={`self-start rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${badgeStyle}`}>
@@ -146,9 +233,9 @@ function HeroCard({ product, whatsappNumber, onOpenModal }: HeroCardProps) {
           href={whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"
+          draggable={false}
           onClick={(e) => { e.stopPropagation(); registerWhatsAppClick(product.id) }}
-          className="flex items-center justify-center gap-2 rounded-lg bg-green-600 hover:bg-green-500 active:bg-green-700 px-3 py-2.5 text-sm font-semibold text-white transition-colors"
-          aria-label={`${product.price != null ? 'Fazer pedido' : 'Solicitar orçamento'} para ${name} via WhatsApp`}
+          className="mt-auto flex items-center justify-center gap-2 rounded-lg bg-green-600 hover:bg-green-500 active:bg-green-700 px-3 py-2.5 text-sm font-semibold text-white transition-colors"
         >
           <WhatsAppIcon />
           {product.price != null ? 'Fazer Pedido' : 'Solicitar Orçamento'}

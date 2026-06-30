@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import Header from '../components/Header'
 import MobileDrawer from '../components/MobileDrawer'
 import VitrineSidebar from '../components/VitrineSidebar'
+import QRCodeModal from '../components/QRCodeModal'
 
 const ADMIN_MOBILE_NAV = [
   {
@@ -30,7 +31,8 @@ const ADMIN_MOBILE_NAV = [
 
 export default function MainLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const { isAuthenticated } = useAuth()
+  const [showQR, setShowQR] = useState(false)
+  const { isAuthenticated, user } = useAuth()
 
   return (
     <div className="min-h-screen bg-[#faf8f5] text-[#1c1813]">
@@ -43,6 +45,7 @@ export default function MainLayout() {
           mobileMenuOpen={mobileMenuOpen}
           toggleMobileMenu={() => setMobileMenuOpen(p => !p)}
           showHamburger={!isAuthenticated}
+          onQRCode={isAuthenticated && user?.slug ? () => setShowQR(true) : undefined}
         />
 
         {/* Mobile drawer — only for non-authenticated visitors */}
@@ -54,10 +57,34 @@ export default function MainLayout() {
           <Outlet />
         </main>
 
-        <footer className="mt-16 border-t border-[#e8e2d8] py-8 text-center text-sm text-[#c4b8ae]">
-          © {new Date().getFullYear()} VitreIn &mdash; Conectando criadores ao seu público
+        <footer className="mt-16 border-t border-[#e8e2d8]">
+          {/* Legal disclaimer */}
+          <div className="bg-[#f4f1eb] border-b border-[#e8e2d8] px-4 py-3 text-center text-xs text-[#9c8e84]">
+            O VitreIn é uma vitrine digital. As negociações ocorrem diretamente entre comprador e vendedor via WhatsApp,
+            fora do ambiente do site, sendo de <strong className="font-medium text-[#6b5d52]">inteira responsabilidade do vendedor</strong>.
+            O VitreIn não gerencia pagamentos, envios ou qualquer etapa da venda.
+          </div>
+          {/* Links + copyright */}
+          <div className="px-4 py-6 text-center space-y-3">
+            <nav className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-xs text-[#9c8e84]">
+              <a href="/termos-de-uso" className="hover:text-[#c9922c] transition-colors">Termos de Uso</a>
+              <a href="/privacidade" className="hover:text-[#c9922c] transition-colors">Política de Privacidade</a>
+              <a href="/denunciar" className="hover:text-[#c9922c] transition-colors">Reportar Conteúdo</a>
+            </nav>
+            <p className="text-xs text-[#c4b8ae]">
+              © {new Date().getFullYear()} VitreIn &mdash; Conectando criadores ao seu público
+            </p>
+          </div>
         </footer>
       </div>
+
+      {showQR && user?.slug && (
+        <QRCodeModal
+          storeSlug={user.slug}
+          storeName={user.storeName}
+          onClose={() => setShowQR(false)}
+        />
+      )}
 
       {/* Mobile bottom nav — admin only, mirrors AdminLayout nav */}
       {isAuthenticated && (

@@ -14,6 +14,9 @@ import ProductFormPage from './pages/admin/ProductFormPage'
 import CategoriesPage from './pages/admin/CategoriesPage'
 import MaterialsPage from './pages/admin/MaterialsPage'
 import SettingsPage from './pages/admin/SettingsPage'
+import TermsOfUsePage from './pages/TermsOfUsePage'
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
+import ReportPage from './pages/ReportPage'
 
 function PublicOnlyRoute() {
   const { isAuthenticated, isLoading } = useAuth()
@@ -29,9 +32,12 @@ export default function App() {
           {/* ── Platform landing ── */}
           <Route path="/" element={<PlatformLandingPage />} />
 
-          {/* ── Public storefront (dynamic per seller) ── */}
+          {/* ── Public storefront + legal pages ── */}
           <Route element={<MainLayout />}>
             <Route path="/:storeSlug" element={<StorePage />} />
+            <Route path="/termos-de-uso" element={<TermsOfUsePage />} />
+            <Route path="/privacidade" element={<PrivacyPolicyPage />} />
+            <Route path="/denunciar" element={<ReportPage />} />
           </Route>
 
           {/* ── Admin: public (only for guests) ── */}

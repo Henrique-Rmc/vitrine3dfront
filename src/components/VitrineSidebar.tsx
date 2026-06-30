@@ -153,7 +153,7 @@ export default function VitrineSidebar() {
       {/* Footer */}
       <div className="p-4 border-t border-[#e8e2d8] shrink-0">
         <p className="text-[10px] text-[#c4b8ae] text-center">
-          VitreIn &copy; {new Date().getFullYear()}
+          Vitrin &copy; {new Date().getFullYear()}
         </p>
       </div>
     </aside>

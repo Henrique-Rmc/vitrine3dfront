@@ -4,10 +4,10 @@ import type { Material } from '../types'
 export async function listMaterials(storeId?: string): Promise<Material[]> {
   if (storeId) {
     const { data } = await apiClient.get<Material[]>(`/api/materials/store/${storeId}`)
-    return data
+    return data.filter((m) => !m.isGlobal)
   }
   const { data } = await apiClient.get<Material[]>('/api/materials')
-  return data
+  return data.filter((m) => !m.isGlobal)
 }
 
 export async function createMaterial(name: string): Promise<Material> {

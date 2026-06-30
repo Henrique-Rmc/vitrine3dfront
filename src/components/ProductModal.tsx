@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import type { Product } from '../types'
 import { buildWhatsAppUrl } from '../utils/whatsapp'
 import { registerWhatsAppClick } from '../services/productService'
@@ -23,112 +23,177 @@ export default function ProductModal({ product, whatsappNumber, categoryName, on
   const badgeStyle = MATERIAL_BADGE[materialName ?? ''] ?? defaultBadge
   const whatsappUrl = buildWhatsAppUrl(whatsappNumber, name)
 
+  const [showWhatsAppWarning, setShowWhatsAppWarning] = useState(false)
+
   useEffect(() => {
     document.body.style.overflow = 'hidden'
     return () => { document.body.style.overflow = '' }
   }, [])
 
   useEffect(() => {
-    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose() }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        if (showWhatsAppWarning) setShowWhatsAppWarning(false)
+        else onClose()
+      }
+    }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  }, [onClose, showWhatsAppWarning])
+
+  function handleWhatsAppClick() {
+    setShowWhatsAppWarning(true)
+  }
+
+  function confirmWhatsApp() {
+    registerWhatsAppClick(product.id)
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
+    setShowWhatsAppWarning(false)
+  }
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={name}
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-6 bg-[#1c1813]/40 backdrop-blur-sm animate-[modal-backdrop-in_0.2s_ease-out]"
-      onClick={onClose}
-    >
+    <>
       <div
-        className="relative w-full sm:max-w-2xl max-h-[92dvh] sm:max-h-[85vh] flex flex-col sm:flex-row overflow-hidden bg-white border border-[#e8e2d8] rounded-t-2xl sm:rounded-2xl shadow-2xl animate-[modal-panel-in_0.2s_ease-out]"
-        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={name}
+        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-6 bg-[#1c1813]/40 backdrop-blur-sm animate-[modal-backdrop-in_0.2s_ease-out]"
+        onClick={onClose}
       >
-        {/* Image side */}
-        <div className="relative w-full aspect-square sm:w-72 sm:aspect-auto shrink-0 bg-[#f4f1eb]">
-          {imageUrl ? (
-            <img src={imageUrl} alt={name} className="h-full w-full object-cover" />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <svg className="w-16 h-16 text-[#d4cec5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-              </svg>
-            </div>
-          )}
-
-          <button
-            onClick={onClose}
-            aria-label="Fechar"
-            className="absolute top-3 right-3 rounded-full bg-white/90 backdrop-blur-sm p-1.5 text-[#9c8e84] hover:text-[#1c1813] border border-[#e8e2d8] transition-colors"
-          >
-            <XIcon />
-          </button>
-        </div>
-
-        {/* Details side */}
-        <div className="flex flex-col gap-5 p-5 sm:p-6 overflow-y-auto flex-1">
-          <div>
-            <h2 className="text-xl font-bold text-[#1c1813] leading-tight">{name}</h2>
-            {categoryName && (
-              <span className="text-xs text-[#9c8e84] mt-1 block">{categoryName}</span>
+        <div
+          className="relative w-full sm:max-w-2xl max-h-[92dvh] sm:max-h-[85vh] flex flex-col sm:flex-row overflow-hidden bg-white border border-[#e8e2d8] rounded-t-2xl sm:rounded-2xl shadow-2xl animate-[modal-panel-in_0.2s_ease-out]"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Image side */}
+          <div className="relative w-full aspect-square sm:w-72 sm:aspect-auto shrink-0 bg-[#f4f1eb]">
+            {imageUrl ? (
+              <img src={imageUrl} alt={name} className="h-full w-full object-cover" />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <svg className="w-16 h-16 text-[#d4cec5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                </svg>
+              </div>
             )}
+
+            <button
+              onClick={onClose}
+              aria-label="Fechar"
+              className="absolute top-3 right-3 rounded-full bg-white/90 backdrop-blur-sm p-1.5 text-[#9c8e84] hover:text-[#1c1813] border border-[#e8e2d8] transition-colors"
+            >
+              <XIcon />
+            </button>
           </div>
 
-          <dl className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-3 text-sm border-t border-[#f0ece5] pt-4">
-            {materialName && (
-              <>
-                <dt className="text-[#9c8e84] self-center">Material</dt>
-                <dd>
-                  <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${badgeStyle}`}>
-                    {materialName}
-                  </span>
-                </dd>
-              </>
-            )}
-
-            {dimensions && (
-              <>
-                <dt className="text-[#9c8e84] self-center">Dimensões</dt>
-                <dd className="text-[#6b5d52] font-mono text-xs">{dimensions}</dd>
-              </>
-            )}
-
-            {product.price != null && (
-              <>
-                <dt className="text-[#9c8e84] self-center">Preço</dt>
-                <dd className="text-[#c9922c] font-bold text-base">
-                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)}
-                </dd>
-              </>
-            )}
-          </dl>
-
-          {description && (
-            <div className="border-t border-[#f0ece5] pt-4">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-[#9c8e84] mb-2">
-                Descrição
-              </p>
-              <p className="text-sm text-[#6b5d52] leading-relaxed">{description}</p>
+          {/* Details side */}
+          <div className="flex flex-col gap-5 p-5 sm:p-6 overflow-y-auto flex-1">
+            <div>
+              <h2 className="text-xl font-bold text-[#1c1813] leading-tight">{name}</h2>
+              {categoryName && (
+                <span className="text-xs text-[#9c8e84] mt-1 block">{categoryName}</span>
+              )}
             </div>
-          )}
 
-          <div className="mt-auto pt-2">
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => registerWhatsAppClick(product.id)}
-              className="flex items-center justify-center gap-2.5 rounded-xl bg-green-600 hover:bg-green-500 active:bg-green-700 px-5 py-3.5 text-sm font-semibold text-white transition-colors"
-            >
-              <WhatsAppIcon />
-              {product.price != null ? 'Fazer Pedido via WhatsApp' : 'Solicitar Orçamento via WhatsApp'}
-            </a>
+            <dl className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-3 text-sm border-t border-[#f0ece5] pt-4">
+              {materialName && (
+                <>
+                  <dt className="text-[#9c8e84] self-center">Material</dt>
+                  <dd>
+                    <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${badgeStyle}`}>
+                      {materialName}
+                    </span>
+                  </dd>
+                </>
+              )}
+
+              {dimensions && (
+                <>
+                  <dt className="text-[#9c8e84] self-center">Dimensões</dt>
+                  <dd className="text-[#6b5d52] font-mono text-xs">{dimensions}</dd>
+                </>
+              )}
+
+              {product.price != null && (
+                <>
+                  <dt className="text-[#9c8e84] self-center">Preço</dt>
+                  <dd className="text-[#c9922c] font-bold text-base">
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)}
+                  </dd>
+                </>
+              )}
+            </dl>
+
+            {description && (
+              <div className="border-t border-[#f0ece5] pt-4">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-[#9c8e84] mb-2">
+                  Descrição
+                </p>
+                <p className="text-sm text-[#6b5d52] leading-relaxed">{description}</p>
+              </div>
+            )}
+
+            <div className="mt-auto pt-2 flex flex-col gap-2">
+              <button
+                onClick={handleWhatsAppClick}
+                className="flex items-center justify-center gap-2.5 rounded-xl bg-green-600 hover:bg-green-500 active:bg-green-700 px-5 py-3.5 text-sm font-semibold text-white transition-colors"
+              >
+                <WhatsAppIcon />
+                {product.price != null ? 'Fazer Pedido via WhatsApp' : 'Solicitar Orçamento via WhatsApp'}
+              </button>
+              <a
+                href={`/denunciar?url=${encodeURIComponent(window.location.href)}`}
+                className="text-center text-xs text-[#c4b8ae] hover:text-[#9c8e84] transition-colors"
+              >
+                Reportar este produto
+              </a>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* WhatsApp redirect warning */}
+      {showWhatsAppWarning && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#1c1813]/50 backdrop-blur-sm"
+          onClick={() => setShowWhatsAppWarning(false)}
+        >
+          <div
+            className="w-full max-w-sm bg-white rounded-2xl shadow-2xl border border-[#e8e2d8] p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3 mb-4">
+              <div className="w-9 h-9 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0 mt-0.5">
+                <svg className="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-[#1c1813]">Você está saindo do VitreIn</h3>
+                <p className="text-xs text-[#6b5d52] mt-1 leading-relaxed">
+                  Lembre-se que o VitreIn <strong>não gerencia pagamentos, envios ou entregas</strong>.
+                  Toda negociação é diretamente com o vendedor e de responsabilidade exclusiva das partes.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowWhatsAppWarning(false)}
+                className="flex-1 py-2.5 rounded-lg border border-[#e8e2d8] text-sm font-medium text-[#6b5d52] hover:bg-[#f4f1eb] transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmWhatsApp}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-green-600 hover:bg-green-500 text-white text-sm font-semibold transition-colors"
+              >
+                <WhatsAppIcon />
+                Continuar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 

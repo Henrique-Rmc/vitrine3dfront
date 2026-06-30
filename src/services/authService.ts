@@ -15,7 +15,7 @@ export interface LoginResponse {
 
 // Actual backend login response — uses storeId (not id), omits userName/slug
 interface LoginApiResponse {
-  token: string
+  accessToken: string
   type: string
   storeId: string
   email: string
@@ -49,7 +49,7 @@ export async function loginUser(credentials: LoginRequest): Promise<LoginRespons
   const { data: profile } = await apiClient.get<StoreApiResponse>(`/api/users/${data.storeId}`)
 
   return {
-    token: data.token,
+    token: data.accessToken,
     user: {
       id: data.storeId,
       email: data.email,
@@ -117,4 +117,15 @@ export async function uploadLogo(userId: string, file: File): Promise<StoreApiRe
   fd.append('logo', file)
   const { data } = await apiClient.post<StoreApiResponse>(`/api/users/${userId}/logo`, fd)
   return data
+}
+
+// ── Refresh / Logout ──────────────────────────────────────────────────────────
+
+export async function refreshToken(): Promise<string> {
+  const { data } = await apiClient.post<{ accessToken: string }>('/api/auth/refresh')
+  return data.accessToken
+}
+
+export async function logoutUser(): Promise<void> {
+  await apiClient.post('/api/auth/logout')
 }

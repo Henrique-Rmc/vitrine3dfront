@@ -112,10 +112,21 @@ export default function MaterialsPage() {
   return (
     <div className="max-w-2xl">
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-[#1c1813]">Materiais</h1>
-        <p className="text-sm text-[#9c8e84] mt-0.5">
-          Defina os materiais dos seus produtos para que os clientes possam filtrar a vitrine.
-        </p>
+        <h1 className="text-xl font-bold text-[#1c1813]">Tipos</h1>
+        <div className="mt-2 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-900 leading-relaxed">
+          <p className="font-semibold mb-1">O que é um Tipo?</p>
+          <p>
+            É a <strong>descrição específica do material, técnica ou seção</strong> que detalha o produto —
+            diferente da Categoria, que agrupa pelo tema.
+          </p>
+          <p className="mt-1.5">
+            <span className="font-medium">Exemplo:</span> Você vende peças decorativas, todas na categoria
+            "Decoração para Casa". Mas algumas são feitas com <strong>Madeira</strong> e outras com{' '}
+            <strong>Metal</strong>. Cadastrando esses dois Tipos, o cliente que só quer peças
+            de madeira consegue filtrar sua vitrine e encontrar exatamente o que busca — sem precisar ver
+            tudo de uma vez.
+          </p>
+        </div>
       </div>
 
       <form onSubmit={handleAdd} className="flex gap-2 mb-6">

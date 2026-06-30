@@ -9,10 +9,10 @@ import type { Category } from '../types'
 export async function listCategories(storeId?: string): Promise<Category[]> {
   if (storeId) {
     const { data } = await apiClient.get<Category[]>(`/api/categories/store/${storeId}`)
-    return data
+    return data.filter((c) => !c.isGlobal)
   }
   const { data } = await apiClient.get<Category[]>('/api/categories')
-  return data
+  return data.filter((c) => !c.isGlobal)
 }
 
 export async function createCategory(name: string): Promise<Category> {

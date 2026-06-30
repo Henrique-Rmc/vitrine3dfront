@@ -79,7 +79,7 @@ export default function CategoryBar({ categories, materials, products }: Categor
                   : 'border-[#e8e2d8] text-[#9c8e84] bg-white hover:border-[#d4cec5] hover:text-[#6b5d52]'
               }`}
             >
-              Todos materiais
+              Todos os Tipos
             </button>
             {visibleMaterials.map((mat) => (
               <button
