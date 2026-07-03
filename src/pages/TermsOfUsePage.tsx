@@ -108,8 +108,8 @@ export default function TermsOfUsePage() {
 
         <div className="pt-6 border-t border-[#e8e2d8] text-xs text-[#9c8e84]">
           Dúvidas? Entre em contato:{' '}
-          <a href="mailto:henriqueribcruz@gmail.com" className="text-[#c9922c] hover:underline">
-            henriqueribcruz@gmail.com
+          <a href="mailto:vitrin.app.store@gmail.com" className="text-[#c9922c] hover:underline">
+            vitrin.app.store@gmail.com
           </a>
         </div>
       </div>

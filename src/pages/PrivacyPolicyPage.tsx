@@ -133,8 +133,8 @@ export default function PrivacyPolicyPage() {
           </p>
           <p className="mt-2">
             <strong>E-mail:</strong>{' '}
-            <a href="mailto:henriqueribcruz@gmail.com" className="text-[#c9922c] hover:underline">
-              henriqueribcruz@gmail.com
+            <a href="mailto:vitrin.app.store@gmail.com" className="text-[#c9922c] hover:underline">
+              vitrin.app.store@gmail.com
             </a>
           </p>
         </section>

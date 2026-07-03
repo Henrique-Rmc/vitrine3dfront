@@ -9,7 +9,7 @@ const REPORT_REASONS = [
   'Outro',
 ]
 
-const ADMIN_EMAIL = 'henriqueribcruz@gmail.com'
+const ADMIN_EMAIL = 'vitrin.app.store@gmail.com'
 
 export default function ReportPage() {
   const [searchParams] = useSearchParams()
