@@ -25,6 +25,17 @@ export default function HeroSection({ products, whatsappNumber, onOpenModal }: H
   const scrollStart = useRef(0)
   const wasDragged  = useRef(false)
 
+  // ── Mouse drag (desktop) ────────────────────────────────────────────────────
+
+  const onMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDragging.current) return
+    const el = trackRef.current
+    if (!el) return
+    const dist = e.pageX - el.getBoundingClientRect().left - startX.current
+    if (Math.abs(dist) > 4) wasDragged.current = true
+    el.scrollLeft = scrollStart.current - dist
+  }, [])
+
   if (products.length === 0) return null
 
   // ── Scroll helpers ──────────────────────────────────────────────────────────
@@ -56,8 +67,6 @@ export default function HeroSection({ products, whatsappNumber, onOpenModal }: H
     el.scrollBy({ left: direction === 'next' ? step : -step, behavior: 'smooth' })
   }
 
-  // ── Mouse drag (desktop) ────────────────────────────────────────────────────
-
   function onMouseDown(e: React.MouseEvent<HTMLDivElement>) {
     const el = trackRef.current
     if (!el) return
@@ -67,15 +76,6 @@ export default function HeroSection({ products, whatsappNumber, onOpenModal }: H
     scrollStart.current = el.scrollLeft
     el.style.cursor     = 'grabbing'
   }
-
-  const onMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDragging.current) return
-    const el = trackRef.current
-    if (!el) return
-    const dist = e.pageX - el.getBoundingClientRect().left - startX.current
-    if (Math.abs(dist) > 4) wasDragged.current = true
-    el.scrollLeft = scrollStart.current - dist
-  }, [])
 
   function stopDrag() {
     const el = trackRef.current

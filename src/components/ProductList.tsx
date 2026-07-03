@@ -54,7 +54,7 @@ const MATERIAL_BADGE: Record<string, string> = {
   Flexível: 'bg-green-50 text-green-700 border-green-200',
 }
 
-function Thumbnail({ src, alt }: { src: string; alt: string }) {
+function Thumbnail({ src, alt }: { src: string | null; alt: string }) {
   return (
     <div className="w-12 h-12 rounded-lg overflow-hidden bg-[#f4f1eb] shrink-0 flex items-center justify-center border border-[#e8e2d8]">
       {src ? (
@@ -212,7 +212,7 @@ export default function ProductList({
               <button
                 onClick={() => onToggleFeatured?.(product.id)}
                 disabled={!isFeatured && !canStar}
-                title={isFeatured ? 'Remover destaque' : canStar ? 'Adicionar ao destaque (máx. 3)' : 'Limite atingido'}
+                title={isFeatured ? 'Remover destaque' : canStar ? 'Adicionar ao destaque (máx. 5)' : 'Limite atingido'}
                 className={`p-2 rounded-lg transition-colors ${
                   isFeatured ? 'text-[#c9922c] hover:bg-amber-50'
                     : canStar ? 'text-[#d4cec5] hover:text-[#c9922c] hover:bg-amber-50'

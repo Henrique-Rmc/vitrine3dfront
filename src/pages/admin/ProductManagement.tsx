@@ -176,10 +176,8 @@ export default function ProductManagement() {
     setIsSavingOrder(true)
     setReorderError(null)
     const orderedIds = pendingOrder.map((p) => p.id)
-    console.log('[reorder] Enviando IDs:', orderedIds)
     try {
       await reorderProducts(orderedIds)
-      console.log('[reorder] Sucesso — backend confirmou a nova ordem')
       setProducts(pendingOrder)
       setReorderMode(false)
       setPendingOrder([])
@@ -255,6 +253,14 @@ export default function ProductManagement() {
             </>
           ) : (
             <>
+              {products.length > 1 && (
+                <button
+                  onClick={enterReorderMode}
+                  className="px-4 py-2.5 rounded-lg border border-[#e8e2d8] text-[#6b5d52] hover:bg-[#f4f1eb] text-sm font-medium transition-colors"
+                >
+                  Reordenar
+                </button>
+              )}
               <button
                 onClick={() => navigate('/admin/products/new')}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#1c1813] hover:bg-[#2c2620] text-white text-sm font-semibold transition-colors"

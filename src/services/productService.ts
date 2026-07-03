@@ -97,8 +97,7 @@ export async function updateProduct(
 }
 
 export async function reorderProducts(orderedIds: number[]): Promise<void> {
-  const { status } = await apiClient.put('/api/products/reorder', orderedIds)
-  console.log('[reorder] HTTP status:', status, '| payload:', orderedIds)
+  await apiClient.put('/api/products/reorder', orderedIds)
 }
 
 export async function patchFeatured(productId: number): Promise<Product> {
