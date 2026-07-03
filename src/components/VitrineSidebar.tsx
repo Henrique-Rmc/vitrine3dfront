@@ -123,7 +123,7 @@ export default function VitrineSidebar() {
       {/* CTA section */}
       <div className="flex-1 px-4 py-6 flex flex-col gap-3">
         <p className="text-xs text-[#9c8e84] leading-relaxed">
-          Apresente sua arte ao mundo com uma vitrine elegante, organizada e profissional.
+          Qualquer vendedor pode ter uma vitrine digital elegante e profissional — de carros a artesanato, de imóveis a brinquedos.
         </p>
 
         <Link
@@ -142,9 +142,9 @@ export default function VitrineSidebar() {
 
         <div className="mt-4 pt-4 border-t border-[#f0ece5]">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-[#c4b8ae] mb-2">
-            Para artesãos de
+            Para vendedores de
           </p>
-          {['Impressão 3D', 'Joias', 'Quadros', 'Cerâmica', 'Tecidos', 'Madeira'].map((c) => (
+          {['Arte & Artesanato', 'Imóveis & Terrenos', 'Veículos', 'Brinquedos', 'Moda', 'E muito mais…'].map((c) => (
             <p key={c} className="text-xs text-[#9c8e84] py-0.5">{c}</p>
           ))}
         </div>

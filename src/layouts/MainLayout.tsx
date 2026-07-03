@@ -72,7 +72,7 @@ export default function MainLayout() {
               <a href="/denunciar" className="hover:text-[#c9922c] transition-colors">Reportar Conteúdo</a>
             </nav>
             <p className="text-xs text-[#c4b8ae]">
-              © {new Date().getFullYear()} VitreIn &mdash; Conectando criadores ao seu público
+              © {new Date().getFullYear()} Vitrin &mdash; Sua vitrine digital para qualquer tipo de venda
             </p>
           </div>
         </footer>

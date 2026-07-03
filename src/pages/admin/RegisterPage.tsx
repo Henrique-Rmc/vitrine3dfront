@@ -15,7 +15,7 @@ export default function RegisterPage() {
           </Link>
           <h1 className="text-2xl font-bold text-[#1c1813]">Criar minha vitrine</h1>
           <p className="text-sm text-[#9c8e84] mt-1">
-            Comece a apresentar seus produtos em minutos. Gratuito.
+            Qualquer tipo de produto ou serviço.
           </p>
         </div>
 

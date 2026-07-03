@@ -45,9 +45,9 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
         </svg>
       </div>
       <div>
-        <h2 className="text-[#1c1813] font-semibold text-base mb-1">Nenhum produto cadastrado ainda</h2>
+        <h2 className="text-[#1c1813] font-semibold text-base mb-1">Nenhum anúncio cadastrado ainda</h2>
         <p className="text-sm text-[#9c8e84] max-w-xs">
-          Adicione seu primeiro produto para que os clientes possam conhecer seu trabalho.
+          Adicione seu primeiro produto ou serviço e comece a receber contatos dos seus clientes.
         </p>
       </div>
       <button
@@ -57,7 +57,7 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
         </svg>
-        Cadastrar primeiro produto
+        Cadastrar primeiro anúncio
       </button>
     </div>
   )
