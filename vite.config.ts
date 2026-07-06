@@ -6,11 +6,12 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
-      // All /api/* calls are forwarded to the Spring Boot backend.
+      // All /api/* calls are forwarded to the backend.
       // This avoids CORS entirely during local development.
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'https://vitrine3d-latest.onrender.com',
         changeOrigin: true,
+        secure: true,
       },
     },
   },
