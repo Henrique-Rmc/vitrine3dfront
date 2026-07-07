@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   listCategories,
   createCategory,
@@ -34,6 +35,9 @@ function LoadingSkeleton() {
 export default function CategoriesPage() {
   const { user } = useAuth()
   const storeId = user?.id ?? ''
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const [showOnboarding, setShowOnboarding] = useState(searchParams.get('onboarding') === '1')
 
   const [categories, setCategories] = useState<Category[]>([])
   const [isLoading, setIsLoading]   = useState(true)
@@ -110,6 +114,42 @@ export default function CategoriesPage() {
   if (isLoading) return <LoadingSkeleton />
 
   return (
+    <>
+    {showOnboarding && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#1c1813]/50 backdrop-blur-sm">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-7 flex flex-col items-center text-center">
+          <div className="w-16 h-16 rounded-full bg-amber-50 border-2 border-amber-200 flex items-center justify-center mb-5">
+            <svg className="w-8 h-8 text-[#c9922c]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-[#1c1813] mb-2">Parabéns por criar sua conta!</h2>
+          <p className="text-sm text-[#6b5d52] leading-relaxed mb-6">
+            Vamos configurar sua vitrine em 2 passos rápidos.<br />
+            <strong className="text-[#1c1813]">Primeiro: crie as categorias para seus produtos.</strong>
+            <br /><br />
+            As categorias são o primeiro filtro que seus clientes usam para descobrir o que você vende.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2 w-full">
+            <button
+              onClick={() => setShowOnboarding(false)}
+              className="flex-1 px-4 py-2.5 rounded-lg border border-[#e8e2d8] text-sm text-[#6b5d52] hover:bg-[#f4f1eb] transition-colors font-medium"
+            >
+              Entendido
+            </button>
+            <button
+              onClick={() => { setShowOnboarding(false); navigate('/admin/materials?onboarding=1') }}
+              className="flex-1 px-4 py-2.5 rounded-lg bg-[#1c1813] hover:bg-[#2c2620] text-white text-sm font-semibold transition-colors flex items-center justify-center gap-1.5"
+            >
+              Próximo: Tipos
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     <div className="max-w-2xl">
       <div className="mb-6">
         <h1 className="text-xl font-bold text-[#1c1813]">Categorias</h1>
@@ -257,5 +297,6 @@ export default function CategoriesPage() {
         </div>
       )}
     </div>
+    </>
   )
 }

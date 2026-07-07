@@ -4,6 +4,7 @@ import axios from 'axios'
 import { registerUser, uploadLogo } from '../../services/authService'
 import { listStates, listCitiesByState, type BrazilState, type BrazilCity } from '../../services/locationService'
 import { compressImage } from '../../services/imageOptimizationService'
+import { useAuth } from '../../context/AuthContext'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -133,6 +134,7 @@ function FormField({ label, hint, error, required, children }: {
 
 export default function RegisterForm() {
   const navigate = useNavigate()
+  const { login } = useAuth()
 
   const [form, setForm] = useState<RegisterFormData>(EMPTY_FORM)
   const [formErrors, setFormErrors] = useState<FormErrors>({})
@@ -249,7 +251,8 @@ export default function RegisterForm() {
         ...(form.cityId !== null && { cityId: form.cityId }),
       })
       if (logoFile) await uploadLogo(created.id, logoFile).catch(() => undefined)
-      navigate('/admin/login')
+      await login(form.email, form.password)
+      navigate('/admin/categories?onboarding=1')
     } catch (err) {
       setFormErrors(extractFormErrors(err))
     } finally {

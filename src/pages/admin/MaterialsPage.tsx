@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   listMaterials,
   createMaterial,
@@ -34,6 +35,9 @@ function LoadingSkeleton() {
 export default function MaterialsPage() {
   const { user } = useAuth()
   const storeId = user?.id ?? ''
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const [showOnboarding, setShowOnboarding] = useState(searchParams.get('onboarding') === '1')
 
   const [materials, setMaterials] = useState<Material[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -110,6 +114,49 @@ export default function MaterialsPage() {
   if (isLoading) return <LoadingSkeleton />
 
   return (
+    <>
+    {showOnboarding && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#1c1813]/50 backdrop-blur-sm">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-7 flex flex-col items-center text-center">
+          <div className="w-16 h-16 rounded-full bg-amber-50 border-2 border-amber-200 flex items-center justify-center mb-5">
+            <svg className="w-8 h-8 text-[#c9922c]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-[#1c1813] mb-2">Agora os Tipos!</h2>
+          <p className="text-sm text-[#6b5d52] leading-relaxed mb-2">
+            As <strong className="text-[#1c1813]">Categorias</strong> são o primeiro filtro — ajudam seus clientes
+            a encontrar o tema certo. Os <strong className="text-[#1c1813]">Tipos</strong> são o segundo filtro,
+            ainda mais específico.
+          </p>
+          <div className="w-full rounded-xl bg-[#faf8f5] border border-[#e8e2d8] px-4 py-3 text-left text-xs text-[#6b5d52] leading-relaxed mb-6">
+            <p className="font-semibold text-[#1c1813] mb-1">Exemplo — joias:</p>
+            <p>Categorias: <span className="text-[#c9922c] font-medium">Ouro · Bijuteria · Prata</span></p>
+            <p className="mt-1">Tipos: <span className="text-[#c9922c] font-medium">Brincos · Anéis · Pulseiras</span></p>
+            <p className="mt-2 text-[#9c8e84]">
+              Com isso, o cliente encontra todas as suas <em>pulseiras de ouro</em> com apenas 2 cliques!
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2 w-full">
+            <button
+              onClick={() => setShowOnboarding(false)}
+              className="flex-1 px-4 py-2.5 rounded-lg border border-[#e8e2d8] text-sm text-[#6b5d52] hover:bg-[#f4f1eb] transition-colors font-medium"
+            >
+              Entendido
+            </button>
+            <button
+              onClick={() => { setShowOnboarding(false); navigate('/admin/products') }}
+              className="flex-1 px-4 py-2.5 rounded-lg bg-[#c9922c] hover:bg-[#b8841f] text-white text-sm font-semibold transition-colors flex items-center justify-center gap-1.5"
+            >
+              Ir para Produtos
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     <div className="max-w-2xl">
       <div className="mb-6">
         <h1 className="text-xl font-bold text-[#1c1813]">Tipos</h1>
@@ -257,5 +304,6 @@ export default function MaterialsPage() {
         </div>
       )}
     </div>
+    </>
   )
 }
