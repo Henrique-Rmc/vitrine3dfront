@@ -2,14 +2,6 @@ import type { Product } from '../types'
 import { buildWhatsAppUrl } from '../utils/whatsapp'
 import { registerWhatsAppClick } from '../services/productService'
 
-const MATERIAL_BADGE: Record<string, string> = {
-  PLA:    'bg-amber-50 text-amber-700 border-amber-200',
-  ABS:    'bg-slate-100 text-slate-600 border-slate-200',
-  Resina: 'bg-violet-50 text-violet-700 border-violet-200',
-  PETG:   'bg-teal-50 text-teal-700 border-teal-200',
-}
-const defaultBadge = 'bg-stone-100 text-stone-500 border-stone-200'
-
 interface ProductCardProps {
   product: Product
   whatsappNumber: string
@@ -17,8 +9,7 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, whatsappNumber, onOpenModal }: ProductCardProps) {
-  const { name, imageUrl, materialName } = product
-  const badgeStyle = MATERIAL_BADGE[materialName ?? ''] ?? defaultBadge
+  const { name, imageUrl } = product
   const whatsappUrl = buildWhatsAppUrl(whatsappNumber, name)
 
   return (
@@ -47,12 +38,6 @@ export default function ProductCard({ product, whatsappNumber, onOpenModal }: Pr
 
       {/* Content */}
       <div className="p-3 flex flex-col gap-2 flex-1">
-        {materialName && (
-          <span className={`self-start rounded-full border px-2 py-0.5 text-[10px] font-semibold ${badgeStyle}`}>
-            {materialName}
-          </span>
-        )}
-
         <h3 className="text-sm font-semibold text-[#1c1813] leading-snug line-clamp-2 flex-1">{name}</h3>
 
         {product.price != null && (

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import StoreProfileHeader from '../components/StoreProfileHeader'
-import CategoryBar from '../components/CategoryBar'
+import AttributeFilterBar, { readActiveAttributes } from '../components/AttributeFilterBar'
 import HeroSection from '../components/HeroSection'
 import ProductCard from '../components/ProductCard'
 import ProductModal from '../components/ProductModal'
@@ -20,8 +20,6 @@ export default function StorePage() {
     storeDescription,
     whatsappNumber,
     logoUrl,
-    categories,
-    materials,
     products,
     featuredProducts,
     loading,
@@ -34,17 +32,6 @@ export default function StorePage() {
   const [searchParams] = useSearchParams()
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
 
-  const activeCategoryId = searchParams.get('category')
-    ? Number(searchParams.get('category'))
-    : null
-
-  const activeMaterialId = searchParams.get('material')
-    ? Number(searchParams.get('material'))
-    : null
-
-  const activeCategory = categories.find((c) => c.id === activeCategoryId)
-  const activeMaterial = materials.find((m) => m.id === activeMaterialId)
-
   const visibleProducts = useMemo(
     () => products.filter((p) => p.isVisible),
     [products],
@@ -55,24 +42,26 @@ export default function StorePage() {
     [featuredProducts],
   )
 
+  const activeAttributes = useMemo(
+    () => readActiveAttributes(searchParams),
+    [searchParams],
+  )
+
+  const hasActiveFilter = Object.keys(activeAttributes).length > 0
+
   const catalogProducts = useMemo(() => {
     return visibleProducts.filter((p) => {
-      if (activeCategoryId === null && activeMaterialId === null && featuredProductIds.has(p.id)) return false
-      if (activeCategoryId !== null && p.categoryId !== activeCategoryId) return false
-      if (activeMaterialId !== null && p.materialId !== activeMaterialId) return false
+      if (!hasActiveFilter && featuredProductIds.has(p.id)) return false
+      for (const [key, value] of Object.entries(activeAttributes)) {
+        if (String(p.attributes?.[key] ?? '') !== value) return false
+      }
       return true
     })
-  }, [visibleProducts, activeCategoryId, activeMaterialId, featuredProductIds])
-
-  const selectedCategoryName = selectedProduct
-    ? (categories.find((c) => c.id === selectedProduct.categoryId)?.name ?? '')
-    : ''
+  }, [visibleProducts, featuredProductIds, activeAttributes, hasActiveFilter])
 
   function sectionTitle() {
-    if (activeCategory && activeMaterial) return `${activeCategory.name} · ${activeMaterial.name}`
-    if (activeCategory) return activeCategory.name
-    if (activeMaterial) return activeMaterial.name
-    return 'Todos os Produtos'
+    if (!hasActiveFilter) return 'Todos os Produtos'
+    return Object.values(activeAttributes).join(' · ')
   }
 
   if (!loading && error) {
@@ -92,22 +81,17 @@ export default function StorePage() {
         storeDescription={storeDescription}
         logoUrl={logoUrl}
         productCount={visibleProducts.length}
-        categories={categories}
       />
 
-      {/* Category + material bar */}
+      {/* Attribute filter bar */}
       {!loading && (
-        <CategoryBar
-          categories={categories}
-          materials={materials}
-          products={visibleProducts}
-        />
+        <AttributeFilterBar products={visibleProducts} />
       )}
 
       {/* Content */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        {/* Hero — only on unfiltered view */}
-        {!loading && activeCategoryId === null && activeMaterialId === null && featuredProducts.length > 0 && (
+        {/* Hero — only when no active filters */}
+        {!loading && !hasActiveFilter && featuredProducts.length > 0 && (
           <HeroSection
             products={featuredProducts}
             whatsappNumber={whatsappNumber}
@@ -144,12 +128,13 @@ export default function StorePage() {
 
           {!loading && catalogProducts.length === 0 && (
             <div className="py-24 text-center">
-              <p className="text-[#9c8e84] text-sm">Nenhum produto encontrado com esses filtros.</p>
+              <p className="text-[#9c8e84] text-sm">
+                {hasActiveFilter ? 'Nenhum produto encontrado com esses filtros.' : 'Nenhum produto disponível.'}
+              </p>
             </div>
           )}
 
-          {/* Load more — only on unfiltered view to avoid pagination/filter mismatch */}
-          {!loading && hasMore && activeCategoryId === null && activeMaterialId === null && (
+          {!loading && hasMore && (
             <div className="flex justify-center mt-10">
               <button
                 onClick={loadMore}
@@ -190,7 +175,6 @@ export default function StorePage() {
         <ProductModal
           product={selectedProduct}
           whatsappNumber={whatsappNumber}
-          categoryName={selectedCategoryName}
           onClose={() => setSelectedProduct(null)}
         />
       )}

@@ -3,13 +3,6 @@ import type { Product } from '../types'
 import { buildWhatsAppUrl } from '../utils/whatsapp'
 import { registerWhatsAppClick } from '../services/productService'
 
-const MATERIAL_BADGE: Record<string, string> = {
-  PLA:    'bg-amber-50 text-amber-700 border-amber-200',
-  ABS:    'bg-slate-100 text-slate-600 border-slate-200',
-  Resina: 'bg-violet-50 text-violet-700 border-violet-200',
-  PETG:   'bg-teal-50 text-teal-700 border-teal-200',
-}
-const defaultBadge = 'bg-stone-100 text-stone-500 border-stone-200'
 
 interface HeroSectionProps {
   products: Product[]
@@ -182,8 +175,7 @@ interface HeroCardProps {
 }
 
 function HeroCard({ product, whatsappNumber, onOpenModal }: HeroCardProps) {
-  const { name, imageUrl, materialName, description } = product
-  const badgeStyle  = MATERIAL_BADGE[materialName ?? ''] ?? defaultBadge
+  const { name, imageUrl, description } = product
   const whatsappUrl = buildWhatsAppUrl(whatsappNumber, name)
 
   return (
@@ -211,12 +203,6 @@ function HeroCard({ product, whatsappNumber, onOpenModal }: HeroCardProps) {
 
       {/* Conteúdo — ocupa o restante da altura do card */}
       <div className="p-4 flex flex-col gap-2.5 flex-1">
-        {materialName && (
-          <span className={`self-start rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${badgeStyle}`}>
-            {materialName}
-          </span>
-        )}
-
         <h3 className="text-base font-semibold text-[#1c1813] leading-snug line-clamp-2 flex-1">{name}</h3>
 
         {description && (

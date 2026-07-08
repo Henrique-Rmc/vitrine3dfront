@@ -1,11 +1,8 @@
-import type { Category } from '../types'
-
 interface StoreProfileHeaderProps {
   storeName: string
   storeDescription: string
   logoUrl: string
   productCount: number
-  categories: Category[]
 }
 
 export default function StoreProfileHeader({
@@ -13,7 +10,6 @@ export default function StoreProfileHeader({
   storeDescription,
   logoUrl,
   productCount,
-  categories,
 }: StoreProfileHeaderProps) {
   const initials = storeName
     .split(' ')
@@ -60,11 +56,6 @@ export default function StoreProfileHeader({
               <div className="text-center sm:text-left">
                 <p className="text-lg font-bold text-[#1c1813]">{productCount}</p>
                 <p className="text-xs text-[#9c8e84] uppercase tracking-wide">Produtos</p>
-              </div>
-              <div className="w-px h-8 bg-[#e8e2d8]" />
-              <div className="text-center sm:text-left">
-                <p className="text-lg font-bold text-[#1c1813]">{categories.length}</p>
-                <p className="text-xs text-[#9c8e84] uppercase tracking-wide">Categorias</p>
               </div>
             </div>
           </div>

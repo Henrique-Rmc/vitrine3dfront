@@ -36,15 +36,11 @@ export interface Product {
   name: string
   description: string | null
   imageUrl: string | null
-  materialId: number | null
-  materialName: string | null
-  dimensions: string | null
   isVisible: boolean
-  categoryId: number
-  categoryName?: string | null
-  storeId: string
-  price?: number | null
-  whatsappUrl?: string
   featured?: boolean
+  price?: number | null
+  storeId: string
+  whatsappUrl?: string
   clickCount?: number
+  attributes?: Record<string, unknown>
 }

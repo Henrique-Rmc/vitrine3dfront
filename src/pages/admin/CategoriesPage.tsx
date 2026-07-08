@@ -160,9 +160,9 @@ export default function CategoriesPage() {
             usa para encontrar o que procura na sua vitrine.
           </p>
           <p className="mt-1.5">
-            <span className="font-medium">Exemplo:</span> Se você vende uma luminária de resina e um vaso
-            decorativo de madeira, ambos podem estar na categoria <strong>"Decoração para Casa"</strong>. Já
-            um colar feito em impressão 3D ficaria em <strong>"Acessórios"</strong>. A categoria não diz
+            <span className="font-medium">Exemplo:</span> Se você vende uma luminária e um vaso
+            decorativo, ambos podem estar na categoria <strong>"Decoração"</strong>. Já
+            um colar ficaria em <strong>"Acessórios"</strong>. A categoria não diz
             <em> como</em> o produto foi feito — ela diz <em>para que serve</em>. Para o material
             utilizado, use os <strong>Tipos</strong>.
           </p>

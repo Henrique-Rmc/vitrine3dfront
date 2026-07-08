@@ -2,9 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { listProducts, patchFeatured, deleteProduct, reorderProducts } from '../../services/productService'
-import { listCategories } from '../../services/categoryService'
-import { listMaterials } from '../../services/materialService'
-import type { Product, Category, Material } from '../../types'
+import type { Product } from '../../types'
 import ProductList from '../../components/ProductList'
 
 function LoadingSkeleton() {
@@ -75,10 +73,8 @@ export default function ProductManagement() {
   const [hasMore, setHasMore]             = useState(false)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
 
-  const [categories, setCategories] = useState<Category[]>([])
-  const [materials, setMaterials]   = useState<Material[]>([])
-  const [filterCategoryId, setFilterCategoryId] = useState<number | null>(null)
-  const [filterMaterialId, setFilterMaterialId] = useState<number | null>(null)
+  // Attribute filters (client-side)
+  const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({})
 
   // Reorder mode state
   const [reorderMode, setReorderMode]     = useState(false)
@@ -106,12 +102,6 @@ export default function ProductManagement() {
   }, [storeId])
 
   useEffect(() => { fetchProducts() }, [fetchProducts])
-
-  useEffect(() => {
-    if (!storeId) return
-    listCategories(storeId).then(setCategories).catch(() => {})
-    listMaterials(storeId).then(setMaterials).catch(() => {})
-  }, [storeId])
 
   async function loadMoreProducts() {
     if (isLoadingMore || !storeId) return
@@ -201,17 +191,35 @@ export default function ProductManagement() {
     })
   }
 
+  // Build attribute map from all loaded products
+  const availableAttributes = useMemo(() => {
+    const map = new Map<string, string[]>()
+    for (const p of products) {
+      if (!p.attributes) continue
+      for (const [key, rawValue] of Object.entries(p.attributes)) {
+        if (rawValue == null) continue
+        const value = String(rawValue)
+        if (!map.has(key)) map.set(key, [])
+        if (!map.get(key)!.includes(value)) map.get(key)!.push(value)
+      }
+    }
+    for (const values of map.values()) values.sort()
+    return map
+  }, [products])
+
+  const hasActiveFilter = Object.keys(selectedAttributes).length > 0
+
   const baseProducts = reorderMode ? pendingOrder : products
 
   const displayProducts = useMemo(() => {
+    if (reorderMode || !hasActiveFilter) return baseProducts
     return baseProducts.filter((p) => {
-      if (filterCategoryId !== null && p.categoryId !== filterCategoryId) return false
-      if (filterMaterialId !== null && p.materialId !== filterMaterialId) return false
+      for (const [key, value] of Object.entries(selectedAttributes)) {
+        if (String(p.attributes?.[key] ?? '') !== value) return false
+      }
       return true
     })
-  }, [baseProducts, filterCategoryId, filterMaterialId])
-
-  const hasActiveFilter = filterCategoryId !== null || filterMaterialId !== null
+  }, [baseProducts, reorderMode, selectedAttributes, hasActiveFilter])
 
   if (isLoading) return <LoadingSkeleton />
   if (!loadError && products.length === 0) return <EmptyState onAdd={() => navigate('/admin/products/new')} />
@@ -275,45 +283,42 @@ export default function ProductManagement() {
         </div>
       </div>
 
-      {/* Filters */}
-      {!reorderMode && (categories.length > 0 || materials.length > 0) && (
+      {/* Attribute filters */}
+      {!reorderMode && availableAttributes.size > 0 && (
         <div className="flex flex-wrap items-center gap-2 mb-4">
-          {categories.length > 0 && (
+          {Array.from(availableAttributes.entries()).map(([key, values]) => (
             <select
-              value={filterCategoryId ?? ''}
-              onChange={(e) => setFilterCategoryId(e.target.value === '' ? null : Number(e.target.value))}
-              className="rounded-lg border border-[#e8e2d8] bg-white px-3 py-2 text-sm text-[#1c1813] focus:outline-none focus:ring-2 focus:ring-[#c9922c]/40 focus:border-[#c9922c]/60 transition-colors"
+              key={key}
+              value={selectedAttributes[key] ?? ''}
+              onChange={(e) => {
+                const val = e.target.value
+                setSelectedAttributes((prev) => {
+                  const next = { ...prev }
+                  if (val === '') delete next[key]
+                  else next[key] = val
+                  return next
+                })
+              }}
+              className="rounded-lg border border-[#e8e2d8] bg-white px-3 py-2 text-sm text-[#1c1813] focus:outline-none focus:ring-2 focus:ring-[#c9922c]/40 focus:border-[#c9922c]/60 transition-colors capitalize"
             >
-              <option value="">Todas as Categorias</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
+              <option value="">Todos ({key})</option>
+              {values.map((v) => (
+                <option key={v} value={v}>{v}</option>
               ))}
             </select>
-          )}
-          {materials.length > 0 && (
-            <select
-              value={filterMaterialId ?? ''}
-              onChange={(e) => setFilterMaterialId(e.target.value === '' ? null : Number(e.target.value))}
-              className="rounded-lg border border-[#e8e2d8] bg-white px-3 py-2 text-sm text-[#1c1813] focus:outline-none focus:ring-2 focus:ring-[#c9922c]/40 focus:border-[#c9922c]/60 transition-colors"
-            >
-              <option value="">Todos os Tipos</option>
-              {materials.map((m) => (
-                <option key={m.id} value={m.id}>{m.name}</option>
-              ))}
-            </select>
-          )}
+          ))}
           {hasActiveFilter && (
-            <button
-              onClick={() => { setFilterCategoryId(null); setFilterMaterialId(null) }}
-              className="text-xs text-[#9c8e84] hover:text-[#1c1813] underline transition-colors"
-            >
-              Limpar filtros
-            </button>
-          )}
-          {hasActiveFilter && (
-            <span className="text-xs text-[#9c8e84]">
-              {displayProducts.length} de {products.length} produto{products.length !== 1 ? 's' : ''}
-            </span>
+            <>
+              <button
+                onClick={() => setSelectedAttributes({})}
+                className="text-xs text-[#9c8e84] hover:text-[#1c1813] underline transition-colors"
+              >
+                Limpar filtros
+              </button>
+              <span className="text-xs text-[#9c8e84]">
+                {displayProducts.length} de {products.length} produto{products.length !== 1 ? 's' : ''}
+              </span>
+            </>
           )}
         </div>
       )}
@@ -362,7 +367,7 @@ export default function ProductManagement() {
         onMoveDown={(id) => moveProduct(id, 'down')}
       />
 
-      {hasMore && !reorderMode && !hasActiveFilter && (
+      {hasMore && !reorderMode && (
         <div className="flex justify-center mt-6">
           <button
             onClick={loadMoreProducts}

@@ -46,14 +46,6 @@ const TrashIcon = () => (
   </svg>
 )
 
-const MATERIAL_BADGE: Record<string, string> = {
-  PLA:      'bg-amber-50 text-amber-700 border-amber-200',
-  ABS:      'bg-slate-100 text-slate-600 border-slate-200',
-  Resina:   'bg-violet-50 text-violet-700 border-violet-200',
-  PETG:     'bg-teal-50 text-teal-700 border-teal-200',
-  Flexível: 'bg-green-50 text-green-700 border-green-200',
-}
-
 function Thumbnail({ src, alt }: { src: string | null; alt: string }) {
   return (
     <div className="w-12 h-12 rounded-lg overflow-hidden bg-[#f4f1eb] shrink-0 flex items-center justify-center border border-[#e8e2d8]">
@@ -65,16 +57,6 @@ function Thumbnail({ src, alt }: { src: string | null; alt: string }) {
         </svg>
       )}
     </div>
-  )
-}
-
-function MaterialBadge({ material }: { material: string | null | undefined }) {
-  if (!material) return null
-  const colors = MATERIAL_BADGE[material] ?? 'bg-stone-100 text-stone-500 border-stone-200'
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border ${colors}`}>
-      {material}
-    </span>
   )
 }
 
@@ -172,12 +154,6 @@ export default function ProductList({
               </span>
             )}
           </div>
-          {product.dimensions && (
-            <p className="text-xs text-[#9c8e84] mt-0.5 font-mono">{product.dimensions}</p>
-          )}
-        </td>
-        <td className="px-4 py-3">
-          <MaterialBadge material={product.materialName} />
         </td>
         <td className="px-4 py-3">
           <StatusBadge isVisible={product.isVisible} />
@@ -276,7 +252,6 @@ export default function ProductList({
             {isFeatured && <StarIcon filled />}
           </div>
           <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-            <MaterialBadge material={product.materialName} />
             <StatusBadge isVisible={product.isVisible} />
           </div>
         </div>
@@ -342,7 +317,6 @@ export default function ProductList({
               {sortable && <th className="w-8" />}
               <th className="text-left px-4 py-3 text-xs font-semibold text-[#9c8e84] uppercase tracking-wide w-16">Imagem</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-[#9c8e84] uppercase tracking-wide">Nome</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-[#9c8e84] uppercase tracking-wide">Material</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-[#9c8e84] uppercase tracking-wide">Status</th>
               <th className="text-right px-4 py-3 text-xs font-semibold text-[#9c8e84] uppercase tracking-wide">Ações</th>
             </tr>

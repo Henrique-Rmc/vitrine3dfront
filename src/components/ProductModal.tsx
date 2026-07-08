@@ -3,24 +3,14 @@ import type { Product } from '../types'
 import { buildWhatsAppUrl } from '../utils/whatsapp'
 import { registerWhatsAppClick } from '../services/productService'
 
-const MATERIAL_BADGE: Record<string, string> = {
-  PLA:    'bg-amber-50 text-amber-700 border-amber-200',
-  ABS:    'bg-slate-100 text-slate-600 border-slate-200',
-  Resina: 'bg-violet-50 text-violet-700 border-violet-200',
-  PETG:   'bg-teal-50 text-teal-700 border-teal-200',
-}
-const defaultBadge = 'bg-stone-100 text-stone-500 border-stone-200'
-
 interface ProductModalProps {
   product: Product
   whatsappNumber: string
-  categoryName: string
   onClose: () => void
 }
 
-export default function ProductModal({ product, whatsappNumber, categoryName, onClose }: ProductModalProps) {
-  const { name, imageUrl, materialName, dimensions, description } = product
-  const badgeStyle = MATERIAL_BADGE[materialName ?? ''] ?? defaultBadge
+export default function ProductModal({ product, whatsappNumber, onClose }: ProductModalProps) {
+  const { name, imageUrl, description } = product
   const whatsappUrl = buildWhatsAppUrl(whatsappNumber, name)
 
   const [showWhatsAppWarning, setShowWhatsAppWarning] = useState(false)
@@ -87,41 +77,13 @@ export default function ProductModal({ product, whatsappNumber, categoryName, on
 
           {/* Details side */}
           <div className="flex flex-col gap-5 p-5 sm:p-6 overflow-y-auto flex-1">
-            <div>
-              <h2 className="text-xl font-bold text-[#1c1813] leading-tight">{name}</h2>
-              {categoryName && (
-                <span className="text-xs text-[#9c8e84] mt-1 block">{categoryName}</span>
-              )}
-            </div>
+            <h2 className="text-xl font-bold text-[#1c1813] leading-tight">{name}</h2>
 
-            <dl className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-3 text-sm border-t border-[#f0ece5] pt-4">
-              {materialName && (
-                <>
-                  <dt className="text-[#9c8e84] self-center">Material</dt>
-                  <dd>
-                    <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${badgeStyle}`}>
-                      {materialName}
-                    </span>
-                  </dd>
-                </>
-              )}
-
-              {dimensions && (
-                <>
-                  <dt className="text-[#9c8e84] self-center">Dimensões</dt>
-                  <dd className="text-[#6b5d52] font-mono text-xs">{dimensions}</dd>
-                </>
-              )}
-
-              {product.price != null && (
-                <>
-                  <dt className="text-[#9c8e84] self-center">Preço</dt>
-                  <dd className="text-[#c9922c] font-bold text-base">
-                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)}
-                  </dd>
-                </>
-              )}
-            </dl>
+            {product.price != null && (
+              <p className="text-[#c9922c] font-bold text-base border-t border-[#f0ece5] pt-4">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)}
+              </p>
+            )}
 
             {description && (
               <div className="border-t border-[#f0ece5] pt-4">

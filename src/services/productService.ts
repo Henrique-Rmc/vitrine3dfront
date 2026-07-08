@@ -7,12 +7,10 @@ export interface ProductFormData {
   name: string
   description: string
   imageUrl: string
-  materialId: number | null
-  dimensions: string
   isVisible: boolean
-  categoryId: number
   storeId: string
   price?: number | null
+  attributes?: Record<string, unknown>
 }
 
 export interface PageResponse<T> {
@@ -31,9 +29,10 @@ export type CreateProductRequest = ProductFormData
 
 function buildFormData(payload: ProductFormData, imageFile?: File | null): FormData {
   const fd = new FormData()
-  const { imageUrl, price, ...rest } = payload
+  const { imageUrl, price, attributes, ...rest } = payload
   const dataJson: Record<string, unknown> = imageFile ? { ...rest } : { ...rest, imageUrl }
   if (price != null) dataJson.price = price
+  if (attributes && Object.keys(attributes).length > 0) dataJson.attributes = attributes
   fd.append('data', JSON.stringify(dataJson))
   if (imageFile) fd.append('image', imageFile)
   return fd
