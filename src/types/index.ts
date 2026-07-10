@@ -15,6 +15,8 @@ export interface User {
   stateAbbreviation?: string | null
   cityId?: number | null
   cityName?: string | null
+  businessTypeId?: number | null
+  businessTypeName?: string | null
 }
 
 export interface Category {

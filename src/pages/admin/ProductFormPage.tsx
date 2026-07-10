@@ -6,6 +6,11 @@ import {
   getProduct,
   type ProductFormData,
 } from '../../services/productService'
+import {
+  listEffectiveAttributes,
+  addOption,
+  type AttributeDefinition,
+} from '../../services/attributeService'
 import { useAuth } from '../../context/AuthContext'
 import { compressImage } from '../../services/imageOptimizationService'
 
@@ -63,6 +68,251 @@ function Toggle({ label, description, checked, disabled, onChange }: {
   )
 }
 
+// ── Normalizes a free-text option to Title Case to prevent duplicate variations ─
+function normalizeOptionValue(raw: string): string {
+  return raw
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLowerCase()
+    .replace(/(^|\s)\S/g, (c) => c.toUpperCase())
+}
+
+// ── ENUM attribute field — dropdown + inline "add new option" ──────────────────
+function EnumAttributeField({
+  attr,
+  value,
+  disabled,
+  storeId,
+  onValueChange,
+  onDefinitionUpdate,
+}: {
+  attr: AttributeDefinition
+  value: string
+  disabled: boolean
+  storeId: string
+  onValueChange: (key: string, value: string) => void
+  onDefinitionUpdate: (updated: AttributeDefinition) => void
+}) {
+  const options  = attr.enumOptions ?? []
+  const forceNew = options.length === 0 && (attr.required ?? false)
+
+  const [isAddingNew, setIsAddingNew] = useState(forceNew)
+  const [rawInput, setRawInput]       = useState('')
+  const [isSaving, setIsSaving]       = useState(false)
+  const [addError, setAddError]       = useState<string | null>(null)
+
+  useEffect(() => { if (forceNew) setIsAddingNew(true) }, [forceNew])
+
+  const normalized  = normalizeOptionValue(rawInput)
+  const showPreview = rawInput.trim() !== '' && normalized !== rawInput.trim()
+  const isDuplicate = rawInput.trim() !== '' &&
+    options.some((opt) => normalizeOptionValue(opt) === normalized)
+
+  function cancelAdd() {
+    setIsAddingNew(false)
+    setRawInput('')
+    setAddError(null)
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!normalized || isDuplicate) return
+    setIsSaving(true)
+    setAddError(null)
+    try {
+      const updated = await addOption(storeId, attr.id, normalized)
+      onDefinitionUpdate(updated)
+      onValueChange(attr.key, normalized)
+      setRawInput('')
+      setIsAddingNew(false)
+    } catch (err: unknown) {
+      const code = (err as { response?: { data?: { code?: string } } })?.response?.data?.code
+      setAddError(
+        code === 'OPTION_ALREADY_EXISTS'
+          ? 'Esse valor já existe na lista.'
+          : 'Erro ao adicionar. Tente novamente.',
+      )
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  if (isAddingNew) {
+    return (
+      <div className="space-y-1.5">
+        <form onSubmit={handleSubmit} className="flex gap-2 items-start">
+          <div className="flex-1 min-w-0">
+            <input
+              type="text"
+              autoFocus
+              required
+              value={rawInput}
+              disabled={isSaving}
+              onChange={(e) => { setRawInput(e.target.value); setAddError(null) }}
+              placeholder="Ex: Para alugar, Residencial..."
+              className={inputClass}
+            />
+            {showPreview && !isDuplicate && (
+              <p className="mt-1 text-[11px] text-[#9c8e84]">
+                Será salvo como: <span className="font-semibold text-[#1c1813]">{normalized}</span>
+              </p>
+            )}
+            {isDuplicate && (
+              <p className="mt-1 text-[11px] text-amber-700 font-medium">
+                "{normalized}" já existe — selecione-o na lista.
+              </p>
+            )}
+            {addError && <p className="mt-1 text-[11px] text-red-600">{addError}</p>}
+          </div>
+
+          {!forceNew && (
+            <button
+              type="button"
+              onClick={cancelAdd}
+              disabled={isSaving}
+              className="shrink-0 px-3 py-2.5 rounded-lg border border-[#e8e2d8] text-[#6b5d52] hover:bg-[#f4f1eb] text-sm transition-colors disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+          )}
+
+          <button
+            type="submit"
+            disabled={!normalized || isDuplicate || isSaving}
+            className="shrink-0 flex items-center gap-1.5 px-3 py-2.5 rounded-lg bg-[#1c1813] hover:bg-[#2c2620] text-white text-sm font-medium transition-colors disabled:opacity-50"
+          >
+            {isSaving
+              ? <span className="w-3.5 h-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+              : 'Adicionar'}
+          </button>
+        </form>
+      </div>
+    )
+  }
+
+  return (
+    <select
+      value={value}
+      disabled={disabled}
+      onChange={(e) => {
+        if (e.target.value === '__add_new__') {
+          setIsAddingNew(true)
+        } else {
+          onValueChange(attr.key, e.target.value)
+        }
+      }}
+      className={inputClass}
+    >
+      <option value="" disabled={!!attr.required}>
+        {attr.required ? 'Selecionar…' : '— Não informado —'}
+      </option>
+      <option value="__add_new__">+ Adicionar novo valor</option>
+      {options.map((opt) => (
+        <option key={opt} value={opt}>{opt}</option>
+      ))}
+    </select>
+  )
+}
+
+// ── Per-type attribute input ───────────────────────────────────────────────────
+function AttributeInput({
+  attr,
+  value,
+  disabled,
+  storeId,
+  onValueChange,
+  onDefinitionUpdate,
+}: {
+  attr: AttributeDefinition
+  value: string
+  disabled: boolean
+  storeId: string
+  onValueChange: (key: string, value: string) => void
+  onDefinitionUpdate: (updated: AttributeDefinition) => void
+}) {
+  if (attr.type === 'ENUM') {
+    return (
+      <EnumAttributeField
+        attr={attr}
+        value={value}
+        disabled={disabled}
+        storeId={storeId}
+        onValueChange={onValueChange}
+        onDefinitionUpdate={onDefinitionUpdate}
+      />
+    )
+  }
+
+  if (attr.type === 'BOOLEAN') {
+    const checked = value === 'true'
+    return (
+      <label className="flex items-center gap-3 cursor-pointer select-none">
+        <button
+          type="button"
+          role="switch"
+          aria-checked={checked}
+          disabled={disabled}
+          onClick={() => onValueChange(attr.key, checked ? 'false' : 'true')}
+          className={`relative w-10 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#c9922c]/40 disabled:opacity-50 ${
+            checked ? 'bg-[#c9922c]' : 'bg-[#e8e2d8]'
+          }`}
+        >
+          <span
+            className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
+              checked ? 'translate-x-4' : 'translate-x-0'
+            }`}
+          />
+        </button>
+        <span className="text-sm text-[#6b5d52]">{checked ? 'Sim' : 'Não'}</span>
+      </label>
+    )
+  }
+
+  if (attr.type === 'DATE') {
+    return (
+      <input
+        type="date"
+        disabled={disabled}
+        value={value}
+        onChange={(e) => onValueChange(attr.key, e.target.value)}
+        className={inputClass}
+      />
+    )
+  }
+
+  if (attr.type === 'NUMBER') {
+    return (
+      <div className="relative">
+        <input
+          type="number"
+          disabled={disabled}
+          value={value}
+          onChange={(e) => onValueChange(attr.key, e.target.value)}
+          placeholder="0"
+          className={`${inputClass} ${attr.unit ? 'pr-12' : ''}`}
+        />
+        {attr.unit && (
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#9c8e84] pointer-events-none">
+            {attr.unit}
+          </span>
+        )}
+      </div>
+    )
+  }
+
+  // TEXT (default)
+  return (
+    <input
+      type="text"
+      disabled={disabled}
+      value={value}
+      onChange={(e) => onValueChange(attr.key, e.target.value)}
+      placeholder={`Informe ${attr.label.toLowerCase()}`}
+      className={inputClass}
+    />
+  )
+}
+
 export default function ProductFormPage() {
   const { id } = useParams<{ id?: string }>()
   const navigate = useNavigate()
@@ -82,7 +332,10 @@ export default function ProductFormPage() {
   const [isLoadingProduct, setIsLoadingProduct] = useState(isEditMode)
   const [notFound, setNotFound] = useState(false)
 
-  const [omitPrice, setOmitPrice] = useState(true)
+  const [omitPrice, setOmitPrice] = useState(false)
+
+  const [attributeDefinitions, setAttributeDefinitions] = useState<AttributeDefinition[]>([])
+  const [isLoadingAttributes, setIsLoadingAttributes] = useState(false)
 
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -90,6 +343,15 @@ export default function ProductFormPage() {
 
   const imageInputRef = useRef<HTMLInputElement>(null)
   const isDisabled = isSaving || isLoadingProduct
+
+  useEffect(() => {
+    if (!storeId) return
+    setIsLoadingAttributes(true)
+    listEffectiveAttributes(storeId)
+      .then(setAttributeDefinitions)
+      .catch(() => {})
+      .finally(() => setIsLoadingAttributes(false))
+  }, [storeId])
 
   useEffect(() => {
     if (isEditMode) {
@@ -115,6 +377,20 @@ export default function ProductFormPage() {
   function setField<K extends keyof ProductFormData>(key: K, value: ProductFormData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }))
     setSaveError(null)
+  }
+
+  function setAttributeValue(key: string, value: string) {
+    setForm((prev) => {
+      const attrs = { ...(prev.attributes ?? {}) }
+      if (value !== '') attrs[key] = value
+      else delete attrs[key]
+      return { ...prev, attributes: attrs }
+    })
+    setSaveError(null)
+  }
+
+  function updateDefinition(updated: AttributeDefinition) {
+    setAttributeDefinitions((prev) => prev.map((a) => (a.id === updated.id ? updated : a)))
   }
 
   async function handleImageFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -277,6 +553,34 @@ export default function ProductFormPage() {
               </div>
             )}
           </FormField>
+
+          {/* Dynamic attribute inputs */}
+          {(isLoadingAttributes || attributeDefinitions.length > 0) && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-[#6b5d52]">Características do produto</p>
+                {isLoadingAttributes && (
+                  <span className="w-4 h-4 rounded-full border-2 border-[#e8e2d8] border-t-[#9c8e84] animate-spin" />
+                )}
+              </div>
+              {!isLoadingAttributes && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {attributeDefinitions.map((attr) => (
+                    <FormField key={attr.key} label={attr.label} required={attr.required}>
+                      <AttributeInput
+                        attr={attr}
+                        value={String(form.attributes?.[attr.key] ?? '')}
+                        disabled={isDisabled}
+                        storeId={storeId}
+                        onValueChange={setAttributeValue}
+                        onDefinitionUpdate={updateDefinition}
+                      />
+                    </FormField>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="py-2">
             <Toggle label="Visível na loja" description="Clientes podem ver este produto"

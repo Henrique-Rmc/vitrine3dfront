@@ -11,8 +11,7 @@ import RegisterPage from './pages/admin/RegisterPage'
 import DashboardPage from './pages/admin/DashboardPage'
 import ProductManagement from './pages/admin/ProductManagement'
 import ProductFormPage from './pages/admin/ProductFormPage'
-import CategoriesPage from './pages/admin/CategoriesPage'
-import MaterialsPage from './pages/admin/MaterialsPage'
+import AttributesPage from './pages/admin/AttributesPage'
 import SettingsPage from './pages/admin/SettingsPage'
 import TermsOfUsePage from './pages/TermsOfUsePage'
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
@@ -57,8 +56,7 @@ export default function App() {
               <Route path="/admin/products" element={<ProductManagement />} />
               <Route path="/admin/products/new" element={<ProductFormPage />} />
               <Route path="/admin/products/edit/:id" element={<ProductFormPage />} />
-              <Route path="/admin/categories" element={<CategoriesPage />} />
-              <Route path="/admin/materials" element={<MaterialsPage />} />
+              <Route path="/admin/attributes" element={<AttributesPage />} />
               <Route path="/admin/settings" element={<SettingsPage />} />
             </Route>
           </Route>

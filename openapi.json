@@ -152,7 +152,7 @@
         "tags": [
           "Produtos"
         ],
-        "summary": "Atualiza um produto (multipart: 'data' JSON + 'image' opcional)",
+        "summary": "Atualiza um produto (multipart: 'data' JSON + 'images' opcional — substitui todas as fotos)",
         "operationId": "update_1",
         "parameters": [
           {
@@ -324,7 +324,7 @@
         "tags": [
           "Produtos"
         ],
-        "summary": "Cadastra um produto com imagem (multipart: 'data' JSON + 'image' arquivo)",
+        "summary": "Cadastra um produto com fotos (multipart: 'data' JSON + até 5 'images')",
         "operationId": "create",
         "requestBody": {
           "content": {
@@ -439,6 +439,57 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/AttributeDefinitionCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttributeDefinitionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/store/{storeId}/attributes/{attributeDefinitionId}/options": {
+      "post": {
+        "tags": [
+          "Atributos da loja"
+        ],
+        "summary": "Cadastra um valor de opcao pra um atributo do tipo lista (ENUM) — global da vertical ou customizado da propria loja",
+        "operationId": "addOption",
+        "parameters": [
+          {
+            "name": "storeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "attributeDefinitionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttributeOptionCreateRequest"
               }
             }
           },
@@ -1190,10 +1241,13 @@
             "$ref": "#/components/schemas/ProductUpdateRequest",
             "description": "Campos a atualizar"
           },
-          "image": {
-            "type": "string",
-            "format": "binary",
-            "description": "Nova imagem (opcional)"
+          "images": {
+            "type": "array",
+            "description": "Novas fotos (opcional, substitui todas as existentes)",
+            "items": {
+              "type": "string",
+              "format": "binary"
+            }
           }
         }
       },
@@ -1243,6 +1297,12 @@
           },
           "imageUrl": {
             "type": "string"
+          },
+          "imageUrls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "isVisible": {
             "type": "boolean"
@@ -1335,10 +1395,13 @@
             "$ref": "#/components/schemas/ProductCreateRequest",
             "description": "Dados do produto"
           },
-          "image": {
-            "type": "string",
-            "format": "binary",
-            "description": "Imagem do produto (opcional)"
+          "images": {
+            "type": "array",
+            "description": "Fotos do produto (opcional, até 5)",
+            "items": {
+              "type": "string",
+              "format": "binary"
+            }
           }
         }
       },
@@ -1362,10 +1425,13 @@
           "isVisible": {
             "type": "boolean"
           },
-          "imageUrl": {
-            "type": "string",
-            "maxLength": 2048,
-            "minLength": 0
+          "imageUrls": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 2048,
+              "minLength": 0
+            }
           },
           "price": {
             "type": "number",
@@ -1481,6 +1547,19 @@
             "type": "boolean"
           }
         }
+      },
+      "AttributeOptionCreateRequest": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "value"
+        ]
       },
       "RefreshResponse": {
         "type": "object",

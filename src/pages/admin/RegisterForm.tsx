@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { registerUser, uploadLogo } from '../../services/authService'
 import { listStates, listCitiesByState, type BrazilState, type BrazilCity } from '../../services/locationService'
+import { listBusinessTypes, type BusinessType } from '../../services/businessTypeService'
 import { compressImage } from '../../services/imageOptimizationService'
 import { useAuth } from '../../context/AuthContext'
 
@@ -18,6 +19,7 @@ interface RegisterFormData {
   storeDescription: string
   stateId: number | null
   cityId: number | null
+  businessTypeId: number | null
 }
 
 type FormErrorKey = keyof RegisterFormData | 'global'
@@ -33,6 +35,7 @@ const EMPTY_FORM: RegisterFormData = {
   storeDescription: '',
   stateId: null,
   cityId: null,
+  businessTypeId: null,
 }
 
 const CUSTOM_CITY_VALUE = '__custom__'
@@ -139,6 +142,9 @@ export default function RegisterForm() {
   const [form, setForm] = useState<RegisterFormData>(EMPTY_FORM)
   const [formErrors, setFormErrors] = useState<FormErrors>({})
 
+  const [businessTypes, setBusinessTypes]         = useState<BusinessType[]>([])
+  const [loadingBusinessTypes, setLoadingBusinessTypes] = useState(true)
+
   const [states, setStates]               = useState<BrazilState[]>([])
   const [cities, setCities]               = useState<BrazilCity[]>([])
   const [loadingStates, setLoadingStates] = useState(true)
@@ -156,6 +162,10 @@ export default function RegisterForm() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
+    listBusinessTypes()
+      .then(setBusinessTypes)
+      .catch(() => undefined)
+      .finally(() => setLoadingBusinessTypes(false))
     listStates()
       .then(setStates)
       .catch(() => undefined)
@@ -230,6 +240,7 @@ export default function RegisterForm() {
     if (form.password.length < MIN_PASSWORD_LENGTH) {
       clientErrors.password = `A senha deve ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`
     }
+    if (!form.businessTypeId) clientErrors.businessTypeId = 'Selecione o tipo de negócio da sua loja.'
     if (!form.stateId) clientErrors.stateId = 'Selecione o estado.'
     if (!form.cityId && !customCityName.trim()) clientErrors.cityId = 'Selecione ou informe a cidade.'
     if (!acceptedTerms) {
@@ -249,10 +260,11 @@ export default function RegisterForm() {
         storeDescription: form.storeDescription,
         stateId: form.stateId!,
         ...(form.cityId !== null && { cityId: form.cityId }),
+        ...(form.businessTypeId !== null && { businessTypeId: form.businessTypeId }),
       })
       if (logoFile) await uploadLogo(created.id, logoFile).catch(() => undefined)
       await login(form.email, form.password)
-      navigate('/admin/categories?onboarding=1')
+      navigate('/admin/attributes?onboarding=1')
     } catch (err) {
       setFormErrors(extractFormErrors(err))
     } finally {
@@ -351,6 +363,30 @@ export default function RegisterForm() {
           onChange={(e) => setField('storeDescription', e.target.value)}
           placeholder="Joias artesanais em prata e pedras naturais, feitas à mão com amor."
           className={`${inputClass(!!formErrors.storeDescription)} resize-none`} />
+      </FormField>
+
+      <FormField
+        label="Tipo de negócio"
+        required
+        error={formErrors.businessTypeId}
+        hint={!formErrors.businessTypeId ? 'Define os atributos padrão dos seus produtos.' : undefined}
+      >
+        <select
+          required
+          disabled={isLoading || loadingBusinessTypes}
+          value={form.businessTypeId !== null ? String(form.businessTypeId) : ''}
+          onChange={(e) => {
+            setField('businessTypeId', e.target.value ? Number(e.target.value) : null)
+          }}
+          className={selectClass(!!formErrors.businessTypeId)}
+        >
+          <option value="">
+            {loadingBusinessTypes ? 'Carregando…' : 'Selecione o tipo de negócio'}
+          </option>
+          {businessTypes.map((bt) => (
+            <option key={bt.id} value={bt.id}>{bt.name}</option>
+          ))}
+        </select>
       </FormField>
 
       <FormField label="WhatsApp" required error={formErrors.whatsappNumber}
