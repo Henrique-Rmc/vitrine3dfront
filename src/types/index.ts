@@ -38,6 +38,7 @@ export interface Product {
   name: string
   description: string | null
   imageUrl: string | null
+  imageUrls?: string[] | null
   isVisible: boolean
   featured?: boolean
   price?: number | null

@@ -329,12 +329,12 @@ export default function ProductFormPage() {
   const storeId = user?.id ?? ''
 
   const emptyForm = (): ProductFormData => ({
-    name: '', description: '', imageUrl: '', isVisible: true, storeId, price: null, attributes: {},
+    name: '', description: '', imageUrls: [], isVisible: true, storeId, price: null, attributes: {},
   })
 
   const [form, setForm] = useState<ProductFormData>(emptyForm)
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [imageFiles, setImageFiles] = useState<File[]>([])
+  const [imagePreviews, setImagePreviews] = useState<string[]>([])
   const [isOptimizingImage, setIsOptimizingImage] = useState(false)
 
   const [isLoadingProduct, setIsLoadingProduct] = useState(isEditMode)
@@ -365,17 +365,21 @@ export default function ProductFormPage() {
     if (isEditMode) {
       getProduct(Number(id))
         .then((product) => {
+          const existingUrls =
+            product.imageUrls?.length ? product.imageUrls
+            : product.imageUrl        ? [product.imageUrl]
+            : []
           setForm({
             name: product.name,
             description: product.description ?? '',
-            imageUrl: product.imageUrl ?? '',
+            imageUrls: existingUrls,
             isVisible: product.isVisible,
             storeId,
             price: product.price ?? null,
             attributes: (product.attributes ?? {}) as Record<string, unknown>,
           })
           setOmitPrice(product.price == null)
-          if (product.imageUrl) setImagePreview(product.imageUrl)
+          setImagePreviews(existingUrls)
         })
         .catch(() => setNotFound(true))
         .finally(() => setIsLoadingProduct(false))
@@ -401,19 +405,38 @@ export default function ProductFormPage() {
     setAttributeDefinitions((prev) => prev.map((a) => (a.id === updated.id ? updated : a)))
   }
 
-  async function handleImageFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0] ?? null
-    if (!file) return
+  async function handleImageFilesChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const selected = Array.from(e.target.files ?? [])
+    e.target.value = ''
+    if (selected.length === 0) return
+
+    const MAX = 5
+    const MAX_BYTES = 2 * 1024 * 1024
+    const ALLOWED = ['image/png', 'image/jpeg', 'image/webp']
+
+    const badType = selected.find((f) => !ALLOWED.includes(f.type))
+    if (badType) { setSaveError(`Formato não suportado: ${badType.name}. Use PNG, JPG ou WebP.`); return }
+    const tooBig = selected.find((f) => f.size > MAX_BYTES)
+    if (tooBig) { setSaveError(`${tooBig.name} excede 2 MB.`); return }
+
+    setSaveError(null)
+    const capped = selected.slice(0, MAX)
+    if (selected.length > MAX) setSaveError(`Máximo de ${MAX} fotos. As primeiras ${MAX} foram selecionadas.`)
+
     setIsOptimizingImage(true)
-    setImagePreview(URL.createObjectURL(file))
-    setField('imageUrl', '')
+    setField('imageUrls', [])
     try {
-      const compressed = await compressImage(file)
-      setImageFile(compressed)
-      setImagePreview(URL.createObjectURL(compressed))
+      const compressed = await Promise.all(capped.map(compressImage))
+      setImageFiles(compressed)
+      setImagePreviews(compressed.map((f) => URL.createObjectURL(f)))
     } finally {
       setIsOptimizingImage(false)
     }
+  }
+
+  function removeImageFile(index: number) {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index))
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index))
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -423,9 +446,9 @@ export default function ProductFormPage() {
     const startedAt = Date.now()
     try {
       if (isEditMode) {
-        await updateProduct(Number(id), { ...form, storeId }, imageFile)
+        await updateProduct(Number(id), { ...form, storeId }, imageFiles)
       } else {
-        await createProduct({ ...form, storeId }, imageFile)
+        await createProduct({ ...form, storeId }, imageFiles)
       }
       const elapsed = Date.now() - startedAt
       if (elapsed < 1000) await new Promise<void>((r) => setTimeout(r, 1000 - elapsed))
@@ -501,10 +524,11 @@ export default function ProductFormPage() {
           </FormField>
 
           <FormField
-            label="Imagem do produto"
-            hint={isOptimizingImage ? undefined : imageFile ? `Arquivo: ${imageFile.name}` : 'Faça upload de um arquivo ou cole uma URL abaixo'}
+            label="Fotos do produto"
+            hint={isOptimizingImage ? undefined : imageFiles.length > 0 ? `${imageFiles.length} foto${imageFiles.length > 1 ? 's' : ''} selecionada${imageFiles.length > 1 ? 's' : ''}` : 'PNG, JPG ou WebP · até 5 fotos · máx. 2 MB cada'}
           >
             <div className="space-y-2">
+              {/* Upload button */}
               <button
                 type="button"
                 disabled={isDisabled || isOptimizingImage}
@@ -514,31 +538,53 @@ export default function ProductFormPage() {
                 {isOptimizingImage ? (
                   <>
                     <span className="w-6 h-6 rounded-full border-2 border-[#e8e2d8] border-t-[#c9922c] animate-spin shrink-0" />
-                    <span className="text-sm text-[#9c8e84]">Optimizing image...</span>
-                  </>
-                ) : imagePreview ? (
-                  <>
-                    <img src={imagePreview} alt="" className="w-12 h-12 rounded-lg object-cover border border-[#e8e2d8] shrink-0"
-                      onError={(e) => { e.currentTarget.style.display = 'none' }} />
-                    <span className="text-sm text-[#c9922c]">Trocar imagem</span>
+                    <span className="text-sm text-[#9c8e84]">Comprimindo imagens…</span>
                   </>
                 ) : (
                   <>
                     <svg className="w-6 h-6 text-[#d4cec5] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                     </svg>
-                    <span className="text-sm text-[#9c8e84]">Fazer upload de imagem</span>
+                    <span className="text-sm text-[#9c8e84]">
+                      {imageFiles.length > 0 ? 'Trocar seleção de fotos' : 'Fazer upload de fotos (até 5)'}
+                    </span>
                   </>
                 )}
               </button>
-              <input ref={imageInputRef} type="file" accept="image/png,image/jpeg,image/webp"
-                className="sr-only" onChange={handleImageFileChange} />
 
-              {!imageFile && (
+              <input ref={imageInputRef} type="file" accept="image/png,image/jpeg,image/webp"
+                multiple className="sr-only" onChange={handleImageFilesChange} />
+
+              {/* Preview grid — new files take priority over saved URLs */}
+              {(imageFiles.length > 0 || form.imageUrls.length > 0) && (
+                <div className="flex flex-wrap gap-2">
+                  {(imageFiles.length > 0 ? imagePreviews : form.imageUrls).map((src, i) => (
+                    <div key={src + i} className="relative">
+                      <img src={src} alt="" className="w-16 h-16 rounded-lg object-cover border border-[#e8e2d8]"
+                        onError={(e) => { e.currentTarget.style.display = 'none' }} />
+                      <button
+                        type="button"
+                        onClick={() => imageFiles.length > 0
+                          ? removeImageFile(i)
+                          : setField('imageUrls', form.imageUrls.filter((_, idx) => idx !== i))
+                        }
+                        className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center leading-none"
+                      >×</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* URL input — only when no files are queued */}
+              {imageFiles.length === 0 && (
                 <input type="url" disabled={isDisabled}
-                  value={form.imageUrl}
-                  onChange={(e) => { setField('imageUrl', e.target.value); setImagePreview(e.target.value || null) }}
-                  placeholder="https://... (opcional se fizer upload acima)"
+                  value={form.imageUrls[0] ?? ''}
+                  onChange={(e) => {
+                    const url = e.target.value.trim()
+                    setField('imageUrls', url ? [url] : [])
+                    setImagePreviews(url ? [url] : [])
+                  }}
+                  placeholder="Ou cole uma URL de imagem"
                   className={inputClass} />
               )}
             </div>

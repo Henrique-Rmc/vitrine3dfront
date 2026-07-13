@@ -6,7 +6,7 @@ import type { Product } from '../types'
 export interface ProductFormData {
   name: string
   description: string
-  imageUrl: string
+  imageUrls: string[]
   isVisible: boolean
   storeId: string
   price?: number | null
@@ -27,14 +27,16 @@ export type CreateProductRequest = ProductFormData
 
 // ── Private helper ────────────────────────────────────────────────────────────
 
-function buildFormData(payload: ProductFormData, imageFile?: File | null): FormData {
+function buildFormData(payload: ProductFormData, imageFiles: File[]): FormData {
   const fd = new FormData()
-  const { imageUrl, price, attributes, ...rest } = payload
-  const dataJson: Record<string, unknown> = imageFile ? { ...rest } : { ...rest, imageUrl }
+  const { imageUrls, price, attributes, ...rest } = payload
+  const dataJson: Record<string, unknown> = imageFiles.length > 0
+    ? { ...rest }
+    : { ...rest, imageUrls }
   if (price != null) dataJson.price = price
   if (attributes && Object.keys(attributes).length > 0) dataJson.attributes = attributes
   fd.append('data', JSON.stringify(dataJson))
-  if (imageFile) fd.append('image', imageFile)
+  imageFiles.forEach((file) => fd.append('images', file))
   return fd
 }
 
@@ -80,18 +82,18 @@ export async function getProduct(id: number): Promise<Product> {
 
 export async function createProduct(
   payload: ProductFormData,
-  imageFile?: File | null,
+  imageFiles: File[] = [],
 ): Promise<Product> {
-  const { data } = await apiClient.post<Product>('/api/products', buildFormData(payload, imageFile))
+  const { data } = await apiClient.post<Product>('/api/products', buildFormData(payload, imageFiles))
   return data
 }
 
 export async function updateProduct(
   id: number,
   payload: ProductFormData,
-  imageFile?: File | null,
+  imageFiles: File[] = [],
 ): Promise<Product> {
-  const { data } = await apiClient.put<Product>(`/api/products/${id}`, buildFormData(payload, imageFile))
+  const { data } = await apiClient.put<Product>(`/api/products/${id}`, buildFormData(payload, imageFiles))
   return data
 }
 

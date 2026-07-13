@@ -16,12 +16,12 @@
       "description": "Gerenciamento de produtos da vitrine"
     },
     {
-      "name": "Usuários",
-      "description": "Cadastro e consulta de lojistas"
+      "name": "Health",
+      "description": "Verificação de disponibilidade do serviço e de suas dependências (Postgres, Redis)"
     },
     {
-      "name": "Health",
-      "description": "Verificação de disponibilidade do serviço"
+      "name": "Usuários",
+      "description": "Cadastro e consulta de lojistas"
     },
     {
       "name": "Tipos de negócio",
@@ -1025,7 +1025,7 @@
         "tags": [
           "Health"
         ],
-        "summary": "Retorna status da aplicação (público)",
+        "summary": "Retorna status da aplicação e de suas dependências — Postgres e Redis (público)",
         "operationId": "health",
         "responses": {
           "200": {
