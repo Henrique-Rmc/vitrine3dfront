@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import { registerUser, uploadLogo } from '../../services/authService'
+import { registerUser, uploadLogo, updateUserProfile } from '../../services/authService'
 import { listStates, listCitiesByState, type BrazilState, type BrazilCity } from '../../services/locationService'
 import { listBusinessTypes, type BusinessType } from '../../services/businessTypeService'
 import { compressImage } from '../../services/imageOptimizationService'
@@ -137,7 +137,7 @@ function FormField({ label, hint, error, required, children }: {
 
 export default function RegisterForm() {
   const navigate = useNavigate()
-  const { login } = useAuth()
+  const { login, updateUser } = useAuth()
 
   const [form, setForm] = useState<RegisterFormData>(EMPTY_FORM)
   const [formErrors, setFormErrors] = useState<FormErrors>({})
@@ -264,6 +264,16 @@ export default function RegisterForm() {
       })
       if (logoFile) await uploadLogo(created.id, logoFile).catch(() => undefined)
       await login(form.email, form.password)
+      // The register endpoint does not reliably persist userName; send an explicit
+      // update now that we have an auth token so the name is saved correctly.
+      const whatsapp = `55${form.whatsappNumber.replace(/\D/g, '')}`
+      const updated = await updateUserProfile(created.id, {
+        userName: form.userName,
+        storeName: form.storeName,
+        whatsappNumber: whatsapp,
+        storeDescription: form.storeDescription,
+      }).catch(() => null)
+      if (updated) updateUser({ userName: updated.userName })
       navigate('/admin/attributes?onboarding=1')
     } catch (err) {
       setFormErrors(extractFormErrors(err))

@@ -114,14 +114,19 @@ function EnumAttributeField({
     setAddError(null)
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!normalized || isDuplicate) return
+  async function handleSave() {
+    if (!normalized || isDuplicate || isSaving) return
     setIsSaving(true)
     setAddError(null)
     try {
       const updated = await addOption(storeId, attr.id, normalized)
-      onDefinitionUpdate(updated)
+      // Backend may not include the new value in enumOptions — merge it in
+      const base = updated.enumOptions ?? attr.enumOptions ?? []
+      const patchedDef: AttributeDefinition = {
+        ...updated,
+        enumOptions: base.includes(normalized) ? base : [...base, normalized],
+      }
+      onDefinitionUpdate(patchedDef)
       onValueChange(attr.key, normalized)
       setRawInput('')
       setIsAddingNew(false)
@@ -140,15 +145,17 @@ function EnumAttributeField({
   if (isAddingNew) {
     return (
       <div className="space-y-1.5">
-        <form onSubmit={handleSubmit} className="flex gap-2 items-start">
+        {/* Intentionally a <div>, not a <form> — avoids nested-form HTML invalidity
+            since this renders inside the product <form>. Enter is handled via onKeyDown. */}
+        <div className="flex gap-2 items-start">
           <div className="flex-1 min-w-0">
             <input
               type="text"
               autoFocus
-              required
               value={rawInput}
               disabled={isSaving}
               onChange={(e) => { setRawInput(e.target.value); setAddError(null) }}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSave() } }}
               placeholder="Ex: Para alugar, Residencial..."
               className={inputClass}
             />
@@ -177,7 +184,8 @@ function EnumAttributeField({
           )}
 
           <button
-            type="submit"
+            type="button"
+            onClick={handleSave}
             disabled={!normalized || isDuplicate || isSaving}
             className="shrink-0 flex items-center gap-1.5 px-3 py-2.5 rounded-lg bg-[#1c1813] hover:bg-[#2c2620] text-white text-sm font-medium transition-colors disabled:opacity-50"
           >
@@ -185,7 +193,7 @@ function EnumAttributeField({
               ? <span className="w-3.5 h-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
               : 'Adicionar'}
           </button>
-        </form>
+        </div>
       </div>
     )
   }
