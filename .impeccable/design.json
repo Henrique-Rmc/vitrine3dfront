@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-21T00:00:00.000Z",
+  "title": "Design System: Vitrine3D",
+  "extensions": {
+    "colorMeta": {
+      "gold": { "role": "primary", "displayName": "Artisan Gold", "canonical": "oklch(66% 0.13 75)", "tonalRamp": ["oklch(20% 0.03 75)", "oklch(30% 0.06 75)", "oklch(40% 0.09 75)", "oklch(50% 0.11 75)", "oklch(66% 0.13 75)", "oklch(78% 0.11 75)", "oklch(88% 0.07 75)", "oklch(95% 0.03 75)"] },
+      "canvas": { "role": "neutral", "displayName": "Warm Linen", "canonical": "oklch(97.5% 0.006 75)", "tonalRamp": ["oklch(15% 0.01 75)", "oklch(28% 0.012 75)", "oklch(42% 0.012 75)", "oklch(58% 0.01 75)", "oklch(74% 0.008 75)", "oklch(88% 0.007 75)", "oklch(94% 0.006 75)", "oklch(97.5% 0.006 75)"] },
+      "card": { "role": "neutral", "displayName": "Gallery White", "canonical": "oklch(100% 0 0)", "tonalRamp": ["oklch(15% 0 0)", "oklch(30% 0 0)", "oklch(45% 0 0)", "oklch(60% 0 0)", "oklch(75% 0 0)", "oklch(88% 0 0)", "oklch(96% 0 0)", "oklch(100% 0 0)"] },
+      "raised": { "role": "neutral", "displayName": "Raised Linen", "canonical": "oklch(95.5% 0.008 75)", "tonalRamp": ["oklch(20% 0.012 75)", "oklch(34% 0.012 75)", "oklch(48% 0.01 75)", "oklch(62% 0.01 75)", "oklch(78% 0.009 75)", "oklch(89% 0.008 75)", "oklch(93% 0.008 75)", "oklch(95.5% 0.008 75)"] },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "oklch(22% 0.015 55)", "tonalRamp": ["oklch(12% 0.015 55)", "oklch(22% 0.015 55)", "oklch(32% 0.015 55)", "oklch(44% 0.015 55)", "oklch(58% 0.012 55)", "oklch(72% 0.01 55)", "oklch(86% 0.008 55)", "oklch(95% 0.006 55)"] },
+      "text-secondary": { "role": "neutral", "displayName": "Umber", "canonical": "oklch(46% 0.03 55)", "tonalRamp": ["oklch(20% 0.03 55)", "oklch(30% 0.03 55)", "oklch(38% 0.03 55)", "oklch(46% 0.03 55)", "oklch(56% 0.028 55)", "oklch(68% 0.024 55)", "oklch(80% 0.018 55)", "oklch(90% 0.012 55)"] },
+      "text-tertiary": { "role": "neutral", "displayName": "Fawn", "canonical": "oklch(63% 0.025 55)", "tonalRamp": ["oklch(25% 0.025 55)", "oklch(38% 0.025 55)", "oklch(50% 0.025 55)", "oklch(63% 0.025 55)", "oklch(72% 0.022 55)", "oklch(80% 0.018 55)", "oklch(88% 0.014 55)", "oklch(94% 0.008 55)"] },
+      "border-standard": { "role": "neutral", "displayName": "Border Linen", "canonical": "oklch(91% 0.01 75)", "tonalRamp": ["oklch(30% 0.012 75)", "oklch(45% 0.012 75)", "oklch(60% 0.012 75)", "oklch(75% 0.011 75)", "oklch(85% 0.01 75)", "oklch(91% 0.01 75)", "oklch(95% 0.008 75)", "oklch(98% 0.005 75)"] },
+      "whatsapp": { "role": "tertiary", "displayName": "WhatsApp Green", "canonical": "oklch(58% 0.15 148)", "tonalRamp": ["oklch(20% 0.08 148)", "oklch(32% 0.1 148)", "oklch(45% 0.13 148)", "oklch(58% 0.15 148)", "oklch(68% 0.15 148)", "oklch(78% 0.13 148)", "oklch(88% 0.09 148)", "oklch(95% 0.04 148)"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Store name in the vitrine hero only." },
+      "display-bold": { "displayName": "Display Bold", "purpose": "Platform landing headline only." },
+      "headline": { "displayName": "Headline", "purpose": "Admin page titles." },
+      "body": { "displayName": "Body", "purpose": "Descriptions and body copy, all surfaces." },
+      "label": { "displayName": "Label", "purpose": "Form labels, filter chips, nav items." },
+      "metadata": { "displayName": "Metadata", "purpose": "Timestamps, counts, monospace dimensions." }
+    },
+    "shadows": [
+      { "name": "card-rest", "value": "0 1px 2px rgba(28,24,19,0.05)", "purpose": "Default card elevation, always paired with a border." },
+      { "name": "modal-toast-lift", "value": "0 10px 30px rgba(28,24,19,0.12)", "purpose": "Product modal and success toast, still paired with a border." }
+    ],
+    "motion": [
+      { "name": "modal-backdrop-in", "value": "opacity 0 -> 1", "purpose": "Modal backdrop fade-in." },
+      { "name": "modal-panel-in", "value": "opacity 0->1, scale 0.96->1, translateY 12px->0", "purpose": "Modal panel entrance." },
+      { "name": "shimmer", "value": "background-position -200% -> 200%, 1.5s infinite", "purpose": "Skeleton loading shimmer." }
+    ],
+    "breakpoints": [
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main call-to-action across admin and public surfaces.",
+      "html": "<button class=\"ds-btn-primary\">Salvar</button>",
+      "css": ".ds-btn-primary { background: #1c1813; color: #ffffff; font-weight: 600; font-size: 0.875rem; padding: 10px 20px; border: none; border-radius: 8px; transition: background 0.2s ease-out; } .ds-btn-primary:hover { background: #2c2620; } .ds-btn-primary:focus-visible { outline: 2px solid #c9922c; outline-offset: 2px; } .ds-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary action, cancel, or dismissive action.",
+      "html": "<button class=\"ds-btn-ghost\">Cancelar</button>",
+      "css": ".ds-btn-ghost { background: transparent; color: #6b5d52; font-weight: 600; font-size: 0.875rem; padding: 10px 20px; border: 1px solid #e8e2d8; border-radius: 8px; transition: color 0.2s ease-out, border-color 0.2s ease-out; } .ds-btn-ghost:hover { color: #1c1813; border-color: #d4cec5; } .ds-btn-ghost:focus-visible { outline: 2px solid #c9922c; outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Standard form field across admin forms.",
+      "html": "<input class=\"ds-input\" placeholder=\"Nome do produto\" />",
+      "css": ".ds-input { width: 100%; background: #f4f1eb; border: 1px solid #e8e2d8; border-radius: 8px; padding: 10px 12px; font-size: 0.875rem; color: #1c1813; transition: box-shadow 0.2s ease-out, border-color 0.2s ease-out; } .ds-input::placeholder { color: #c4b8ae; } .ds-input:focus { outline: none; box-shadow: 0 0 0 2px rgba(201,146,44,0.4); border-color: rgba(201,146,44,0.6); } .ds-input:disabled { opacity: 0.5; }"
+    },
+    {
+      "name": "Product Card",
+      "kind": "card",
+      "refersTo": "card-surface",
+      "description": "White gallery card resting on the linen canvas.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-title\">Miniatura Articulada</div><div class=\"ds-card-price\">R$ 89,90</div></div>",
+      "css": ".ds-card { background: #ffffff; border: 1px solid #e8e2d8; border-radius: 12px; box-shadow: 0 1px 2px rgba(28,24,19,0.05); padding: 16px; } .ds-card-title { font-size: 0.875rem; font-weight: 600; color: #1c1813; } .ds-card-price { font-size: 0.875rem; font-weight: 600; color: #c9922c; margin-top: 4px; }"
+    },
+    {
+      "name": "Filter Chip",
+      "kind": "chip",
+      "refersTo": "filter-chip-active",
+      "description": "Category/attribute filter pill, active and inactive states.",
+      "html": "<button class=\"ds-chip ds-chip-active\">Ceramica</button> <button class=\"ds-chip\">Joias</button>",
+      "css": ".ds-chip { padding: 6px 16px; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; border: 1px solid #e8e2d8; background: #ffffff; color: #6b5d52; transition: all 0.2s ease-out; } .ds-chip:hover { border-color: #d4cec5; color: #1c1813; } .ds-chip-active { background: #1c1813; border-color: #1c1813; color: #ffffff; box-shadow: 0 1px 2px rgba(28,24,19,0.05); }"
+    },
+    {
+      "name": "Admin Nav Item",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "Sidebar and bottom-nav item, active/inactive states.",
+      "html": "<a class=\"ds-nav-item ds-nav-item-active\">Produtos</a><a class=\"ds-nav-item\">Filtros</a>",
+      "css": ".ds-nav-item { display: block; padding: 10px 12px; border-radius: 8px; font-size: 0.875rem; color: #9c8e84; transition: color 0.2s ease-out, background 0.2s ease-out; } .ds-nav-item:hover { color: #1c1813; background: #f4f1eb; } .ds-nav-item-active { background: rgba(201,146,44,0.1); color: #c9922c; font-weight: 600; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Boutique Vitrine",
+    "overview": "Vitrine3D exists so that anyone who makes or curates something worth a second look — a 3D-printed prop, a hand-forged ring, a canvas, a car, a listing — can hang it on their own wall without renting space in a crowded marketplace. The interface is that wall: warm linen behind the glass, a single gallery light (the artisan gold accent) picking out the price and the call to action, and nothing else competing for attention. Every screen, admin or public, behaves like a quiet gallery attendant: present, helpful, never in front of the work. This system explicitly rejects the cold SaaS dashboard (sterile gray chrome, dense enterprise tables as the default surface) and the generic marketplace grid (anonymous tiles that make every seller look interchangeable). Warmth here is structural — carried by the linen canvas, the serif display type, and the restraint of a single accent color — not applied as gradients or decoration.",
+    "keyCharacteristics": [
+      "Warm linen canvas, never stark white or cold gray",
+      "One accent color (artisan gold) used sparingly and deliberately — prices, active states, featured marks",
+      "Serif display type reserved for store names and headlines; sans-serif for everything functional",
+      "Flat, quiet surfaces lifted only by soft borders and shadow-sm, never dramatic shadows or gradients",
+      "Identical restraint across admin and public storefront — one visual language, two audiences"
+    ],
+    "rules": [
+      { "name": "The One Light Rule", "body": "Artisan gold appears in exactly one role per screen at a time — a price, an active state, or a featured mark — never as decoration or a background wash.", "section": "colors" },
+      { "name": "The Warm-Never-Cold Rule", "body": "Every neutral in this system carries a warm linen undertone. A pure gray or pure white anywhere in a surface is a bug, not a variant.", "section": "colors" },
+      { "name": "The Two-Moment Rule", "body": "Playfair Display is earned, not decorative — it appears only on the store name and the landing headline. Everywhere else is Inter.", "section": "typography" },
+      { "name": "The Passe-Partout Rule", "body": "Depth comes from a border plus a soft, tight shadow — never a wide, dramatic blur, and never a shadow without a border underneath it.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep the artisan gold accent to one role per screen — price, active state, or featured mark.",
+      "Do use the ink button (#1c1813) as the primary action color; gold is an accent, not an action surface.",
+      "Do pair every shadow with a border underneath it.",
+      "Do reserve Playfair Display for the store name and landing headline only.",
+      "Do keep every neutral warm-linen-tinted — canvas, card, borders, all of it.",
+      "Do make placeholder text hit 4.5:1 against its raised-linen background, not a lighter 'elegant' gray."
+    ],
+    "donts": [
+      "Don't build a cold SaaS dashboard feel — no sterile gray chrome, no dense tables as the default surface, no enterprise-tool spacing.",
+      "Don't build a generic marketplace grid — no anonymous, interchangeable product tiles; every seller's vitrine should feel personal.",
+      "Don't use gradients, glassmorphism, or border-left/border-right colored stripes anywhere in the system.",
+      "Don't pair a 1px border with a wide, soft box-shadow (blur >= 16px) — pick the border-plus-tight-shadow language above, never a floating ghost card.",
+      "Don't round cards or sections past rounded-2xl (16px) — this system is elegant, not 'insanely rounded'.",
+      "Don't repurpose the WhatsApp green for generic success states, or the success-green for the WhatsApp CTA — they're different signals."
+    ]
+  }
+}

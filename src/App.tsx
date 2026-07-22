@@ -12,6 +12,7 @@ import DashboardPage from './pages/admin/DashboardPage'
 import ProductManagement from './pages/admin/ProductManagement'
 import ProductFormPage from './pages/admin/ProductFormPage'
 import AttributesPage from './pages/admin/AttributesPage'
+import ProductTypesPage from './pages/admin/ProductTypesPage'
 import SettingsPage from './pages/admin/SettingsPage'
 import TermsOfUsePage from './pages/TermsOfUsePage'
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
@@ -57,6 +58,7 @@ export default function App() {
               <Route path="/admin/products/new" element={<ProductFormPage />} />
               <Route path="/admin/products/edit/:id" element={<ProductFormPage />} />
               <Route path="/admin/attributes" element={<AttributesPage />} />
+              <Route path="/admin/product-types" element={<ProductTypesPage />} />
               <Route path="/admin/settings" element={<SettingsPage />} />
             </Route>
           </Route>

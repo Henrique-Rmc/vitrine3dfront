@@ -1,21 +1,39 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import StoreProfileHeader from '../components/StoreProfileHeader'
-import AttributeFilterBar, { readActiveAttributes } from '../components/AttributeFilterBar'
 import HeroSection from '../components/HeroSection'
 import ProductCard from '../components/ProductCard'
 import ProductModal from '../components/ProductModal'
 import ProductSkeleton from '../components/ProductSkeleton'
 import { useStoreInfo } from '../hooks/useStoreInfo'
+import { listProductTypes, type ProductType } from '../services/productTypeService'
+import { readActiveAttributes } from '../utils/attributeFilters'
 import type { Product } from '../types'
 
 const SKELETON_COUNT = 8
+
+function typeTab(active: boolean) {
+  return `px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-200 border ${
+    active
+      ? 'bg-[#1c1813] border-[#1c1813] text-white shadow-sm'
+      : 'border-[#e8e2d8] text-[#6b5d52] bg-white hover:border-[#d4cec5] hover:text-[#1c1813]'
+  }`
+}
+
+function chip(active: boolean) {
+  return `px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 border ${
+    active
+      ? 'bg-[#1c1813] border-[#1c1813] text-white shadow-sm'
+      : 'border-[#e8e2d8] text-[#6b5d52] bg-white hover:border-[#d4cec5] hover:text-[#1c1813]'
+  }`
+}
 
 export default function StorePage() {
   const { storeSlug = '' } = useParams<{ storeSlug: string }>()
   const { isAuthenticated } = useAuth()
   const {
+    storeId,
     storeName,
     storeDescription,
     whatsappNumber,
@@ -29,8 +47,17 @@ export default function StorePage() {
     loadMore,
   } = useStoreInfo(storeSlug)
 
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [productTypes, setProductTypes]       = useState<ProductType[]>([])
+  const [selectedTypeId, setSelectedTypeId]   = useState<number | null>(null)
+
+  useEffect(() => {
+    if (!storeId) return
+    listProductTypes(storeId)
+      .then(setProductTypes)
+      .catch(() => {})
+  }, [storeId])
 
   const visibleProducts = useMemo(
     () => products.filter((p) => p.isVisible),
@@ -49,20 +76,68 @@ export default function StorePage() {
 
   const hasActiveFilter = Object.keys(activeAttributes).length > 0
 
+  // Filter products by selected product type
+  const typeFilteredProducts = useMemo(() => {
+    if (selectedTypeId === null) return visibleProducts
+    return visibleProducts.filter((p) => p.productTypeId === selectedTypeId)
+  }, [visibleProducts, selectedTypeId])
+
+  // Derive attribute chips from type-filtered products
+  const attributeMap = useMemo(() => {
+    const map = new Map<string, string[]>()
+    for (const p of typeFilteredProducts) {
+      if (!p.attributes) continue
+      for (const [key, rawValue] of Object.entries(p.attributes)) {
+        if (rawValue == null) continue
+        const value = String(rawValue)
+        if (!map.has(key)) map.set(key, [])
+        if (!map.get(key)!.includes(value)) map.get(key)!.push(value)
+      }
+    }
+    for (const values of map.values()) values.sort()
+    return map
+  }, [typeFilteredProducts])
+
   const catalogProducts = useMemo(() => {
-    return visibleProducts.filter((p) => {
-      if (!hasActiveFilter && featuredProductIds.has(p.id)) return false
+    return typeFilteredProducts.filter((p) => {
+      // Hide featured products from catalog only on the "all" view with no filters
+      if (selectedTypeId === null && !hasActiveFilter && featuredProductIds.has(p.id)) return false
       for (const [key, value] of Object.entries(activeAttributes)) {
         if (String(p.attributes?.[key] ?? '') !== value) return false
       }
       return true
     })
-  }, [visibleProducts, featuredProductIds, activeAttributes, hasActiveFilter])
+  }, [typeFilteredProducts, featuredProductIds, activeAttributes, hasActiveFilter, selectedTypeId])
+
+  function getActive(key: string): string | null {
+    return searchParams.get(`attr_${key}`) ?? null
+  }
+
+  function setFilter(key: string, value: string | null) {
+    const next = new URLSearchParams(searchParams)
+    if (value === null) next.delete(`attr_${key}`)
+    else next.set(`attr_${key}`, value)
+    setSearchParams(next, { replace: true })
+  }
+
+  function handleTypeChange(typeId: number | null) {
+    setSelectedTypeId(typeId)
+    setSearchParams({}, { replace: true })
+  }
 
   function sectionTitle() {
+    if (selectedTypeId !== null) {
+      if (hasActiveFilter) return Object.values(activeAttributes).join(' · ')
+      return productTypes.find((t) => t.id === selectedTypeId)?.label ?? 'Produtos'
+    }
     if (!hasActiveFilter) return 'Todos os Produtos'
     return Object.values(activeAttributes).join(' · ')
   }
+
+  const hasTypeTabs = productTypes.length > 0
+  // Show attr chips when type is selected, OR when there are no type tabs (backward-compat)
+  const showAttrChips = attributeMap.size > 0 && (selectedTypeId !== null || !hasTypeTabs)
+  const showFilterBar = !loading && (hasTypeTabs || showAttrChips)
 
   if (!loading && error) {
     return (
@@ -83,15 +158,52 @@ export default function StorePage() {
         productCount={visibleProducts.length}
       />
 
-      {/* Attribute filter bar */}
-      {!loading && (
-        <AttributeFilterBar products={visibleProducts} />
+      {/* Combined filter bar: type tabs + attribute chips */}
+      {showFilterBar && (
+        <div className="sticky top-14 z-40 bg-white/95 backdrop-blur-sm border-b border-[#e8e2d8]">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            {/* ProductType tabs */}
+            {hasTypeTabs && (
+              <div className={`flex items-center gap-2 overflow-x-auto scrollbar-none py-2.5 ${showAttrChips ? 'border-b border-[#f0ece5]' : ''}`}>
+                <button onClick={() => handleTypeChange(null)} className={typeTab(selectedTypeId === null)}>
+                  Todos
+                </button>
+                {productTypes.map((pt) => (
+                  <button key={pt.id} onClick={() => handleTypeChange(pt.id)} className={typeTab(selectedTypeId === pt.id)}>
+                    {pt.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Attribute chips — only when type is selected (or no type tabs exist) */}
+            {showAttrChips && Array.from(attributeMap.entries()).map(([key, values]) => (
+              <div key={key} className="flex items-center gap-2 overflow-x-auto scrollbar-none py-2.5 border-b border-[#f0ece5] last:border-b-0">
+                <span className="text-[11px] font-semibold text-[#9c8e84] uppercase tracking-wide shrink-0 w-20 truncate">
+                  {key}
+                </span>
+                <button onClick={() => setFilter(key, null)} className={chip(getActive(key) === null)}>
+                  Todos
+                </button>
+                {values.map((value) => {
+                  const isBool = values.length <= 2 && values.every((v) => v === 'true' || v === 'false')
+                  const label = isBool ? (value === 'true' ? 'Sim' : 'Não') : value
+                  return (
+                    <button key={value} onClick={() => setFilter(key, value)} className={chip(getActive(key) === value)}>
+                      {label}
+                    </button>
+                  )
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Content */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        {/* Hero — only when no active filters */}
-        {!loading && !hasActiveFilter && featuredProducts.length > 0 && (
+        {/* Hero — only on "all" view with no attribute filters */}
+        {!loading && selectedTypeId === null && !hasActiveFilter && featuredProducts.length > 0 && (
           <HeroSection
             products={featuredProducts}
             whatsappNumber={whatsappNumber}
@@ -129,7 +241,9 @@ export default function StorePage() {
           {!loading && catalogProducts.length === 0 && (
             <div className="py-24 text-center">
               <p className="text-[#9c8e84] text-sm">
-                {hasActiveFilter ? 'Nenhum produto encontrado com esses filtros.' : 'Nenhum produto disponível.'}
+                {hasActiveFilter || selectedTypeId !== null
+                  ? 'Nenhum produto encontrado com esses filtros.'
+                  : 'Nenhum produto disponível.'}
               </p>
             </div>
           )}

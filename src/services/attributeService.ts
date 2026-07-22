@@ -4,28 +4,30 @@ export interface AttributeDefinition {
   id: number
   key: string
   label: string
-  type: 'NUMBER' | 'TEXT' | 'ENUM' | 'BOOLEAN' | 'DATE'
+  type: 'NUMBER' | 'ENUM' | 'BOOLEAN'
   unit?: string | null
   required?: boolean
   filterable?: boolean
   sortOrder?: number | null
   enumOptions?: string[] | null
   custom: boolean
+  productTypeId?: number | null
 }
 
-export async function listEffectiveAttributes(storeId: string): Promise<AttributeDefinition[]> {
-  const { data } = await apiClient.get<AttributeDefinition[]>(
-    `/api/products/store/${storeId}/attributes`,
-  )
+export async function listEffectiveAttributes(storeId: string, productTypeId?: number): Promise<AttributeDefinition[]> {
+  const url = productTypeId != null
+    ? `/api/products/store/${storeId}/attributes?productTypeId=${productTypeId}`
+    : `/api/products/store/${storeId}/attributes`
+  const { data } = await apiClient.get<AttributeDefinition[]>(url)
   return [...data].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
 }
 
 export interface CustomAttributePayload {
-  type?: AttributeDefinition['type']
-  unit?: string
   required?: boolean
   sortOrder?: number
   filterable?: boolean
+  enumOptions?: string[]
+  productTypeId?: number
 }
 
 export async function createCustomAttribute(
@@ -36,29 +38,15 @@ export async function createCustomAttribute(
 ): Promise<AttributeDefinition> {
   const { data } = await apiClient.post<AttributeDefinition>(
     `/api/products/store/${storeId}/attributes`,
-    { key, label, type: 'TEXT', filterable: true, ...options },
+    { key, label, filterable: true, ...options },
   )
   return data
-}
-
-export async function hideGlobalAttribute(storeId: string, attributeId: number): Promise<void> {
-  await apiClient.patch(`/api/products/store/${storeId}/attributes/${attributeId}/hide`)
-}
-
-export async function unhideGlobalAttribute(storeId: string, attributeId: number): Promise<void> {
-  await apiClient.patch(`/api/products/store/${storeId}/attributes/${attributeId}/unhide`)
 }
 
 export async function deleteCustomAttribute(storeId: string, attributeId: number): Promise<void> {
   await apiClient.delete(`/api/products/store/${storeId}/attributes/${attributeId}`)
 }
 
-export async function listGlobalAttributes(businessTypeId: number): Promise<AttributeDefinition[]> {
-  const { data } = await apiClient.get<AttributeDefinition[]>(
-    `/api/business-types/${businessTypeId}/attributes`,
-  )
-  return [...data].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-}
 
 export async function addOption(
   storeId: string,

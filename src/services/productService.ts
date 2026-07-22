@@ -11,6 +11,7 @@ export interface ProductFormData {
   storeId: string
   price?: number | null
   attributes?: Record<string, unknown>
+  productTypeId?: number | null
 }
 
 export interface PageResponse<T> {
@@ -27,14 +28,20 @@ export type CreateProductRequest = ProductFormData
 
 // ── Private helper ────────────────────────────────────────────────────────────
 
-function buildFormData(payload: ProductFormData, imageFiles: File[]): FormData {
+function buildFormData(
+  payload: ProductFormData,
+  imageFiles: File[],
+  includeStoreId: boolean,
+): FormData {
   const fd = new FormData()
-  const { imageUrls, price, attributes, ...rest } = payload
+  const { imageUrls, price, attributes, storeId, productTypeId, ...rest } = payload
   const dataJson: Record<string, unknown> = imageFiles.length > 0
     ? { ...rest }
     : { ...rest, imageUrls }
+  if (includeStoreId) dataJson.storeId = storeId
   if (price != null) dataJson.price = price
   if (attributes && Object.keys(attributes).length > 0) dataJson.attributes = attributes
+  if (productTypeId != null) dataJson.productTypeId = productTypeId
   fd.append('data', JSON.stringify(dataJson))
   imageFiles.forEach((file) => fd.append('images', file))
   return fd
@@ -84,7 +91,7 @@ export async function createProduct(
   payload: ProductFormData,
   imageFiles: File[] = [],
 ): Promise<Product> {
-  const { data } = await apiClient.post<Product>('/api/products', buildFormData(payload, imageFiles))
+  const { data } = await apiClient.post<Product>('/api/products', buildFormData(payload, imageFiles, true))
   return data
 }
 
@@ -93,7 +100,7 @@ export async function updateProduct(
   payload: ProductFormData,
   imageFiles: File[] = [],
 ): Promise<Product> {
-  const { data } = await apiClient.put<Product>(`/api/products/${id}`, buildFormData(payload, imageFiles))
+  const { data } = await apiClient.put<Product>(`/api/products/${id}`, buildFormData(payload, imageFiles, false))
   return data
 }
 
@@ -113,4 +120,36 @@ export async function toggleProductVisibility(id: number): Promise<Product> {
 
 export async function deleteProduct(id: number): Promise<void> {
   await apiClient.delete(`/api/products/${id}`)
+}
+
+// ── Search (public, server-side filtering) ────────────────────────────────────
+
+export interface ProductSearchFilter {
+  keyword?: string
+  minPrice?: number
+  maxPrice?: number
+  productTypeId?: number
+  attributes?: Record<string, string>
+}
+
+export async function searchProducts(
+  storeId: string,
+  filter: ProductSearchFilter,
+  page = 0,
+  size = 15,
+): Promise<PageResponse<Product>> {
+  const params = new URLSearchParams()
+  if (filter.keyword)                  params.set('filter.keyword',       filter.keyword)
+  if (filter.minPrice != null)         params.set('filter.minPrice',      String(filter.minPrice))
+  if (filter.maxPrice != null)         params.set('filter.maxPrice',      String(filter.maxPrice))
+  if (filter.productTypeId != null)    params.set('filter.productTypeId', String(filter.productTypeId))
+  for (const [k, v] of Object.entries(filter.attributes ?? {})) {
+    params.set(`filter.attributes[${k}]`, v)
+  }
+  params.set('page', String(page))
+  params.set('size', String(size))
+  const { data } = await apiClient.get<PageResponse<Product>>(
+    `/api/products/store/${storeId}/search?${params.toString()}`,
+  )
+  return data
 }

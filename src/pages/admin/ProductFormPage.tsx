@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
   createProduct,
   updateProduct,
@@ -11,6 +11,10 @@ import {
   addOption,
   type AttributeDefinition,
 } from '../../services/attributeService'
+import {
+  listProductTypes,
+  type ProductType,
+} from '../../services/productTypeService'
 import { useAuth } from '../../context/AuthContext'
 import { compressImage } from '../../services/imageOptimizationService'
 
@@ -68,13 +72,12 @@ function Toggle({ label, description, checked, disabled, onChange }: {
   )
 }
 
-// ── Normalizes a free-text option to Title Case to prevent duplicate variations ─
-function normalizeOptionValue(raw: string): string {
-  return raw
-    .trim()
-    .replace(/\s+/g, ' ')
-    .toLowerCase()
-    .replace(/(^|\s)\S/g, (c) => c.toUpperCase())
+// ── Normalizes an option value to prevent duplicate variations.
+// TEXT/ENUM → Title Case. NUMBER → trim only (numbers/units must stay as typed).
+function normalizeOptionValue(raw: string, type?: AttributeDefinition['type']): string {
+  const cleaned = raw.trim().replace(/\s+/g, ' ')
+  if (type === 'NUMBER') return cleaned
+  return cleaned.toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase())
 }
 
 // ── ENUM attribute field — dropdown + inline "add new option" ──────────────────
@@ -94,7 +97,7 @@ function EnumAttributeField({
   onDefinitionUpdate: (updated: AttributeDefinition) => void
 }) {
   const options  = attr.enumOptions ?? []
-  const forceNew = options.length === 0 && (attr.required ?? false)
+  const forceNew = options.length === 0
 
   const [isAddingNew, setIsAddingNew] = useState(forceNew)
   const [rawInput, setRawInput]       = useState('')
@@ -103,10 +106,10 @@ function EnumAttributeField({
 
   useEffect(() => { if (forceNew) setIsAddingNew(true) }, [forceNew])
 
-  const normalized  = normalizeOptionValue(rawInput)
+  const normalized  = normalizeOptionValue(rawInput, attr.type)
   const showPreview = rawInput.trim() !== '' && normalized !== rawInput.trim()
   const isDuplicate = rawInput.trim() !== '' &&
-    options.some((opt) => normalizeOptionValue(opt) === normalized)
+    options.some((opt) => normalizeOptionValue(opt, attr.type) === normalized)
 
   function cancelAdd() {
     setIsAddingNew(false)
@@ -156,7 +159,7 @@ function EnumAttributeField({
               disabled={isSaving}
               onChange={(e) => { setRawInput(e.target.value); setAddError(null) }}
               onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSave() } }}
-              placeholder="Ex: Para alugar, Residencial..."
+              placeholder={`Ex: valores de ${attr.label.toLowerCase()}`}
               className={inputClass}
             />
             {showPreview && !isDuplicate && (
@@ -223,6 +226,9 @@ function EnumAttributeField({
 }
 
 // ── Per-type attribute input ───────────────────────────────────────────────────
+// ENUM and TEXT use EnumAttributeField (dropdown + add-new via /options API).
+// NUMBER and DATE use native inputs — the /options endpoint only accepts ENUM types.
+// BOOLEAN keeps a fixed Sim/Não toggle.
 function AttributeInput({
   attr,
   value,
@@ -238,19 +244,6 @@ function AttributeInput({
   onValueChange: (key: string, value: string) => void
   onDefinitionUpdate: (updated: AttributeDefinition) => void
 }) {
-  if (attr.type === 'ENUM') {
-    return (
-      <EnumAttributeField
-        attr={attr}
-        value={value}
-        disabled={disabled}
-        storeId={storeId}
-        onValueChange={onValueChange}
-        onDefinitionUpdate={onDefinitionUpdate}
-      />
-    )
-  }
-
   if (attr.type === 'BOOLEAN') {
     const checked = value === 'true'
     return (
@@ -276,18 +269,6 @@ function AttributeInput({
     )
   }
 
-  if (attr.type === 'DATE') {
-    return (
-      <input
-        type="date"
-        disabled={disabled}
-        value={value}
-        onChange={(e) => onValueChange(attr.key, e.target.value)}
-        className={inputClass}
-      />
-    )
-  }
-
   if (attr.type === 'NUMBER') {
     return (
       <div className="relative">
@@ -308,17 +289,21 @@ function AttributeInput({
     )
   }
 
-  // TEXT (default)
-  return (
-    <input
-      type="text"
-      disabled={disabled}
-      value={value}
-      onChange={(e) => onValueChange(attr.key, e.target.value)}
-      placeholder={`Informe ${attr.label.toLowerCase()}`}
-      className={inputClass}
-    />
-  )
+  if (attr.type === 'ENUM') {
+    return (
+      <EnumAttributeField
+        attr={attr}
+        value={value}
+        disabled={disabled}
+        storeId={storeId}
+        onValueChange={onValueChange}
+        onDefinitionUpdate={onDefinitionUpdate}
+      />
+    )
+  }
+
+  // TEXT and DATE: removed from product form (types are deprecated)
+  return null
 }
 
 export default function ProductFormPage() {
@@ -329,7 +314,7 @@ export default function ProductFormPage() {
   const storeId = user?.id ?? ''
 
   const emptyForm = (): ProductFormData => ({
-    name: '', description: '', imageUrls: [], isVisible: true, storeId, price: null, attributes: {},
+    name: '', description: '', imageUrls: [], isVisible: true, storeId, price: null, attributes: {}, productTypeId: null,
   })
 
   const [form, setForm] = useState<ProductFormData>(emptyForm)
@@ -345,6 +330,9 @@ export default function ProductFormPage() {
   const [attributeDefinitions, setAttributeDefinitions] = useState<AttributeDefinition[]>([])
   const [isLoadingAttributes, setIsLoadingAttributes] = useState(false)
 
+  const [productTypes, setProductTypes]   = useState<ProductType[]>([])
+  const [isLoadingTypes, setIsLoadingTypes] = useState(true)
+
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [showSuccess, setShowSuccess] = useState(false)
@@ -352,14 +340,27 @@ export default function ProductFormPage() {
   const imageInputRef = useRef<HTMLInputElement>(null)
   const isDisabled = isSaving || isLoadingProduct
 
+  // Load product types once
   useEffect(() => {
     if (!storeId) return
+    listProductTypes(storeId)
+      .then(setProductTypes)
+      .catch(() => {})
+      .finally(() => setIsLoadingTypes(false))
+  }, [storeId])
+
+  // Re-load attributes whenever the selected product type changes
+  useEffect(() => {
+    if (!storeId || form.productTypeId == null) {
+      setAttributeDefinitions([])
+      return
+    }
     setIsLoadingAttributes(true)
-    listEffectiveAttributes(storeId)
+    listEffectiveAttributes(storeId, form.productTypeId)
       .then(setAttributeDefinitions)
       .catch(() => {})
       .finally(() => setIsLoadingAttributes(false))
-  }, [storeId])
+  }, [storeId, form.productTypeId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (isEditMode) {
@@ -377,6 +378,7 @@ export default function ProductFormPage() {
             storeId,
             price: product.price ?? null,
             attributes: (product.attributes ?? {}) as Record<string, unknown>,
+            productTypeId: product.productTypeId ?? null,
           })
           setOmitPrice(product.price == null)
           setImagePreviews(existingUrls)
@@ -405,6 +407,11 @@ export default function ProductFormPage() {
     setAttributeDefinitions((prev) => prev.map((a) => (a.id === updated.id ? updated : a)))
   }
 
+  function handleProductTypeChange(typeId: number | null) {
+    setForm((prev) => ({ ...prev, productTypeId: typeId, attributes: {} }))
+    setSaveError(null)
+  }
+
   async function handleImageFilesChange(e: React.ChangeEvent<HTMLInputElement>) {
     const selected = Array.from(e.target.files ?? [])
     e.target.value = ''
@@ -420,15 +427,22 @@ export default function ProductFormPage() {
     if (tooBig) { setSaveError(`${tooBig.name} excede 2 MB.`); return }
 
     setSaveError(null)
-    const capped = selected.slice(0, MAX)
-    if (selected.length > MAX) setSaveError(`Máximo de ${MAX} fotos. As primeiras ${MAX} foram selecionadas.`)
+
+    const currentCount = imageFiles.length
+    const available = MAX - currentCount
+    if (available <= 0) { setSaveError(`Limite de ${MAX} fotos já atingido.`); return }
+
+    const capped = selected.slice(0, available)
+    if (selected.length > available) {
+      setSaveError(`Apenas ${capped.length} foto${capped.length > 1 ? 's' : ''} adicionada${capped.length > 1 ? 's' : ''} — limite de ${MAX} atingido.`)
+    }
 
     setIsOptimizingImage(true)
-    setField('imageUrls', [])
+    if (imageFiles.length === 0) setField('imageUrls', []) // switching from URL to file mode
     try {
       const compressed = await Promise.all(capped.map(compressImage))
-      setImageFiles(compressed)
-      setImagePreviews(compressed.map((f) => URL.createObjectURL(f)))
+      setImageFiles((prev) => [...prev, ...compressed])
+      setImagePreviews((prev) => [...prev, ...compressed.map((f) => URL.createObjectURL(f))])
     } finally {
       setIsOptimizingImage(false)
     }
@@ -506,7 +520,51 @@ export default function ProductFormPage() {
           </div>
         </div>
 
+        {/* No product types — block the form */}
+        {!isLoadingTypes && productTypes.length === 0 && (
+          <div className="flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-4 text-sm text-amber-800 mb-6">
+            <svg className="w-5 h-5 shrink-0 mt-0.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+            <div>
+              <p className="font-semibold">Você precisa criar um tipo de produto primeiro</p>
+              <p className="mt-1 text-amber-700">
+                Cada produto pertence a um tipo (ex.: Camisa, Action Figure). Crie pelo menos um tipo antes de cadastrar produtos.
+              </p>
+              <Link
+                to="/admin/product-types"
+                className="mt-2 inline-block text-sm font-semibold text-amber-700 hover:text-amber-800 underline"
+              >
+                Gerenciar tipos de produto →
+              </Link>
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Product type selector — required */}
+          <FormField label="Tipo do produto" required>
+            {isLoadingTypes ? (
+              <div className="flex items-center gap-2 py-2.5">
+                <span className="w-4 h-4 rounded-full border-2 border-[#e8e2d8] border-t-[#c9922c] animate-spin" />
+                <span className="text-sm text-[#9c8e84]">Carregando tipos…</span>
+              </div>
+            ) : (
+              <select
+                required
+                disabled={isDisabled || productTypes.length === 0}
+                value={form.productTypeId ?? ''}
+                onChange={(e) => handleProductTypeChange(e.target.value ? Number(e.target.value) : null)}
+                className={inputClass}
+              >
+                <option value="" disabled>Selecionar tipo…</option>
+                {productTypes.map((pt) => (
+                  <option key={pt.id} value={pt.id}>{pt.label}</option>
+                ))}
+              </select>
+            )}
+          </FormField>
+
           <FormField label="Nome do produto" required>
             <input type="text" required disabled={isDisabled}
               value={form.name}
@@ -523,70 +581,95 @@ export default function ProductFormPage() {
               className={`${inputClass} resize-none`} />
           </FormField>
 
-          <FormField
-            label="Fotos do produto"
-            hint={isOptimizingImage ? undefined : imageFiles.length > 0 ? `${imageFiles.length} foto${imageFiles.length > 1 ? 's' : ''} selecionada${imageFiles.length > 1 ? 's' : ''}` : 'PNG, JPG ou WebP · até 5 fotos · máx. 2 MB cada'}
-          >
-            <div className="space-y-2">
-              {/* Upload button */}
-              <button
-                type="button"
-                disabled={isDisabled || isOptimizingImage}
-                onClick={() => imageInputRef.current?.click()}
-                className="w-full rounded-lg border-2 border-dashed border-[#e8e2d8] hover:border-[#d4cec5] bg-[#f4f1eb]/60 hover:bg-[#f4f1eb] transition-colors px-4 py-4 flex items-center gap-3 disabled:opacity-50"
-              >
-                {isOptimizingImage ? (
-                  <>
-                    <span className="w-6 h-6 rounded-full border-2 border-[#e8e2d8] border-t-[#c9922c] animate-spin shrink-0" />
-                    <span className="text-sm text-[#9c8e84]">Comprimindo imagens…</span>
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-6 h-6 text-[#d4cec5] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                    </svg>
-                    <span className="text-sm text-[#9c8e84]">
-                      {imageFiles.length > 0 ? 'Trocar seleção de fotos' : 'Fazer upload de fotos (até 5)'}
-                    </span>
-                  </>
-                )}
-              </button>
+          <FormField label="Fotos do produto">
+            <div className="space-y-3">
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                multiple
+                className="sr-only"
+                onChange={handleImageFilesChange}
+              />
 
-              <input ref={imageInputRef} type="file" accept="image/png,image/jpeg,image/webp"
-                multiple className="sr-only" onChange={handleImageFilesChange} />
+              {/* 5-slot image grid */}
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                {Array.from({ length: 5 }).map((_, i) => {
+                  const src = imageFiles.length > 0 ? imagePreviews[i] : form.imageUrls[i]
+                  const isFilled = !!src
+                  const isThisProcessing = isOptimizingImage && !isFilled && i === (imageFiles.length > 0 ? imageFiles.length : form.imageUrls.length)
 
-              {/* Preview grid — new files take priority over saved URLs */}
-              {(imageFiles.length > 0 || form.imageUrls.length > 0) && (
-                <div className="flex flex-wrap gap-2">
-                  {(imageFiles.length > 0 ? imagePreviews : form.imageUrls).map((src, i) => (
-                    <div key={src + i} className="relative">
-                      <img src={src} alt="" className="w-16 h-16 rounded-lg object-cover border border-[#e8e2d8]"
-                        onError={(e) => { e.currentTarget.style.display = 'none' }} />
-                      <button
-                        type="button"
-                        onClick={() => imageFiles.length > 0
-                          ? removeImageFile(i)
-                          : setField('imageUrls', form.imageUrls.filter((_, idx) => idx !== i))
-                        }
-                        className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center leading-none"
-                      >×</button>
+                  return (
+                    <div key={i} className="relative aspect-square">
+                      {isFilled ? (
+                        <>
+                          <img
+                            src={src}
+                            alt={`Foto ${i + 1}`}
+                            className="w-full h-full object-cover rounded-xl border border-[#e8e2d8]"
+                            onError={(e) => { e.currentTarget.style.display = 'none' }}
+                          />
+                          <button
+                            type="button"
+                            disabled={isDisabled}
+                            onClick={() => imageFiles.length > 0
+                              ? removeImageFile(i)
+                              : setField('imageUrls', form.imageUrls.filter((_, idx) => idx !== i))
+                            }
+                            className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[#1c1813] hover:bg-red-500 text-white flex items-center justify-center shadow transition-colors disabled:opacity-50"
+                          >
+                            <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                          {i === 0 && (
+                            <span className="absolute bottom-1 left-1 text-[9px] font-semibold uppercase tracking-wide text-white bg-black/50 px-1 py-0.5 rounded">
+                              Capa
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={isDisabled || isOptimizingImage}
+                          onClick={() => imageInputRef.current?.click()}
+                          className={`w-full h-full rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                            i === 0
+                              ? 'border-[#d4cec5] hover:border-[#c9922c]/50 bg-[#f4f1eb] hover:bg-[#ede8df]'
+                              : 'border-[#ede8df] hover:border-[#d4cec5] bg-[#faf8f5] hover:bg-[#f4f1eb]'
+                          }`}
+                        >
+                          {isThisProcessing ? (
+                            <span className="w-4 h-4 rounded-full border-2 border-[#e8e2d8] border-t-[#c9922c] animate-spin" />
+                          ) : (
+                            <>
+                              <svg className={`text-[#d4cec5] ${i === 0 ? 'w-6 h-6' : 'w-4 h-4'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                              </svg>
+                              {i === 0 && (
+                                <span className="text-[10px] text-[#c4b8ae] font-medium leading-tight text-center px-1">
+                                  Foto principal
+                                </span>
+                              )}
+                            </>
+                          )}
+                        </button>
+                      )}
                     </div>
-                  ))}
+                  )
+                })}
+              </div>
+
+              {isOptimizingImage && (
+                <div className="flex items-center gap-2 text-xs text-[#9c8e84]">
+                  <span className="w-3 h-3 rounded-full border-2 border-[#e8e2d8] border-t-[#c9922c] animate-spin" />
+                  Comprimindo imagens…
                 </div>
               )}
 
-              {/* URL input — only when no files are queued */}
-              {imageFiles.length === 0 && (
-                <input type="url" disabled={isDisabled}
-                  value={form.imageUrls[0] ?? ''}
-                  onChange={(e) => {
-                    const url = e.target.value.trim()
-                    setField('imageUrls', url ? [url] : [])
-                    setImagePreviews(url ? [url] : [])
-                  }}
-                  placeholder="Ou cole uma URL de imagem"
-                  className={inputClass} />
-              )}
+              <p className="text-xs text-[#c4b8ae]">
+                PNG, JPG ou WebP · até 5 fotos · máx. 2 MB cada · toque em um bloco para adicionar
+              </p>
             </div>
           </FormField>
 
@@ -620,7 +703,7 @@ export default function ProductFormPage() {
               {!isLoadingAttributes && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {attributeDefinitions.map((attr) => (
-                    <FormField key={attr.key} label={attr.label} required={attr.required}>
+                    <FormField key={attr.key} label={attr.type === 'NUMBER' && attr.unit ? `${attr.label} (${attr.unit})` : attr.label} required={attr.required}>
                       <AttributeInput
                         attr={attr}
                         value={String(form.attributes?.[attr.key] ?? '')}

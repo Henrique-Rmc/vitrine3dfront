@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Product } from '../types'
 import { buildWhatsAppUrl } from '../utils/whatsapp'
 import { registerWhatsAppClick } from '../services/productService'
@@ -10,10 +10,30 @@ interface ProductModalProps {
 }
 
 export default function ProductModal({ product, whatsappNumber, onClose }: ProductModalProps) {
-  const { name, imageUrl, description } = product
+  const { name, description } = product
   const whatsappUrl = buildWhatsAppUrl(whatsappNumber, name)
 
+  // Resolve image list: prefer imageUrls array, fall back to singular imageUrl
+  const images: string[] = product.imageUrls?.length
+    ? product.imageUrls
+    : product.imageUrl
+    ? [product.imageUrl]
+    : []
+
+  const [currentIndex, setCurrentIndex] = useState(0)
   const [showWhatsAppWarning, setShowWhatsAppWarning] = useState(false)
+  const touchStartX = useRef<number>(0)
+
+  const currentImage = images[currentIndex] ?? null
+  const hasMultiple  = images.length > 1
+
+  function prev() {
+    setCurrentIndex((i) => (i - 1 + images.length) % images.length)
+  }
+
+  function next() {
+    setCurrentIndex((i) => (i + 1) % images.length)
+  }
 
   useEffect(() => {
     document.body.style.overflow = 'hidden'
@@ -26,10 +46,27 @@ export default function ProductModal({ product, whatsappNumber, onClose }: Produ
         if (showWhatsAppWarning) setShowWhatsAppWarning(false)
         else onClose()
       }
+      if (!showWhatsAppWarning && hasMultiple) {
+        if (e.key === 'ArrowRight') next()
+        if (e.key === 'ArrowLeft')  prev()
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [onClose, showWhatsAppWarning])
+  }, [onClose, showWhatsAppWarning, hasMultiple]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function onTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX
+  }
+
+  function onTouchEnd(e: React.TouchEvent) {
+    if (!hasMultiple) return
+    const delta = touchStartX.current - e.changedTouches[0].clientX
+    if (Math.abs(delta) > 48) {
+      if (delta > 0) next()
+      else prev()
+    }
+  }
 
   function handleWhatsAppClick() {
     setShowWhatsAppWarning(true)
@@ -54,28 +91,95 @@ export default function ProductModal({ product, whatsappNumber, onClose }: Produ
           className="relative w-full sm:max-w-2xl max-h-[92dvh] sm:max-h-[85vh] flex flex-col sm:flex-row overflow-hidden bg-white border border-[#e8e2d8] rounded-t-2xl sm:rounded-2xl shadow-2xl animate-[modal-panel-in_0.2s_ease-out]"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Image side */}
-          <div className="relative w-full aspect-square sm:w-72 sm:aspect-auto shrink-0 bg-[#f4f1eb]">
-            {imageUrl ? (
-              <img src={imageUrl} alt={name} className="h-full w-full object-cover" />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <svg className="w-16 h-16 text-[#d4cec5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                </svg>
+          {/* ── Image gallery panel ─────────────────────────────────────── */}
+          <div className="w-full sm:w-72 shrink-0 flex flex-col">
+
+            {/* Main image */}
+            <div
+              className="relative aspect-square sm:aspect-auto sm:flex-1 bg-[#f4f1eb] overflow-hidden select-none"
+              onTouchStart={onTouchStart}
+              onTouchEnd={onTouchEnd}
+            >
+              {currentImage ? (
+                <img
+                  key={currentIndex}
+                  src={currentImage}
+                  alt={`${name} — foto ${currentIndex + 1}`}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <svg className="w-16 h-16 text-[#d4cec5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                  </svg>
+                </div>
+              )}
+
+              {/* Prev arrow */}
+              {hasMultiple && (
+                <button
+                  onClick={prev}
+                  aria-label="Foto anterior"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/85 backdrop-blur-sm border border-[#e8e2d8] flex items-center justify-center text-[#6b5d52] hover:bg-white hover:text-[#1c1813] transition-colors shadow-sm"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                  </svg>
+                </button>
+              )}
+
+              {/* Next arrow */}
+              {hasMultiple && (
+                <button
+                  onClick={next}
+                  aria-label="Próxima foto"
+                  className="absolute right-12 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/85 backdrop-blur-sm border border-[#e8e2d8] flex items-center justify-center text-[#6b5d52] hover:bg-white hover:text-[#1c1813] transition-colors shadow-sm"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                  </svg>
+                </button>
+              )}
+
+              {/* Counter badge */}
+              {hasMultiple && (
+                <span className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 text-white text-[11px] font-medium px-2 py-0.5 rounded-full pointer-events-none">
+                  {currentIndex + 1} / {images.length}
+                </span>
+              )}
+
+              {/* Close button */}
+              <button
+                onClick={onClose}
+                aria-label="Fechar"
+                className="absolute top-3 right-3 rounded-full bg-white/90 backdrop-blur-sm p-1.5 text-[#9c8e84] hover:text-[#1c1813] border border-[#e8e2d8] transition-colors"
+              >
+                <XIcon />
+              </button>
+            </div>
+
+            {/* Thumbnail strip — only when multiple images */}
+            {hasMultiple && (
+              <div className="flex gap-1.5 px-2 py-2 bg-[#f4f1eb] border-t border-[#e8e2d8] overflow-x-auto scrollbar-none">
+                {images.map((src, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentIndex(i)}
+                    aria-label={`Ver foto ${i + 1}`}
+                    className={`shrink-0 w-11 h-11 rounded-lg overflow-hidden transition-all ${
+                      i === currentIndex
+                        ? 'ring-2 ring-[#c9922c] ring-offset-1 ring-offset-[#f4f1eb]'
+                        : 'opacity-50 hover:opacity-80'
+                    }`}
+                  >
+                    <img src={src} alt="" className="w-full h-full object-cover" />
+                  </button>
+                ))}
               </div>
             )}
-
-            <button
-              onClick={onClose}
-              aria-label="Fechar"
-              className="absolute top-3 right-3 rounded-full bg-white/90 backdrop-blur-sm p-1.5 text-[#9c8e84] hover:text-[#1c1813] border border-[#e8e2d8] transition-colors"
-            >
-              <XIcon />
-            </button>
           </div>
 
-          {/* Details side */}
+          {/* ── Details panel ───────────────────────────────────────────── */}
           <div className="flex flex-col gap-5 p-5 sm:p-6 overflow-y-auto flex-1">
             <h2 className="text-xl font-bold text-[#1c1813] leading-tight">{name}</h2>
 
@@ -113,7 +217,7 @@ export default function ProductModal({ product, whatsappNumber, onClose }: Produ
         </div>
       </div>
 
-      {/* WhatsApp redirect warning */}
+      {/* ── WhatsApp redirect warning ──────────────────────────────────── */}
       {showWhatsAppWarning && (
         <div
           className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#1c1813]/50 backdrop-blur-sm"

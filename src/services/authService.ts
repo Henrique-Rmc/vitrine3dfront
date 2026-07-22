@@ -69,8 +69,6 @@ export async function loginUser(credentials: LoginRequest): Promise<LoginRespons
       stateAbbreviation: profile.stateAbbreviation ?? null,
       cityId: profile.cityId ?? null,
       cityName: profile.cityName ?? null,
-      businessTypeId: profile.businessTypeId ?? null,
-      businessTypeName: profile.businessTypeName ?? null,
     },
   }
 }
@@ -86,7 +84,6 @@ export interface RegisterRequest {
   storeDescription: string
   stateId: number
   cityId?: number
-  businessTypeId?: number
 }
 
 export interface RegisterApiResponse {

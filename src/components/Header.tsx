@@ -10,7 +10,7 @@ interface HeaderProps {
 
 export default function Header({ mobileMenuOpen, toggleMobileMenu, showHamburger = true, onQRCode }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-[#e8e2d8]">
+    <header className="md:hidden sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-[#e8e2d8]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="shrink-0 hover:opacity-80 transition-opacity">

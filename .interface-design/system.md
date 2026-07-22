@@ -1,10 +1,10 @@
-# Vitrine Artesã — Interface Design System
+# Vitrin — Interface Design System
 
 ## Direction
 
-**Ateliê Galeria** — Um espaço expositivo para qualquer tipo de artesão: impressores 3D, joalheiros, pintores, ceramistas, bordadeiras. Quem visita sente que entrou em uma galeria boutique com paredes de linho — o trabalho do criador é o protagonista, a interface é o suporte.
+**Ateliê Galeria** — Uma plataforma onde qualquer pessoa que vende pode ter sua vitrine digital: artesãos, joalheiros, pintores, ceramistas, vendedores de carros, imóveis, brinquedos, moda. Quem visita sente que entrou em uma galeria boutique com paredes de linho — o produto do vendedor é o protagonista, a interface é o suporte.
 
-**Feeling:** Elegante, arejado, artesanal. Não um SaaS. Não um marketplace frio. Uma vitrine pessoal de alguém orgulhoso do que faz.
+**Feeling:** Elegante, arejado, acessível. Não um SaaS. Não um marketplace frio. Uma vitrine pessoal de quem tem orgulho do que vende.
 
 ## Palette
 
@@ -128,14 +128,46 @@ inactive: text-[#9c8e84] hover:text-[#1c1813] hover:bg-[#f4f1eb]
 
 ## Layout
 
-- **Admin:** `AdminLayout` — sidebar `w-60 bg-white border-r border-[#e8e2d8]` + `md:ml-60` content
-- **Vitrine pública:** `MainLayout` — **sem sidebar**. Full-width. Header sticky top.
+- **Admin panel:** `AdminLayout` — `AdminSidebar` `w-60 bg-white border-r border-[#e8e2d8]` + `md:ml-60` content. Nav: Produtos, Filtros, Configurações.
+- **Vitrine pública:** `MainLayout` — `VitrineSidebar` `w-60 bg-white border-r border-[#e8e2d8]` (context-aware: admin branch + visitor branch) + `md:ml-60` content.
+  - Admin branch: logo + "Admin" badge, "Visualizando" indicator, admin nav links (Produtos, Filtros, Configurações), user avatar + logout.
+  - Visitor branch: logo, CTA text, "Criar minha vitrine" dark button, "Entrar" ghost button, seller category list.
+  - Mobile (MainLayout): admin sees bottom nav `h-16` (Produtos, Filtros, Config., Vitrine); visitors see MobileDrawer via hamburger.
+
+## Key Patterns (continued)
+
+### AttributeRow (list row with type badge)
+```tsx
+<div className="flex items-center gap-3 px-4 py-3 border-b border-[#f0ece5]">
+  <span className="text-sm font-medium text-[#1c1813]">{attr.label}</span>
+  <span className="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide bg-[#f4f1eb] text-[#9c8e84] border border-[#e8e2d8]">{typeLabel}</span>
+  {/* Required badge */}
+  <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">Obrigatório</span>
+</div>
+```
+
+### Attribute action buttons
+```tsx
+{/* Reexibir (restore) — amber tint */}
+<button className="px-3 py-1.5 rounded-lg text-xs font-medium text-[#c9922c] hover:text-[#a87820] hover:bg-amber-50 border border-amber-200 transition-colors">
+{/* Ocultar / secondary action — ghost */}
+<button className="px-3 py-1.5 rounded-lg text-xs font-medium text-[#9c8e84] hover:text-[#6b5d52] hover:bg-[#f4f1eb] border border-[#e8e2d8] transition-colors">
+{/* Excluir — destructive */}
+<button className="px-3 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:text-red-600 hover:bg-red-50 border border-red-200 transition-colors">
+```
+
+### Filter chip (AttributeFilterBar)
+```tsx
+// active: bg-[#1c1813] border-[#1c1813] text-white shadow-sm
+// inactive: border-[#e8e2d8] text-[#6b5d52] bg-white hover:border-[#d4cec5] hover:text-[#1c1813]
+<button className="px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200">
+```
 
 ## Notes
 
 - `html` base bg: `#faf8f5` (definido em index.css)
 - Sem dark mode — single light theme
 - Playfair Display carregado via Google Fonts no index.html
-- Vitrine pública sem sidebar: `md:ml-0`, header `h-16` sticky
 - Accent `#c9922c` substitui amber-500 do sistema anterior
 - Primary button usa tinta escura `#1c1813` (não amber) — mais elegante no tema claro
+- Admin nav item "Filtros" (`/admin/attributes`) — substituiu "Categorias" em todos os layouts
