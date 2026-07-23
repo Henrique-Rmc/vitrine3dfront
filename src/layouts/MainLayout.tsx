@@ -35,7 +35,7 @@ export default function MainLayout() {
   const { isAuthenticated, user } = useAuth()
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] text-[#1c1813]">
+    <div className="min-h-screen bg-surface text-ink">
       {/* Desktop sidebar (both admin and non-admin) */}
       <VitrineSidebar />
 
@@ -57,21 +57,21 @@ export default function MainLayout() {
           <Outlet />
         </main>
 
-        <footer className="mt-16 border-t border-[#e8e2d8]">
+        <footer className="mt-16 border-t border-border">
           {/* Legal disclaimer */}
-          <div className="bg-[#f4f1eb] border-b border-[#e8e2d8] px-4 py-3 text-center text-xs text-[#9c8e84]">
+          <div className="bg-surface-2 border-b border-border px-4 py-3 text-center text-xs text-ink-3">
             O VitreIn é uma vitrine digital. As negociações ocorrem diretamente entre comprador e vendedor via WhatsApp,
-            fora do ambiente do site, sendo de <strong className="font-medium text-[#6b5d52]">inteira responsabilidade do vendedor</strong>.
+            fora do ambiente do site, sendo de <strong className="font-medium text-ink-2">inteira responsabilidade do vendedor</strong>.
             O VitreIn não gerencia pagamentos, envios ou qualquer etapa da venda.
           </div>
           {/* Links + copyright */}
           <div className="px-4 py-6 text-center space-y-3">
-            <nav className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-xs text-[#9c8e84]">
-              <a href="/termos-de-uso" className="hover:text-[#c9922c] transition-colors">Termos de Uso</a>
-              <a href="/privacidade" className="hover:text-[#c9922c] transition-colors">Política de Privacidade</a>
-              <a href="/denunciar" className="hover:text-[#c9922c] transition-colors">Reportar Conteúdo</a>
+            <nav className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-xs text-ink-3">
+              <a href="/termos-de-uso" className="hover:text-brand transition-colors">Termos de Uso</a>
+              <a href="/privacidade" className="hover:text-brand transition-colors">Política de Privacidade</a>
+              <a href="/denunciar" className="hover:text-brand transition-colors">Reportar Conteúdo</a>
             </nav>
-            <p className="text-xs text-[#c4b8ae]">
+            <p className="text-xs text-ink-4">
               © {new Date().getFullYear()} Vitrin &mdash; Sua vitrine digital para qualquer tipo de venda
             </p>
           </div>
@@ -88,14 +88,14 @@ export default function MainLayout() {
 
       {/* Mobile bottom nav — admin only, mirrors AdminLayout nav */}
       {isAuthenticated && (
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-[#e8e2d8] h-16 flex items-stretch shadow-[0_-1px_0_#e8e2d8]">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-canvas border-t border-border h-16 flex items-stretch shadow-[0_-1px_0_var(--color-border)]">
           {ADMIN_MOBILE_NAV.map(({ to, label, icon }) => (
             <NavLink
               key={to}
               to={to}
               className={({ isActive }) =>
                 `flex-1 flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors ${
-                  isActive ? 'text-[#c9922c]' : 'text-[#c4b8ae] hover:text-[#9c8e84]'
+                  isActive ? 'text-brand' : 'text-ink-4 hover:text-ink-3'
                 }`
               }
             >
@@ -107,7 +107,7 @@ export default function MainLayout() {
           ))}
 
           {/* "Vitrine" tab — always active since we're on the vitrine */}
-          <div className="flex-1 flex flex-col items-center justify-center gap-0.5 text-xs font-semibold text-[#c9922c]">
+          <div className="flex-1 flex flex-col items-center justify-center gap-0.5 text-xs font-semibold text-brand">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016 2.993 2.993 0 002.25-1.016 3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z" />
             </svg>

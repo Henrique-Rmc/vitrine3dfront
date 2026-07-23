@@ -44,7 +44,7 @@ export default function ReportPage() {
     setSubmitted(true)
   }
 
-  const inputCls = 'w-full rounded-lg bg-[#f4f1eb] border border-[#e8e2d8] px-4 py-2.5 text-sm text-[#1c1813] placeholder-[#c4b8ae] focus:outline-none focus:ring-2 focus:ring-[#c9922c]/40 focus:border-[#c9922c]/60 transition-colors'
+  const inputCls = 'w-full rounded-lg bg-surface-2 border border-border px-4 py-2.5 text-sm text-ink placeholder-ink-4 focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/60 transition-colors'
 
   if (submitted) {
     return (
@@ -54,12 +54,12 @@ export default function ReportPage() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
           </svg>
         </div>
-        <h2 className="text-lg font-bold text-[#1c1813] mb-2">Denúncia enviada</h2>
-        <p className="text-sm text-[#6b5d52] mb-6">
+        <h2 className="text-lg font-bold text-ink mb-2">Denúncia enviada</h2>
+        <p className="text-sm text-ink-2 mb-6">
           Seu cliente de e-mail foi aberto com a denúncia pronta. Confirme o envio. Nossa equipe irá analisar
           o caso e tomar as medidas necessárias em breve.
         </p>
-        <Link to="/" className="text-sm text-[#c9922c] hover:underline">← Voltar para a página inicial</Link>
+        <Link to="/" className="text-sm text-brand hover:underline">← Voltar para a página inicial</Link>
       </div>
     )
   }
@@ -67,11 +67,11 @@ export default function ReportPage() {
   return (
     <div className="mx-auto max-w-xl px-4 sm:px-6 lg:px-8 py-12">
       <div className="mb-8">
-        <Link to="/" className="text-sm text-[#c9922c] hover:underline">← Voltar</Link>
-        <h1 className="mt-4 text-2xl font-bold text-[#1c1813]">Reportar Conteúdo</h1>
-        <p className="text-sm text-[#9c8e84] mt-1">
+        <Link to="/" className="text-sm text-brand hover:underline">← Voltar</Link>
+        <h1 className="mt-4 text-2xl font-bold text-ink">Reportar Conteúdo</h1>
+        <p className="text-sm text-ink-3 mt-1">
           Use este formulário para reportar produtos ou lojas que violem nossos{' '}
-          <Link to="/termos-de-uso" className="text-[#c9922c] hover:underline">Termos de Uso</Link>.
+          <Link to="/termos-de-uso" className="text-brand hover:underline">Termos de Uso</Link>.
           Nossa equipe analisará sua denúncia e tomará as medidas cabíveis.
         </p>
       </div>
@@ -84,7 +84,7 @@ export default function ReportPage() {
         )}
 
         <div>
-          <label className="block text-sm font-medium text-[#6b5d52] mb-1.5">
+          <label className="block text-sm font-medium text-ink-2 mb-1.5">
             Seu nome <span className="text-red-500">*</span>
           </label>
           <input
@@ -94,7 +94,7 @@ export default function ReportPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-[#6b5d52] mb-1.5">
+          <label className="block text-sm font-medium text-ink-2 mb-1.5">
             Seu e-mail <span className="text-red-500">*</span>
           </label>
           <input
@@ -104,7 +104,7 @@ export default function ReportPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-[#6b5d52] mb-1.5">
+          <label className="block text-sm font-medium text-ink-2 mb-1.5">
             Link do produto ou loja <span className="text-red-500">*</span>
           </label>
           <input
@@ -114,7 +114,7 @@ export default function ReportPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-[#6b5d52] mb-1.5">
+          <label className="block text-sm font-medium text-ink-2 mb-1.5">
             Motivo da denúncia <span className="text-red-500">*</span>
           </label>
           <select
@@ -129,7 +129,7 @@ export default function ReportPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-[#6b5d52] mb-1.5">
+          <label className="block text-sm font-medium text-ink-2 mb-1.5">
             Detalhes adicionais
           </label>
           <textarea
@@ -146,7 +146,7 @@ export default function ReportPage() {
 
         <button
           type="submit"
-          className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#1c1813] hover:bg-[#2c2620] text-white font-semibold py-2.5 text-sm transition-colors"
+          className="w-full flex items-center justify-center gap-2 rounded-lg bg-cta hover:bg-cta-2 text-cta-fg font-semibold py-2.5 text-sm transition-colors"
         >
           Enviar Denúncia
         </button>

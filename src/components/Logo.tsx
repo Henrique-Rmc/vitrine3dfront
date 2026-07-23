@@ -12,7 +12,7 @@ export default function Logo({ height = 28, className = '', showText = true }: L
     <span className={`inline-flex items-center gap-2 ${className}`}>
       <img src={logoUrl} alt="VitrIn" height={height} width={width} style={{ height, width }} />
       {showText && (
-        <span className="font-bold tracking-tight" style={{ fontSize: height * 0.7 }}>
+        <span className="font-bold tracking-tight text-ink" style={{ fontSize: height * 0.7 }}>
         Vitrin
         </span>
       )}

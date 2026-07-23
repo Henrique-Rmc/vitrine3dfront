@@ -38,6 +38,7 @@ const NAV_ITEMS: NavItem[] = [
   },
 ]
 
+
 export default function AdminLayout() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
@@ -48,7 +49,7 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] text-[#1c1813] flex">
+    <div className="min-h-screen bg-surface text-ink flex">
       <AdminSidebar
         navItems={NAV_ITEMS}
         userName={user?.userName ?? user?.email}
@@ -59,13 +60,13 @@ export default function AdminLayout() {
 
       <div className="flex-1 flex flex-col min-w-0 md:ml-60">
         {/* Mobile top bar */}
-        <header className="md:hidden sticky top-0 z-30 bg-white border-b border-[#e8e2d8] h-14 px-4 flex items-center justify-between shrink-0 shadow-sm">
+        <header className="md:hidden sticky top-0 z-30 bg-canvas border-b border-border h-14 px-4 flex items-center justify-between shrink-0 shadow-sm">
           <Logo height={22} />
           <div className="flex items-center gap-3">
-            <span className="text-xs text-[#9c8e84] font-medium truncate max-w-32">{user?.storeName ?? user?.email}</span>
+            <span className="text-xs text-ink-3 font-medium truncate max-w-32">{user?.storeName ?? user?.email}</span>
             <button
               onClick={handleLogout}
-              className="p-1.5 rounded-lg text-[#9c8e84] hover:text-[#1c1813] hover:bg-[#f4f1eb] transition-colors"
+              className="p-1.5 rounded-lg text-ink-3 hover:text-ink hover:bg-surface-2 transition-colors"
               title="Sair"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -81,14 +82,14 @@ export default function AdminLayout() {
       </div>
 
       {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-[#e8e2d8] h-16 flex items-stretch shadow-[0_-1px_0_#e8e2d8]">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-canvas border-t border-border h-16 flex items-stretch shadow-[0_-1px_0_var(--color-border)]">
         {NAV_ITEMS.map(({ to, label, icon }) => (
           <NavLink
             key={to}
             to={to}
             className={({ isActive }) =>
               `flex-1 flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors ${
-                isActive ? 'text-[#c9922c]' : 'text-[#c4b8ae] hover:text-[#9c8e84]'
+                isActive ? 'text-brand' : 'text-ink-4 hover:text-ink-3'
               }`
             }
           >
@@ -104,7 +105,7 @@ export default function AdminLayout() {
             href={`/${user.slug}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 flex flex-col items-center justify-center gap-0.5 text-xs font-medium text-[#c4b8ae] hover:text-[#9c8e84] transition-colors"
+            className="flex-1 flex flex-col items-center justify-center gap-0.5 text-xs font-medium text-ink-4 hover:text-ink-3 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />

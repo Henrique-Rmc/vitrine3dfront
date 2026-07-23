@@ -39,19 +39,19 @@ const FEATURES = [
 
 export default function PlatformLandingPage() {
   return (
-    <div className="min-h-screen bg-[#faf8f5] text-[#1c1813] flex flex-col">
+    <div className="min-h-screen bg-surface text-ink flex flex-col">
 
       {/* Nav */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-[#e8e2d8]">
+      <header className="sticky top-0 z-30 bg-canvas/95 backdrop-blur border-b border-border">
         <div className="max-w-5xl mx-auto px-5 sm:px-8 h-14 flex items-center justify-between gap-4">
           <Logo height={28} />
           <div className="flex items-center gap-3">
             <Link to="/admin/login"
-              className="text-sm text-[#9c8e84] hover:text-[#1c1813] transition-colors font-medium">
+              className="text-sm text-ink-3 hover:text-ink transition-colors font-medium">
               Entrar
             </Link>
             <Link to="/admin/register"
-              className="text-sm bg-[#1c1813] hover:bg-[#2c2620] text-white font-semibold px-4 py-2 rounded-lg transition-colors">
+              className="text-sm bg-cta hover:bg-cta-2 text-cta-fg font-semibold px-4 py-2 rounded-lg transition-colors">
               Criar vitrine
             </Link>
           </div>
@@ -62,17 +62,17 @@ export default function PlatformLandingPage() {
       <main className="flex-1">
         <section className="max-w-4xl mx-auto px-5 sm:px-8 pt-20 pb-16 text-center">
           {/* Pill */}
-          <span className="inline-block mb-6 px-4 py-1.5 rounded-full bg-[#f4f1eb] border border-[#e8e2d8] text-xs font-semibold text-[#9c8e84] tracking-wide uppercase">
+          <span className="inline-block mb-6 px-4 py-1.5 rounded-full bg-surface-2 border border-border text-xs font-semibold text-ink-3 tracking-wide uppercase">
             Para qualquer pessoa que queira vender
           </span>
 
           {/* Headline */}
-          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-[#1c1813] leading-tight tracking-tight mb-6">
+          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-ink leading-tight tracking-tight mb-6">
             Seu negócio merece{' '}
-            <span className="text-[#c9922c]">uma vitrine à altura</span>
+            <span className="text-brand">uma vitrine à altura</span>
           </h1>
 
-          <p className="text-lg sm:text-xl text-[#6b5d52] mb-10 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg sm:text-xl text-ink-2 mb-10 max-w-2xl mx-auto leading-relaxed">
             Do artesanato aos imóveis, de brinquedos a automóveis — qualquer vendedor pode criar sua vitrine digital em minutos e receber contatos diretamente pelo WhatsApp.
           </p>
 
@@ -80,7 +80,7 @@ export default function PlatformLandingPage() {
           <div className="flex flex-wrap gap-2 justify-center mb-10">
             {SELLER_CATEGORIES.map((c) => (
               <span key={c.label}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-[#e8e2d8] text-xs font-medium text-[#6b5d52] shadow-sm">
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-canvas border border-border text-xs font-medium text-ink-2 shadow-sm">
                 {c.emoji} {c.label}
               </span>
             ))}
@@ -89,13 +89,13 @@ export default function PlatformLandingPage() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               to="/admin/register"
-              className="px-8 py-3.5 rounded-xl bg-[#1c1813] hover:bg-[#2c2620] text-white font-semibold transition-colors text-sm shadow-sm"
+              className="px-8 py-3.5 rounded-xl bg-cta hover:bg-cta-2 text-cta-fg font-semibold transition-colors text-sm shadow-sm"
             >
               Criar minha vitrine grátis
             </Link>
             <Link
               to={`/${DEMO_STORE_SLUG}`}
-              className="px-8 py-3.5 rounded-xl bg-white hover:bg-[#f4f1eb] text-[#1c1813] font-semibold transition-colors text-sm border border-[#e8e2d8] shadow-sm"
+              className="px-8 py-3.5 rounded-xl bg-canvas hover:bg-surface-2 text-ink font-semibold transition-colors text-sm border border-border shadow-sm"
             >
               Ver exemplo de vitrine →
             </Link>
@@ -104,16 +104,16 @@ export default function PlatformLandingPage() {
 
         {/* Visual separator */}
         <div className="max-w-5xl mx-auto px-5 sm:px-8">
-          <div className="border-t border-[#e8e2d8]" />
+          <div className="border-t border-border" />
         </div>
 
         {/* Features */}
         <section className="max-w-5xl mx-auto px-5 sm:px-8 py-20">
           <div className="text-center mb-12">
-            <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#1c1813] mb-3">
+            <h2 className="font-display text-2xl sm:text-3xl font-bold text-ink mb-3">
               Tudo que você precisa para vender
             </h2>
-            <p className="text-[#9c8e84] text-sm sm:text-base max-w-xl mx-auto">
+            <p className="text-ink-3 text-sm sm:text-base max-w-xl mx-auto">
               Simples de configurar, profissional de apresentar. Funciona para qualquer tipo de produto ou serviço.
             </p>
           </div>
@@ -122,15 +122,15 @@ export default function PlatformLandingPage() {
             {FEATURES.map((feature) => (
               <div
                 key={feature.title}
-                className="rounded-xl bg-white border border-[#e8e2d8] shadow-sm p-5 hover:shadow-md transition-shadow"
+                className="rounded-xl bg-canvas border border-border shadow-sm p-5 hover:shadow-md transition-shadow"
               >
-                <div className="w-10 h-10 rounded-xl bg-[#f4f1eb] flex items-center justify-center mb-4">
-                  <svg className="w-5 h-5 text-[#c9922c]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <div className="w-10 h-10 rounded-xl bg-surface-2 flex items-center justify-center mb-4">
+                  <svg className="w-5 h-5 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d={feature.iconPath} />
                   </svg>
                 </div>
-                <p className="text-sm font-semibold text-[#1c1813] mb-1.5">{feature.title}</p>
-                <p className="text-xs text-[#9c8e84] leading-relaxed">{feature.description}</p>
+                <p className="text-sm font-semibold text-ink mb-1.5">{feature.title}</p>
+                <p className="text-xs text-ink-3 leading-relaxed">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -138,22 +138,22 @@ export default function PlatformLandingPage() {
 
         {/* CTA bottom */}
         <section className="max-w-3xl mx-auto px-5 sm:px-8 pb-20 text-center">
-          <div className="bg-white border border-[#e8e2d8] rounded-2xl px-8 py-12 shadow-sm">
-            <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#1c1813] mb-3">
+          <div className="bg-canvas border border-border rounded-2xl px-8 py-12 shadow-sm">
+            <h2 className="font-display text-2xl sm:text-3xl font-bold text-ink mb-3">
               Pronto para começar?
             </h2>
-            <p className="text-[#9c8e84] text-sm mb-7 max-w-sm mx-auto">
+            <p className="text-ink-3 text-sm mb-7 max-w-sm mx-auto">
               Crie sua vitrine em minutos, sem custo, sem cartão de crédito.
             </p>
             <Link
               to="/admin/register"
-              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-[#1c1813] hover:bg-[#2c2620] text-white font-semibold text-sm transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-cta hover:bg-cta-2 text-cta-fg font-semibold text-sm transition-colors shadow-sm"
             >
               Criar minha vitrine grátis
             </Link>
-            <p className="mt-4 text-xs text-[#c4b8ae]">
+            <p className="mt-4 text-xs text-ink-4">
               Já tem conta?{' '}
-              <Link to="/admin/login" className="text-[#9c8e84] hover:text-[#1c1813] transition-colors">
+              <Link to="/admin/login" className="text-ink-3 hover:text-ink transition-colors">
                 Entrar
               </Link>
             </p>
@@ -161,7 +161,7 @@ export default function PlatformLandingPage() {
         </section>
       </main>
 
-      <footer className="border-t border-[#e8e2d8] py-6 text-center text-xs text-[#c4b8ae]">
+      <footer className="border-t border-border py-6 text-center text-xs text-ink-4">
         © {new Date().getFullYear()} Vitrin &mdash; Sua vitrine digital para qualquer tipo de venda
       </footer>
     </div>

@@ -1,15 +1,15 @@
+import { useState, useRef, useEffect } from 'react'
+
 interface StoreProfileHeaderProps {
   storeName: string
   storeDescription: string
   logoUrl: string
-  productCount: number
 }
 
 export default function StoreProfileHeader({
   storeName,
   storeDescription,
   logoUrl,
-  productCount,
 }: StoreProfileHeaderProps) {
   const initials = storeName
     .split(' ')
@@ -18,46 +18,60 @@ export default function StoreProfileHeader({
     .join('')
     .toUpperCase()
 
+  const [descExpanded, setDescExpanded] = useState(false)
+  const descRef = useRef<HTMLParagraphElement>(null)
+  const [isLong, setIsLong] = useState(false)
+
+  useEffect(() => {
+    const el = descRef.current
+    if (el) setIsLong(el.scrollHeight > el.clientHeight + 1)
+  }, [storeDescription])
+
   return (
-    <div className="bg-white border-b border-[#e8e2d8]">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-          {/* Avatar */}
-          <div className="shrink-0 relative">
+    <div className="bg-white border-b border-border">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-5 pb-6 sm:pt-6 sm:pb-8">
+        <div className="flex flex-col sm:flex-row items-center gap-5 sm:gap-8">
+          {/* Avatar — 30% larger than previous size */}
+          <div className="shrink-0">
             {logoUrl ? (
               <img
                 src={logoUrl}
                 alt={storeName}
-                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover ring-4 ring-[#e8e2d8]"
+                className="w-36 h-36 sm:w-40 sm:h-40 rounded-full object-cover ring-4 ring-border shadow-sm"
               />
             ) : (
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full ring-4 ring-[#e8e2d8] bg-[#f4f1eb] flex items-center justify-center">
-                <span className="text-2xl sm:text-3xl font-bold text-[#c4b8ae] select-none font-display">
+              <div className="w-36 h-36 sm:w-40 sm:h-40 rounded-full ring-4 ring-border shadow-sm bg-surface-2 flex items-center justify-center">
+                <span className="text-4xl sm:text-5xl font-bold text-ink-4 select-none font-display">
                   {initials}
                 </span>
               </div>
             )}
-            <span className="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full bg-green-500 border-2 border-white" />
           </div>
 
-          {/* Info */}
-          <div className="text-center sm:text-left flex-1">
-            <h1 className="font-display text-3xl sm:text-4xl font-bold text-[#1c1813] leading-tight">
+          {/* Info — vertically centered alongside the avatar */}
+          <div className="flex-1 text-center sm:text-left">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-ink leading-tight tracking-tight">
               {storeName}
             </h1>
 
             {storeDescription && (
-              <p className="text-base text-[#6b5d52] mt-2 max-w-xl leading-relaxed">
-                {storeDescription}
-              </p>
-            )}
-
-            <div className="flex items-center justify-center sm:justify-start gap-5 mt-4">
-              <div className="text-center sm:text-left">
-                <p className="text-lg font-bold text-[#1c1813]">{productCount}</p>
-                <p className="text-xs text-[#9c8e84] uppercase tracking-wide">Produtos</p>
+              <div className="mt-2 max-w-xl">
+                <p
+                  ref={descRef}
+                  className={`text-sm text-ink-2 leading-relaxed ${descExpanded ? '' : 'line-clamp-2'}`}
+                >
+                  {storeDescription}
+                </p>
+                {isLong && !descExpanded && (
+                  <button
+                    onClick={() => setDescExpanded(true)}
+                    className="text-sm text-brand hover:text-brand-dim transition-colors mt-0.5"
+                  >
+                    ler mais
+                  </button>
+                )}
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

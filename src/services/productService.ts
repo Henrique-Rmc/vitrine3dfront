@@ -12,6 +12,7 @@ export interface ProductFormData {
   price?: number | null
   attributes?: Record<string, unknown>
   productTypeId?: number | null
+  affiliateUrl?: string | null
 }
 
 export interface PageResponse<T> {
@@ -34,7 +35,7 @@ function buildFormData(
   includeStoreId: boolean,
 ): FormData {
   const fd = new FormData()
-  const { imageUrls, price, attributes, storeId, productTypeId, ...rest } = payload
+  const { imageUrls, price, attributes, storeId, productTypeId, affiliateUrl, ...rest } = payload
   const dataJson: Record<string, unknown> = imageFiles.length > 0
     ? { ...rest }
     : { ...rest, imageUrls }
@@ -42,6 +43,7 @@ function buildFormData(
   if (price != null) dataJson.price = price
   if (attributes && Object.keys(attributes).length > 0) dataJson.attributes = attributes
   if (productTypeId != null) dataJson.productTypeId = productTypeId
+  if (affiliateUrl != null && affiliateUrl !== '') dataJson.affiliateUrl = affiliateUrl
   fd.append('data', JSON.stringify(dataJson))
   imageFiles.forEach((file) => fd.append('images', file))
   return fd
@@ -67,6 +69,10 @@ export async function listFeaturedProducts(storeId: string): Promise<Product[]> 
 
 export async function registerWhatsAppClick(productId: number): Promise<void> {
   await apiClient.post(`/api/products/${productId}/whatsapp-click`)
+}
+
+export async function registerAffiliateClick(productId: number): Promise<void> {
+  await apiClient.post(`/api/products/${productId}/affiliate-click`)
 }
 
 // ── Admin (JWT required) ──────────────────────────────────────────────────────

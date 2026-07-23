@@ -20,9 +20,9 @@ function LoadingSkeleton() {
         <div className="flex-1 h-10 skeleton rounded-lg" />
         <div className="w-28 h-10 skeleton rounded-lg" />
       </div>
-      <div className="bg-white border border-[#e8e2d8] rounded-xl overflow-hidden shadow-sm">
+      <div className="bg-white border border-border rounded-xl overflow-hidden shadow-sm">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className={`flex items-center gap-3 px-4 py-3 ${i < 3 ? 'border-b border-[#f0ece5]' : ''}`}>
+          <div key={i} className={`flex items-center gap-3 px-4 py-3 ${i < 3 ? 'border-b border-border' : ''}`}>
             <div className="w-8 h-8 skeleton rounded-lg" />
             <div className="flex-1 h-4 skeleton rounded" />
           </div>
@@ -116,30 +116,30 @@ export default function CategoriesPage() {
   return (
     <>
     {showOnboarding && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#1c1813]/50 backdrop-blur-sm">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-cta/50 backdrop-blur-sm">
         <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-7 flex flex-col items-center text-center">
           <div className="w-16 h-16 rounded-full bg-amber-50 border-2 border-amber-200 flex items-center justify-center mb-5">
-            <svg className="w-8 h-8 text-[#c9922c]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <svg className="w-8 h-8 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
             </svg>
           </div>
-          <h2 className="text-xl font-bold text-[#1c1813] mb-2">Parabéns por criar sua conta!</h2>
-          <p className="text-sm text-[#6b5d52] leading-relaxed mb-6">
+          <h2 className="text-xl font-bold text-ink mb-2">Parabéns por criar sua conta!</h2>
+          <p className="text-sm text-ink-2 leading-relaxed mb-6">
             Vamos configurar sua vitrine em 2 passos rápidos.<br />
-            <strong className="text-[#1c1813]">Primeiro: crie as categorias para seus produtos.</strong>
+            <strong className="text-ink">Primeiro: crie as categorias para seus produtos.</strong>
             <br /><br />
             As categorias são o primeiro filtro que seus clientes usam para descobrir o que você vende.
           </p>
           <div className="flex flex-col sm:flex-row gap-2 w-full">
             <button
               onClick={() => setShowOnboarding(false)}
-              className="flex-1 px-4 py-2.5 rounded-lg border border-[#e8e2d8] text-sm text-[#6b5d52] hover:bg-[#f4f1eb] transition-colors font-medium"
+              className="flex-1 px-4 py-2.5 rounded-lg border border-border text-sm text-ink-2 hover:bg-surface-2 transition-colors font-medium"
             >
               Entendido
             </button>
             <button
               onClick={() => { setShowOnboarding(false); navigate('/admin/materials?onboarding=1') }}
-              className="flex-1 px-4 py-2.5 rounded-lg bg-[#1c1813] hover:bg-[#2c2620] text-white text-sm font-semibold transition-colors flex items-center justify-center gap-1.5"
+              className="flex-1 px-4 py-2.5 rounded-lg bg-cta hover:bg-cta-2 text-cta-fg text-sm font-semibold transition-colors flex items-center justify-center gap-1.5"
             >
               Próximo: Tipos
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -152,7 +152,7 @@ export default function CategoriesPage() {
     )}
     <div className="max-w-2xl">
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-[#1c1813]">Categorias</h1>
+        <h1 className="text-xl font-bold text-ink">Categorias</h1>
         <div className="mt-2 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-900 leading-relaxed">
           <p className="font-semibold mb-1">O que é uma Categoria?</p>
           <p>
@@ -175,12 +175,12 @@ export default function CategoriesPage() {
           value={newName}
           onChange={(e) => { setNewName(e.target.value); setAddError(null) }}
           placeholder="Nome da nova categoria"
-          className="flex-1 rounded-lg bg-[#f4f1eb] border border-[#e8e2d8] px-3 py-2.5 text-sm text-[#1c1813] placeholder-[#c4b8ae] focus:outline-none focus:ring-2 focus:ring-[#c9922c]/40 focus:border-[#c9922c]/60 transition-colors"
+          className="flex-1 rounded-lg bg-surface-2 border border-border px-3 py-2.5 text-sm text-ink placeholder-ink-4 focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/60 transition-colors"
         />
         <button
           type="submit"
           disabled={isAdding || !newName.trim()}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#1c1813] hover:bg-[#2c2620] disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors shrink-0"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-cta hover:bg-cta-2 disabled:opacity-60 disabled:cursor-not-allowed text-cta-fg text-sm font-semibold transition-colors shrink-0"
         >
           {isAdding ? (
             <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
@@ -200,19 +200,19 @@ export default function CategoriesPage() {
 
       {!loadError && categories.length === 0 && (
         <div className="text-center py-16">
-          <p className="text-[#9c8e84] text-sm">Nenhuma categoria cadastrada ainda.</p>
+          <p className="text-ink-3 text-sm">Nenhuma categoria cadastrada ainda.</p>
         </div>
       )}
 
       {categories.length > 0 && (
-        <div className="bg-white border border-[#e8e2d8] rounded-xl overflow-hidden shadow-sm">
+        <div className="bg-white border border-border rounded-xl overflow-hidden shadow-sm">
           {categories.map((cat, i) => (
             <div
               key={cat.id}
-              className={`flex items-center gap-3 px-4 py-3 ${i < categories.length - 1 ? 'border-b border-[#f0ece5]' : ''}`}
+              className={`flex items-center gap-3 px-4 py-3 ${i < categories.length - 1 ? 'border-b border-border' : ''}`}
             >
-              <div className="w-8 h-8 rounded-lg bg-[#f4f1eb] flex items-center justify-center shrink-0">
-                <svg className="w-4 h-4 text-[#9c8e84]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <div className="w-8 h-8 rounded-lg bg-surface-2 flex items-center justify-center shrink-0">
+                <svg className="w-4 h-4 text-ink-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
                 </svg>
               </div>
@@ -226,13 +226,13 @@ export default function CategoriesPage() {
                     if (e.key === 'Enter') handleSaveEdit(cat.id)
                     if (e.key === 'Escape') setEditingId(null)
                   }}
-                  className="flex-1 rounded-md bg-[#f4f1eb] border border-[#e8e2d8] px-2 py-1 text-sm text-[#1c1813] focus:outline-none focus:ring-2 focus:ring-[#c9922c]/40"
+                  className="flex-1 rounded-md bg-surface-2 border border-border px-2 py-1 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand/40"
                 />
               ) : (
                 <div className="flex-1 min-w-0 flex items-center gap-2">
-                  <span className="text-sm text-[#1c1813] truncate">{cat.name}</span>
+                  <span className="text-sm text-ink truncate">{cat.name}</span>
                   {cat.isGlobal && (
-                    <span className="text-[10px] font-semibold uppercase tracking-wide text-[#9c8e84] bg-[#f4f1eb] px-1.5 py-0.5 rounded shrink-0">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-3 bg-surface-2 px-1.5 py-0.5 rounded shrink-0">
                       Global
                     </span>
                   )}
@@ -257,7 +257,7 @@ export default function CategoriesPage() {
                   </button>
                   <button
                     onClick={() => setEditingId(null)}
-                    className="p-1.5 rounded-lg text-[#9c8e84] hover:text-[#1c1813] hover:bg-[#f4f1eb] transition-colors"
+                    className="p-1.5 rounded-lg text-ink-3 hover:text-ink hover:bg-surface-2 transition-colors"
                     title="Cancelar"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -269,7 +269,7 @@ export default function CategoriesPage() {
                 <div className="flex gap-1 shrink-0">
                   <button
                     onClick={() => { setEditingId(cat.id); setEditName(cat.name) }}
-                    className="p-1.5 rounded-lg text-[#9c8e84] hover:text-[#1c1813] hover:bg-[#f4f1eb] transition-colors"
+                    className="p-1.5 rounded-lg text-ink-3 hover:text-ink hover:bg-surface-2 transition-colors"
                     title="Editar"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -279,7 +279,7 @@ export default function CategoriesPage() {
                   <button
                     onClick={() => handleDelete(cat.id)}
                     disabled={deletingId === cat.id}
-                    className="p-1.5 rounded-lg text-[#9c8e84] hover:text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors"
+                    className="p-1.5 rounded-lg text-ink-3 hover:text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors"
                     title="Excluir"
                   >
                     {deletingId === cat.id ? (

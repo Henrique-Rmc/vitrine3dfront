@@ -4,15 +4,15 @@ export default function PrivacyPolicyPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-12">
       <div className="mb-8">
-        <Link to="/" className="text-sm text-[#c9922c] hover:underline">← Voltar</Link>
-        <h1 className="mt-4 text-2xl font-bold text-[#1c1813]">Política de Privacidade</h1>
-        <p className="text-sm text-[#9c8e84] mt-1">Última atualização: junho de 2025 · Em conformidade com a LGPD (Lei 13.709/2018)</p>
+        <Link to="/" className="text-sm text-brand hover:underline">← Voltar</Link>
+        <h1 className="mt-4 text-2xl font-bold text-ink">Política de Privacidade</h1>
+        <p className="text-sm text-ink-3 mt-1">Última atualização: junho de 2025 · Em conformidade com a LGPD (Lei 13.709/2018)</p>
       </div>
 
-      <div className="prose prose-stone max-w-none text-sm text-[#4a3f38] leading-relaxed space-y-6">
+      <div className="prose prose-stone max-w-none text-sm text-ink leading-relaxed space-y-6">
 
         <section>
-          <h2 className="text-base font-bold text-[#1c1813] mb-2">1. Quem Somos</h2>
+          <h2 className="text-base font-bold text-ink mb-2">1. Quem Somos</h2>
           <p>
             O <strong>VitreIn</strong> é uma plataforma de vitrine digital para lojistas. Nós atuamos como
             controladores dos dados pessoais que coletamos no funcionamento da plataforma e tratamos essas
@@ -21,9 +21,9 @@ export default function PrivacyPolicyPage() {
         </section>
 
         <section>
-          <h2 className="text-base font-bold text-[#1c1813] mb-2">2. Dados que Coletamos</h2>
+          <h2 className="text-base font-bold text-ink mb-2">2. Dados que Coletamos</h2>
 
-          <p className="font-medium text-[#1c1813] mb-1">2.1 Dados dos Lojistas (cadastro)</p>
+          <p className="font-medium text-ink mb-1">2.1 Dados dos Lojistas (cadastro)</p>
           <ul className="list-disc pl-5 space-y-1">
             <li>Nome completo e nome da loja;</li>
             <li>Endereço de e-mail e senha (armazenada com hash criptográfico);</li>
@@ -32,13 +32,13 @@ export default function PrivacyPolicyPage() {
             <li>Imagem de logotipo da loja (quando fornecida).</li>
           </ul>
 
-          <p className="font-medium text-[#1c1813] mb-1 mt-4">2.2 Dados dos Produtos</p>
+          <p className="font-medium text-ink mb-1 mt-4">2.2 Dados dos Produtos</p>
           <ul className="list-disc pl-5 space-y-1">
             <li>Fotos, títulos, descrições e preços cadastrados pelo lojista;</li>
             <li>Categorias e tipos associados a cada produto.</li>
           </ul>
 
-          <p className="font-medium text-[#1c1813] mb-1 mt-4">2.3 Dados dos Visitantes</p>
+          <p className="font-medium text-ink mb-1 mt-4">2.3 Dados dos Visitantes</p>
           <ul className="list-disc pl-5 space-y-1">
             <li>Cookies de sessão necessários para o funcionamento da plataforma;</li>
             <li>Contagem de cliques no botão de WhatsApp (dado anônimo e agregado).</li>
@@ -49,7 +49,7 @@ export default function PrivacyPolicyPage() {
         </section>
 
         <section>
-          <h2 className="text-base font-bold text-[#1c1813] mb-2">3. Finalidade do Tratamento</h2>
+          <h2 className="text-base font-bold text-ink mb-2">3. Finalidade do Tratamento</h2>
           <ul className="list-disc pl-5 space-y-1">
             <li>Criar e gerenciar a conta e vitrine do lojista;</li>
             <li>Exibir os produtos cadastrados para visitantes;</li>
@@ -60,7 +60,7 @@ export default function PrivacyPolicyPage() {
         </section>
 
         <section>
-          <h2 className="text-base font-bold text-[#1c1813] mb-2">4. Base Legal</h2>
+          <h2 className="text-base font-bold text-ink mb-2">4. Base Legal</h2>
           <p>O tratamento dos dados é realizado com base em:</p>
           <ul className="list-disc pl-5 space-y-1 mt-2">
             <li><strong>Execução de contrato</strong> — para operar a conta e a vitrine do lojista (art. 7º, V, LGPD);</li>
@@ -70,7 +70,7 @@ export default function PrivacyPolicyPage() {
         </section>
 
         <section>
-          <h2 className="text-base font-bold text-[#1c1813] mb-2">5. Armazenamento e Segurança</h2>
+          <h2 className="text-base font-bold text-ink mb-2">5. Armazenamento e Segurança</h2>
           <p>
             Os dados são armazenados em servidores seguros. As imagens são armazenadas em serviço de
             armazenamento em nuvem (MinIO/S3-compatible). Adotamos medidas técnicas e organizacionais para
@@ -82,7 +82,7 @@ export default function PrivacyPolicyPage() {
         </section>
 
         <section>
-          <h2 className="text-base font-bold text-[#1c1813] mb-2">6. Compartilhamento de Dados</h2>
+          <h2 className="text-base font-bold text-ink mb-2">6. Compartilhamento de Dados</h2>
           <p>
             Não vendemos nem compartilhamos dados pessoais com terceiros para fins comerciais. Os dados
             podem ser compartilhados com:
@@ -94,7 +94,7 @@ export default function PrivacyPolicyPage() {
         </section>
 
         <section>
-          <h2 className="text-base font-bold text-[#1c1813] mb-2">7. Seus Direitos (LGPD)</h2>
+          <h2 className="text-base font-bold text-ink mb-2">7. Seus Direitos (LGPD)</h2>
           <p>Como titular de dados, você tem direito a:</p>
           <ul className="list-disc pl-5 space-y-1 mt-2">
             <li>Confirmar a existência de tratamento dos seus dados;</li>
@@ -110,7 +110,7 @@ export default function PrivacyPolicyPage() {
         </section>
 
         <section>
-          <h2 className="text-base font-bold text-[#1c1813] mb-2">8. Retenção de Dados</h2>
+          <h2 className="text-base font-bold text-ink mb-2">8. Retenção de Dados</h2>
           <p>
             Os dados de lojistas são mantidos enquanto a conta estiver ativa. Após o encerramento da conta,
             os dados são excluídos em até 90 dias, salvo quando a retenção for exigida por lei.
@@ -118,7 +118,7 @@ export default function PrivacyPolicyPage() {
         </section>
 
         <section>
-          <h2 className="text-base font-bold text-[#1c1813] mb-2">9. Cookies</h2>
+          <h2 className="text-base font-bold text-ink mb-2">9. Cookies</h2>
           <p>
             Utilizamos cookies estritamente necessários para autenticação e funcionamento da sessão do lojista.
             Não utilizamos cookies de rastreamento publicitário ou de terceiros.
@@ -126,20 +126,20 @@ export default function PrivacyPolicyPage() {
         </section>
 
         <section>
-          <h2 className="text-base font-bold text-[#1c1813] mb-2">10. Contato e Encarregado (DPO)</h2>
+          <h2 className="text-base font-bold text-ink mb-2">10. Contato e Encarregado (DPO)</h2>
           <p>
             Para questões sobre privacidade ou para exercer seus direitos, entre em contato com nosso
             Encarregado de Proteção de Dados:
           </p>
           <p className="mt-2">
             <strong>E-mail:</strong>{' '}
-            <a href="mailto:vitrin.app.store@gmail.com" className="text-[#c9922c] hover:underline">
+            <a href="mailto:vitrin.app.store@gmail.com" className="text-brand hover:underline">
               vitrin.app.store@gmail.com
             </a>
           </p>
         </section>
 
-        <div className="pt-6 border-t border-[#e8e2d8] text-xs text-[#9c8e84]">
+        <div className="pt-6 border-t border-border text-xs text-ink-3">
           Esta política pode ser atualizada periodicamente. Recomendamos que você a revise regularmente.
         </div>
       </div>

@@ -30,7 +30,7 @@ export default function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 z-40 bg-[#1c1813]/30 backdrop-blur-sm md:hidden transition-opacity duration-300 ${
+        className={`fixed inset-0 z-40 bg-cta/30 backdrop-blur-sm md:hidden transition-opacity duration-300 ${
           isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={onClose}
@@ -40,7 +40,7 @@ export default function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
       <aside
         className={`
           fixed left-0 top-0 z-50 h-full w-72
-          bg-white border-r border-[#e8e2d8] shadow-xl
+          bg-canvas border-r border-border shadow-xl
           flex flex-col
           transition-transform duration-300 ease-in-out
           md:hidden
@@ -48,11 +48,11 @@ export default function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
         `}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 h-16 border-b border-[#e8e2d8] shrink-0">
+        <div className="flex items-center justify-between px-5 h-16 border-b border-border shrink-0">
           <Logo height={24} />
           <button
             onClick={onClose}
-            className="p-2 rounded-lg text-[#9c8e84] hover:text-[#1c1813] hover:bg-[#f4f1eb] transition-colors"
+            className="p-2 rounded-lg text-ink-3 hover:text-ink hover:bg-surface-2 transition-colors"
             aria-label="Fechar menu"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -91,8 +91,8 @@ export default function MobileDrawer({ isOpen, onClose }: MobileDrawerProps) {
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t border-[#e8e2d8]">
-          <p className="text-xs text-[#c4b8ae] text-center">Vitrin &copy; {new Date().getFullYear()}</p>
+        <div className="p-4 border-t border-border">
+          <p className="text-xs text-ink-4 text-center">Vitrin &copy; {new Date().getFullYear()}</p>
         </div>
       </aside>
     </>
@@ -116,8 +116,8 @@ function NavItem({
       onClick={onClose}
       className={`block px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
         highlight
-          ? 'bg-[#1c1813] text-white hover:bg-[#2c2620]'
-          : 'text-[#6b5d52] hover:text-[#1c1813] hover:bg-[#f4f1eb]'
+          ? 'bg-cta text-cta-fg hover:bg-cta-2'
+          : 'text-ink-2 hover:text-ink hover:bg-surface-2'
       }`}
     >
       {children}

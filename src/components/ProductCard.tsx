@@ -1,6 +1,6 @@
 import type { Product } from '../types'
 import { buildWhatsAppUrl } from '../utils/whatsapp'
-import { registerWhatsAppClick } from '../services/productService'
+import { registerWhatsAppClick, registerAffiliateClick } from '../services/productService'
 
 interface ProductCardProps {
   product: Product
@@ -10,15 +10,26 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, whatsappNumber, onOpenModal }: ProductCardProps) {
   const { name, imageUrl } = product
+  const isAffiliate = Boolean(product.affiliateUrl)
   const whatsappUrl = buildWhatsAppUrl(whatsappNumber, name)
+
+  function handleCtaClick(e: React.MouseEvent) {
+    e.stopPropagation()
+    if (isAffiliate) {
+      registerAffiliateClick(product.id).catch(() => {})
+      window.open(product.affiliateUrl!, '_blank', 'noopener,noreferrer')
+    } else {
+      registerWhatsAppClick(product.id)
+    }
+  }
 
   return (
     <article
-      className="group bg-white border border-[#e8e2d8] rounded-xl overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col"
+      className="group bg-canvas border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col"
       onClick={() => onOpenModal(product)}
     >
       {/* Image */}
-      <div className="relative aspect-square overflow-hidden bg-[#f4f1eb]">
+      <div className="relative aspect-square overflow-hidden bg-surface-2">
         {imageUrl ? (
           <img
             src={imageUrl}
@@ -28,7 +39,7 @@ export default function ProductCard({ product, whatsappNumber, onOpenModal }: Pr
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
-            <svg className="w-10 h-10 text-[#d4cec5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+            <svg className="w-10 h-10 text-border-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
             </svg>
           </div>
@@ -37,28 +48,50 @@ export default function ProductCard({ product, whatsappNumber, onOpenModal }: Pr
       </div>
 
       {/* Content */}
-      <div className="p-3 flex flex-col gap-2 flex-1">
-        <h3 className="text-sm font-semibold text-[#1c1813] leading-snug line-clamp-2 flex-1">{name}</h3>
+      <div className="p-3 flex flex-col gap-1.5 flex-1">
+        <h3 className="text-sm font-semibold text-ink leading-snug line-clamp-2 flex-1">{name}</h3>
 
-        {product.price != null && (
-          <p className="text-sm font-bold text-[#c9922c]">
-            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)}
-          </p>
-        )}
+        <div className="flex items-center justify-between gap-2 mt-auto pt-1">
+          {product.price != null ? (
+            <p className="text-sm font-bold text-brand">
+              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)}
+            </p>
+          ) : (
+            <span className="text-xs text-ink-4">Sob consulta</span>
+          )}
 
-        <a
-          href={whatsappUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => { e.stopPropagation(); registerWhatsAppClick(product.id) }}
-          className="flex items-center justify-center gap-1.5 rounded-lg bg-green-600 hover:bg-green-500 active:bg-green-700 px-2.5 py-2 text-[11px] font-semibold text-white transition-colors"
-          aria-label={`${product.price != null ? 'Fazer pedido' : 'Solicitar orçamento'} para ${name} via WhatsApp`}
-        >
-          <WhatsAppIcon />
-          {product.price != null ? 'Fazer Pedido' : 'Solicitar Orçamento'}
-        </a>
+          {isAffiliate ? (
+            <button
+              onClick={handleCtaClick}
+              className="h-10 px-3 flex items-center justify-center gap-1.5 rounded-lg bg-cta hover:bg-cta-2 active:bg-cta-3 text-cta-fg text-xs font-semibold transition-colors shrink-0"
+              aria-label={`Ver produto ${name}`}
+            >
+              <ExternalIcon />
+              Ver
+            </button>
+          ) : (
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={handleCtaClick}
+              className="w-10 h-10 flex items-center justify-center rounded-lg bg-green-600 hover:bg-green-500 active:bg-green-700 text-white transition-colors shrink-0"
+              aria-label={`Contato via WhatsApp para ${name}`}
+            >
+              <WhatsAppIcon />
+            </a>
+          )}
+        </div>
       </div>
     </article>
+  )
+}
+
+function ExternalIcon() {
+  return (
+    <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+    </svg>
   )
 }
 

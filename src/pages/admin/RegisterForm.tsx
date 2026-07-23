@@ -5,6 +5,7 @@ import { registerUser, uploadLogo } from '../../services/authService'
 import { listStates, listCitiesByState, type BrazilState, type BrazilCity } from '../../services/locationService'
 import { compressImage } from '../../services/imageOptimizationService'
 import { useAuth } from '../../context/AuthContext'
+import SearchableSelect from '../../components/SearchableSelect'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -81,18 +82,18 @@ function extractFormErrors(err: unknown): FormErrors {
 // ── Style helpers ─────────────────────────────────────────────────────────────
 
 function inputClass(hasError: boolean) {
-  return `w-full rounded-lg bg-[#f4f1eb] border px-4 py-2.5 text-sm text-[#1c1813] placeholder-[#c4b8ae] focus:outline-none focus:ring-2 disabled:opacity-50 transition-colors ${
+  return `w-full rounded-lg bg-surface-2 border px-4 py-2.5 text-sm text-ink placeholder-ink-4 focus:outline-none focus:ring-2 disabled:opacity-50 transition-colors ${
     hasError
       ? 'border-red-400 focus:ring-red-400/30'
-      : 'border-[#e8e2d8] focus:ring-[#c9922c]/40 focus:border-[#c9922c]/60'
+      : 'border-border focus:ring-brand/40 focus:border-brand/60'
   }`
 }
 
 function selectClass(hasError: boolean) {
-  return `w-full rounded-lg bg-[#f4f1eb] border px-4 py-2.5 text-sm text-[#1c1813] focus:outline-none focus:ring-2 disabled:opacity-50 cursor-pointer transition-colors ${
+  return `w-full rounded-lg bg-surface-2 border px-4 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 disabled:opacity-50 cursor-pointer transition-colors ${
     hasError
       ? 'border-red-400 focus:ring-red-400/30'
-      : 'border-[#e8e2d8] focus:ring-[#c9922c]/40 focus:border-[#c9922c]/60'
+      : 'border-border focus:ring-brand/40 focus:border-brand/60'
   }`
 }
 
@@ -119,13 +120,13 @@ function FormField({ label, hint, error, required, children }: {
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-[#6b5d52] mb-1.5">
+      <label className="block text-sm font-medium text-ink-2 mb-1.5">
         {label}
         {required && <span className="text-red-500 ml-0.5">*</span>}
       </label>
       {children}
       {error  && <p className="mt-1 text-xs text-red-600">{error}</p>}
-      {!error && hint && <p className="mt-1 text-xs text-[#9c8e84]">{hint}</p>}
+      {!error && hint && <p className="mt-1 text-xs text-ink-3">{hint}</p>}
     </div>
   )
 }
@@ -252,7 +253,7 @@ export default function RegisterForm() {
       })
       if (logoFile) await uploadLogo(created.id, logoFile).catch(() => undefined)
       await login(form.email, form.password)
-      navigate('/admin/attributes?onboarding=1')
+      navigate('/admin/onboarding', { replace: true })
     } catch (err) {
       setFormErrors(extractFormErrors(err))
     } finally {
@@ -316,7 +317,7 @@ export default function RegisterForm() {
             type="button"
             tabIndex={-1}
             onClick={() => setShowPassword((p) => !p)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#c4b8ae] hover:text-[#9c8e84] transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-4 hover:text-ink-3 transition-colors"
             aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
           >
             {showPassword ? (
@@ -337,7 +338,7 @@ export default function RegisterForm() {
         label="Nome da loja"
         required
         error={formErrors.storeName}
-        hint={form.slug ? <>Sua loja ficará em: <span className="text-[#c9922c] font-mono">/{form.slug}</span></> : undefined}
+        hint={form.slug ? <>Sua loja ficará em: <span className="text-brand font-mono">/{form.slug}</span></> : undefined}
       >
         <input type="text" required disabled={isLoading}
           value={form.storeName} onChange={(e) => handleStoreNameChange(e.target.value)}
@@ -355,10 +356,10 @@ export default function RegisterForm() {
 
       <FormField label="WhatsApp" required error={formErrors.whatsappNumber}
         hint={!formErrors.whatsappNumber ? 'Digite o DDD e o número. O +55 é adicionado automaticamente.' : undefined}>
-        <div className={`flex rounded-lg overflow-hidden border bg-[#f4f1eb] focus-within:ring-2 transition-colors ${
-          formErrors.whatsappNumber ? 'border-red-400 focus-within:ring-red-400/30' : 'border-[#e8e2d8] focus-within:ring-[#c9922c]/40'
+        <div className={`flex rounded-lg overflow-hidden border bg-surface-2 focus-within:ring-2 transition-colors ${
+          formErrors.whatsappNumber ? 'border-red-400 focus-within:ring-red-400/30' : 'border-border focus-within:ring-brand/40'
         } ${isLoading ? 'opacity-50' : ''}`}>
-          <span className="flex items-center px-3 text-sm font-medium text-[#9c8e84] bg-[#ede8df] border-r border-[#e8e2d8] shrink-0 select-none">
+          <span className="flex items-center px-3 text-sm font-medium text-ink-3 bg-surface-3 border-r border-border shrink-0 select-none">
             +55
           </span>
           <input
@@ -366,35 +367,43 @@ export default function RegisterForm() {
             value={form.whatsappNumber}
             onChange={(e) => setField('whatsappNumber', e.target.value)}
             placeholder="11 99999-8877"
-            className="flex-1 min-w-0 bg-transparent px-3 py-2.5 text-sm text-[#1c1813] placeholder-[#c4b8ae] focus:outline-none"
+            className="flex-1 min-w-0 bg-transparent px-3 py-2.5 text-sm text-ink placeholder-ink-4 focus:outline-none"
           />
         </div>
       </FormField>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <FormField label="Estado" required error={formErrors.stateId}>
-          <select required disabled={isLoading || loadingStates}
+          <SearchableSelect
+            required
+            disabled={isLoading || loadingStates}
             value={form.stateId !== null ? String(form.stateId) : ''}
-            onChange={(e) => handleStateChange(e.target.value)}
-            className={selectClass(!!formErrors.stateId)}>
-            <option value="">{loadingStates ? 'Carregando…' : 'Selecione o estado'}</option>
-            {states.map((s) => <option key={s.id} value={s.id}>{s.name} ({s.abbreviation})</option>)}
-          </select>
+            onChange={handleStateChange}
+            options={states.map((s) => ({ value: String(s.id), label: `${s.name} (${s.abbreviation})` }))}
+            placeholder={loadingStates ? 'Carregando…' : 'Selecione o estado'}
+            searchPlaceholder="Buscar estado…"
+            hasError={!!formErrors.stateId}
+          />
         </FormField>
 
         <FormField label="Cidade" required error={formErrors.cityId}>
-          <select
+          <SearchableSelect
             required={!isCustomCity}
             disabled={isLoading || !form.stateId || loadingCities}
             value={citySelectValue}
-            onChange={(e) => handleCityChange(e.target.value)}
-            className={selectClass(!!formErrors.cityId)}>
-            <option value="">
-              {loadingCities ? 'Carregando…' : form.stateId ? 'Selecione a cidade' : 'Selecione o estado primeiro'}
-            </option>
-            {cities.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            <option value={CUSTOM_CITY_VALUE}>Outra cidade / digitar</option>
-          </select>
+            onChange={handleCityChange}
+            options={[
+              ...cities.map((c) => ({ value: String(c.id), label: c.name })),
+              { value: CUSTOM_CITY_VALUE, label: 'Outra cidade / digitar' },
+            ]}
+            placeholder={
+              loadingCities ? 'Carregando…'
+              : !form.stateId ? 'Selecione o estado primeiro'
+              : 'Selecione a cidade'
+            }
+            searchPlaceholder="Buscar cidade…"
+            hasError={!!formErrors.cityId}
+          />
         </FormField>
       </div>
 
@@ -413,25 +422,25 @@ export default function RegisterForm() {
           type="button"
           disabled={isLoading || isOptimizingLogo}
           onClick={() => fileInputRef.current?.click()}
-          className="w-full rounded-lg border-2 border-dashed border-[#e8e2d8] hover:border-[#d4cec5] bg-[#f4f1eb]/60 hover:bg-[#f4f1eb] transition-colors px-4 py-5 flex flex-col items-center gap-2 disabled:opacity-50"
+          className="w-full rounded-lg border-2 border-dashed border-border hover:border-border-2 bg-surface-2/60 hover:bg-surface-2 transition-colors px-4 py-5 flex flex-col items-center gap-2 disabled:opacity-50"
         >
           {isOptimizingLogo ? (
             <>
-              <span className="w-6 h-6 rounded-full border-2 border-[#e8e2d8] border-t-[#c9922c] animate-spin" />
-              <span className="text-xs text-[#9c8e84]">Optimizing image...</span>
+              <span className="w-6 h-6 rounded-full border-2 border-border border-t-brand animate-spin" />
+              <span className="text-xs text-ink-3">Optimizing image...</span>
             </>
           ) : logoPreview ? (
             <>
-              <img src={logoPreview} alt="Logo preview" className="w-14 h-14 rounded-full object-cover border-2 border-[#e8e2d8]" />
-              <span className="text-xs text-[#9c8e84]">{logoFile?.name}</span>
-              <span className="text-xs text-[#c9922c]">Trocar imagem</span>
+              <img src={logoPreview} alt="Logo preview" className="w-14 h-14 rounded-full object-cover border-2 border-border" />
+              <span className="text-xs text-ink-3">{logoFile?.name}</span>
+              <span className="text-xs text-brand">Trocar imagem</span>
             </>
           ) : (
             <>
-              <svg className="w-7 h-7 text-[#d4cec5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <svg className="w-7 h-7 text-border-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
               </svg>
-              <span className="text-sm text-[#9c8e84]">Clique para selecionar</span>
+              <span className="text-sm text-ink-3">Clique para selecionar</span>
             </>
           )}
         </button>
@@ -446,15 +455,15 @@ export default function RegisterForm() {
             setAcceptedTerms(e.target.checked)
             if (e.target.checked) setFormErrors((prev) => { const next = { ...prev }; delete next.global; return next })
           }}
-          className="mt-0.5 w-4 h-4 shrink-0 rounded border-[#d4cec5] text-[#c9922c] accent-[#c9922c] cursor-pointer"
+          className="mt-0.5 w-4 h-4 shrink-0 rounded border-border-2 text-brand accent-brand cursor-pointer"
         />
-        <span className="text-xs text-[#6b5d52] leading-relaxed">
+        <span className="text-xs text-ink-2 leading-relaxed">
           Li e concordo com os{' '}
-          <a href="/termos-de-uso" target="_blank" rel="noopener noreferrer" className="text-[#c9922c] hover:underline font-medium">
+          <a href="/termos-de-uso" target="_blank" rel="noopener noreferrer" className="text-brand hover:underline font-medium">
             Termos de Uso
           </a>{' '}
           e a{' '}
-          <a href="/privacidade" target="_blank" rel="noopener noreferrer" className="text-[#c9922c] hover:underline font-medium">
+          <a href="/privacidade" target="_blank" rel="noopener noreferrer" className="text-brand hover:underline font-medium">
             Política de Privacidade
           </a>
           {', '}
@@ -465,10 +474,10 @@ export default function RegisterForm() {
       <button
         type="submit"
         disabled={isLoading || !acceptedTerms}
-        className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#1c1813] hover:bg-[#2c2620] disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-2.5 transition-colors mt-2"
+        className="w-full flex items-center justify-center gap-2 rounded-lg bg-cta hover:bg-cta-2 disabled:opacity-60 disabled:cursor-not-allowed text-cta-fg font-semibold py-2.5 transition-colors mt-2"
       >
         {isLoading ? (
-          <><span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" /> Criando conta…</>
+          <><span className="w-4 h-4 rounded-full border-2 border-cta-fg/40 border-t-cta-fg animate-spin" /> Criando conta…</>
         ) : (
           'Criar conta grátis'
         )}

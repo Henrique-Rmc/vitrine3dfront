@@ -19,7 +19,7 @@ import { useAuth } from '../../context/AuthContext'
 import { compressImage } from '../../services/imageOptimizationService'
 
 const inputClass =
-  'w-full rounded-lg bg-[#f4f1eb] border border-[#e8e2d8] px-3 py-2.5 text-sm text-[#1c1813] placeholder-[#c4b8ae] focus:outline-none focus:ring-2 focus:ring-[#c9922c]/40 focus:border-[#c9922c]/60 disabled:opacity-50 transition-colors'
+  'w-full rounded-lg bg-surface-2 border border-border px-3 py-2.5 text-sm text-ink placeholder-ink-4 focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/60 disabled:opacity-50 transition-colors'
 
 function FormField({ label, required, hint, children }: {
   label: string
@@ -29,12 +29,12 @@ function FormField({ label, required, hint, children }: {
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-[#6b5d52] mb-1.5">
+      <label className="block text-sm font-medium text-ink-2 mb-1.5">
         {label}
         {required && <span className="text-red-500 ml-0.5">*</span>}
       </label>
       {children}
-      {hint && <p className="mt-1 text-xs text-[#9c8e84]">{hint}</p>}
+      {hint && <p className="mt-1 text-xs text-ink-3">{hint}</p>}
     </div>
   )
 }
@@ -54,8 +54,8 @@ function Toggle({ label, description, checked, disabled, onChange }: {
         aria-checked={checked}
         disabled={disabled}
         onClick={() => onChange(!checked)}
-        className={`relative w-10 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#c9922c]/40 disabled:opacity-50 ${
-          checked ? 'bg-[#c9922c]' : 'bg-[#e8e2d8]'
+        className={`relative w-10 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-brand/40 disabled:opacity-50 ${
+          checked ? 'bg-brand' : 'bg-border'
         }`}
       >
         <span
@@ -65,8 +65,8 @@ function Toggle({ label, description, checked, disabled, onChange }: {
         />
       </button>
       <span className="flex flex-col">
-        <span className="text-sm text-[#1c1813]">{label}</span>
-        {description && <span className="text-xs text-[#9c8e84]">{description}</span>}
+        <span className="text-sm text-ink">{label}</span>
+        {description && <span className="text-xs text-ink-3">{description}</span>}
       </span>
     </label>
   )
@@ -163,8 +163,8 @@ function EnumAttributeField({
               className={inputClass}
             />
             {showPreview && !isDuplicate && (
-              <p className="mt-1 text-[11px] text-[#9c8e84]">
-                Será salvo como: <span className="font-semibold text-[#1c1813]">{normalized}</span>
+              <p className="mt-1 text-[11px] text-ink-3">
+                Será salvo como: <span className="font-semibold text-ink">{normalized}</span>
               </p>
             )}
             {isDuplicate && (
@@ -180,7 +180,7 @@ function EnumAttributeField({
               type="button"
               onClick={cancelAdd}
               disabled={isSaving}
-              className="shrink-0 px-3 py-2.5 rounded-lg border border-[#e8e2d8] text-[#6b5d52] hover:bg-[#f4f1eb] text-sm transition-colors disabled:opacity-50"
+              className="shrink-0 px-3 py-2.5 rounded-lg border border-border text-ink-2 hover:bg-surface-2 text-sm transition-colors disabled:opacity-50"
             >
               Cancelar
             </button>
@@ -190,10 +190,10 @@ function EnumAttributeField({
             type="button"
             onClick={handleSave}
             disabled={!normalized || isDuplicate || isSaving}
-            className="shrink-0 flex items-center gap-1.5 px-3 py-2.5 rounded-lg bg-[#1c1813] hover:bg-[#2c2620] text-white text-sm font-medium transition-colors disabled:opacity-50"
+            className="shrink-0 flex items-center gap-1.5 px-3 py-2.5 rounded-lg bg-cta hover:bg-cta-2 text-cta-fg text-sm font-medium transition-colors disabled:opacity-50"
           >
             {isSaving
-              ? <span className="w-3.5 h-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+              ? <span className="w-3.5 h-3.5 rounded-full border-2 border-cta-fg/40 border-t-cta-fg animate-spin" />
               : 'Adicionar'}
           </button>
         </div>
@@ -254,8 +254,8 @@ function AttributeInput({
           aria-checked={checked}
           disabled={disabled}
           onClick={() => onValueChange(attr.key, checked ? 'false' : 'true')}
-          className={`relative w-10 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#c9922c]/40 disabled:opacity-50 ${
-            checked ? 'bg-[#c9922c]' : 'bg-[#e8e2d8]'
+          className={`relative w-10 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-brand/40 disabled:opacity-50 ${
+            checked ? 'bg-brand' : 'bg-border'
           }`}
         >
           <span
@@ -264,7 +264,7 @@ function AttributeInput({
             }`}
           />
         </button>
-        <span className="text-sm text-[#6b5d52]">{checked ? 'Sim' : 'Não'}</span>
+        <span className="text-sm text-ink-2">{checked ? 'Sim' : 'Não'}</span>
       </label>
     )
   }
@@ -281,7 +281,7 @@ function AttributeInput({
           className={`${inputClass} ${attr.unit ? 'pr-12' : ''}`}
         />
         {attr.unit && (
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#9c8e84] pointer-events-none">
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-ink-3 pointer-events-none">
             {attr.unit}
           </span>
         )}
@@ -313,8 +313,10 @@ export default function ProductFormPage() {
   const isEditMode = !!id
   const storeId = user?.id ?? ''
 
+  const isAffiliate = user?.profileType === 'AFFILIATE'
+
   const emptyForm = (): ProductFormData => ({
-    name: '', description: '', imageUrls: [], isVisible: true, storeId, price: null, attributes: {}, productTypeId: null,
+    name: '', description: '', imageUrls: [], isVisible: true, storeId, price: null, attributes: {}, productTypeId: null, affiliateUrl: null,
   })
 
   const [form, setForm] = useState<ProductFormData>(emptyForm)
@@ -379,6 +381,7 @@ export default function ProductFormPage() {
             price: product.price ?? null,
             attributes: (product.attributes ?? {}) as Record<string, unknown>,
             productTypeId: product.productTypeId ?? null,
+            affiliateUrl: product.affiliateUrl ?? null,
           })
           setOmitPrice(product.price == null)
           setImagePreviews(existingUrls)
@@ -478,7 +481,7 @@ export default function ProductFormPage() {
   if (isLoadingProduct) {
     return (
       <div className="flex justify-center py-24">
-        <span className="w-6 h-6 rounded-full border-2 border-[#c9922c] border-t-transparent animate-spin" />
+        <span className="w-6 h-6 rounded-full border-2 border-brand border-t-transparent animate-spin" />
       </div>
     )
   }
@@ -486,10 +489,10 @@ export default function ProductFormPage() {
   if (notFound) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-4">
-        <p className="text-[#9c8e84] text-sm">Produto não encontrado.</p>
+        <p className="text-ink-3 text-sm">Produto não encontrado.</p>
         <button
           onClick={() => navigate('/admin/products')}
-          className="px-4 py-2 rounded-lg bg-[#f4f1eb] border border-[#e8e2d8] hover:bg-[#ede8df] text-[#6b5d52] text-sm font-medium transition-colors"
+          className="px-4 py-2 rounded-lg bg-surface-2 border border-border hover:bg-surface-3 text-ink-2 text-sm font-medium transition-colors"
         >
           ← Voltar para Produtos
         </button>
@@ -503,7 +506,7 @@ export default function ProductFormPage() {
         <div className="flex items-center gap-3 mb-6">
           <button
             onClick={() => navigate('/admin/products')}
-            className="p-2 rounded-lg text-[#9c8e84] hover:text-[#1c1813] hover:bg-[#f4f1eb] transition-colors"
+            className="p-2 rounded-lg text-ink-3 hover:text-ink hover:bg-surface-2 transition-colors"
             aria-label="Voltar"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -511,11 +514,11 @@ export default function ProductFormPage() {
             </svg>
           </button>
           <div>
-            <h1 className="text-xl font-bold text-[#1c1813]">
+            <h1 className="text-xl font-bold text-ink">
               {isEditMode ? 'Editar Produto' : 'Novo Produto'}
             </h1>
             {isEditMode && form.name && (
-              <p className="text-sm text-[#9c8e84] mt-0.5 truncate">{form.name}</p>
+              <p className="text-sm text-ink-3 mt-0.5 truncate">{form.name}</p>
             )}
           </div>
         </div>
@@ -546,8 +549,8 @@ export default function ProductFormPage() {
           <FormField label="Tipo do produto" required>
             {isLoadingTypes ? (
               <div className="flex items-center gap-2 py-2.5">
-                <span className="w-4 h-4 rounded-full border-2 border-[#e8e2d8] border-t-[#c9922c] animate-spin" />
-                <span className="text-sm text-[#9c8e84]">Carregando tipos…</span>
+                <span className="w-4 h-4 rounded-full border-2 border-border border-t-brand animate-spin" />
+                <span className="text-sm text-ink-3">Carregando tipos…</span>
               </div>
             ) : (
               <select
@@ -606,7 +609,7 @@ export default function ProductFormPage() {
                           <img
                             src={src}
                             alt={`Foto ${i + 1}`}
-                            className="w-full h-full object-cover rounded-xl border border-[#e8e2d8]"
+                            className="w-full h-full object-cover rounded-xl border border-border"
                             onError={(e) => { e.currentTarget.style.display = 'none' }}
                           />
                           <button
@@ -616,7 +619,7 @@ export default function ProductFormPage() {
                               ? removeImageFile(i)
                               : setField('imageUrls', form.imageUrls.filter((_, idx) => idx !== i))
                             }
-                            className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[#1c1813] hover:bg-red-500 text-white flex items-center justify-center shadow transition-colors disabled:opacity-50"
+                            className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-cta hover:bg-red-500 text-cta-fg flex items-center justify-center shadow transition-colors disabled:opacity-50"
                           >
                             <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -635,19 +638,19 @@ export default function ProductFormPage() {
                           onClick={() => imageInputRef.current?.click()}
                           className={`w-full h-full rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
                             i === 0
-                              ? 'border-[#d4cec5] hover:border-[#c9922c]/50 bg-[#f4f1eb] hover:bg-[#ede8df]'
-                              : 'border-[#ede8df] hover:border-[#d4cec5] bg-[#faf8f5] hover:bg-[#f4f1eb]'
+                              ? 'border-border-2 hover:border-brand/50 bg-surface-2 hover:bg-surface-3'
+                              : 'border-border hover:border-border-2 bg-surface hover:bg-surface-2'
                           }`}
                         >
                           {isThisProcessing ? (
-                            <span className="w-4 h-4 rounded-full border-2 border-[#e8e2d8] border-t-[#c9922c] animate-spin" />
+                            <span className="w-4 h-4 rounded-full border-2 border-border border-t-brand animate-spin" />
                           ) : (
                             <>
-                              <svg className={`text-[#d4cec5] ${i === 0 ? 'w-6 h-6' : 'w-4 h-4'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <svg className={`text-border-2 ${i === 0 ? 'w-6 h-6' : 'w-4 h-4'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                               </svg>
                               {i === 0 && (
-                                <span className="text-[10px] text-[#c4b8ae] font-medium leading-tight text-center px-1">
+                                <span className="text-[10px] text-ink-4 font-medium leading-tight text-center px-1">
                                   Foto principal
                                 </span>
                               )}
@@ -661,13 +664,13 @@ export default function ProductFormPage() {
               </div>
 
               {isOptimizingImage && (
-                <div className="flex items-center gap-2 text-xs text-[#9c8e84]">
-                  <span className="w-3 h-3 rounded-full border-2 border-[#e8e2d8] border-t-[#c9922c] animate-spin" />
+                <div className="flex items-center gap-2 text-xs text-ink-3">
+                  <span className="w-3 h-3 rounded-full border-2 border-border border-t-brand animate-spin" />
                   Comprimindo imagens…
                 </div>
               )}
 
-              <p className="text-xs text-[#c4b8ae]">
+              <p className="text-xs text-ink-4">
                 PNG, JPG ou WebP · até 5 fotos · máx. 2 MB cada · toque em um bloco para adicionar
               </p>
             </div>
@@ -677,12 +680,12 @@ export default function ProductFormPage() {
             <label className="flex items-center gap-2 cursor-pointer select-none mb-2">
               <input type="checkbox" checked={omitPrice}
                 onChange={(e) => { setOmitPrice(e.target.checked); if (e.target.checked) setField('price', null) }}
-                className="w-3.5 h-3.5 rounded accent-[#c9922c]" />
-              <span className="text-sm text-[#9c8e84]">Não informar preço (orçamento sob consulta)</span>
+                className="w-3.5 h-3.5 rounded accent-brand" />
+              <span className="text-sm text-ink-3">Não informar preço (orçamento sob consulta)</span>
             </label>
             {!omitPrice && (
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[#9c8e84] pointer-events-none">R$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-ink-3 pointer-events-none">R$</span>
                 <input type="number" min="0.01" step="0.01" disabled={isDisabled}
                   value={form.price ?? ''}
                   onChange={(e) => setField('price', e.target.value ? Number(e.target.value) : null)}
@@ -691,13 +694,31 @@ export default function ProductFormPage() {
             )}
           </FormField>
 
+          {/* Affiliate URL — visible only for AFFILIATE accounts */}
+          {isAffiliate && (
+            <FormField label="Link de afiliado" required>
+              <input
+                type="url"
+                required={isAffiliate}
+                disabled={isDisabled}
+                value={form.affiliateUrl ?? ''}
+                onChange={(e) => setField('affiliateUrl', e.target.value || null)}
+                placeholder="https://loja.exemplo.com/produto?ref=seu-codigo"
+                className={inputClass}
+              />
+              <p className="mt-1 text-xs text-ink-3">
+                Link externo para o qual o cliente será redirecionado ao clicar em "Ver".
+              </p>
+            </FormField>
+          )}
+
           {/* Dynamic attribute inputs */}
           {(isLoadingAttributes || attributeDefinitions.length > 0) && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-[#6b5d52]">Características do produto</p>
+                <p className="text-sm font-medium text-ink-2">Características do produto</p>
                 {isLoadingAttributes && (
-                  <span className="w-4 h-4 rounded-full border-2 border-[#e8e2d8] border-t-[#9c8e84] animate-spin" />
+                  <span className="w-4 h-4 rounded-full border-2 border-border border-t-ink-3 animate-spin" />
                 )}
               </div>
               {!isLoadingAttributes && (
@@ -735,14 +756,14 @@ export default function ProductFormPage() {
 
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={() => navigate('/admin/products')} disabled={isDisabled}
-              className="flex-1 sm:flex-none px-5 py-2.5 rounded-lg bg-[#f4f1eb] hover:bg-[#ede8df] border border-[#e8e2d8] disabled:opacity-50 text-[#6b5d52] text-sm font-medium transition-colors">
+              className="flex-1 sm:flex-none px-5 py-2.5 rounded-lg bg-surface-2 hover:bg-surface-3 border border-border disabled:opacity-50 text-ink-2 text-sm font-medium transition-colors">
               Cancelar
             </button>
             <button type="submit" disabled={isDisabled}
-              className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-[#1c1813] hover:bg-[#2c2620] disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-2.5 px-6 transition-colors">
+              className="flex-1 flex items-center justify-center gap-2 rounded-lg bg-cta hover:bg-cta-2 disabled:opacity-60 disabled:cursor-not-allowed text-cta-fg font-semibold py-2.5 px-6 transition-colors">
               {isSaving ? (
                 <>
-                  <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                  <span className="w-4 h-4 rounded-full border-2 border-cta-fg/40 border-t-cta-fg animate-spin" />
                   {isEditMode ? 'Salvando…' : 'Cadastrando…'}
                 </>
               ) : (
@@ -755,24 +776,24 @@ export default function ProductFormPage() {
 
       {/* Loading overlay */}
       {isSaving && (
-        <div className="fixed inset-0 z-50 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center gap-5">
+        <div className="fixed inset-0 z-50 bg-canvas/80 backdrop-blur-sm flex flex-col items-center justify-center gap-5">
           <div className="relative w-14 h-14">
-            <div className="absolute inset-0 rounded-full border-4 border-[#e8e2d8]" />
-            <div className="absolute inset-0 rounded-full border-4 border-t-[#c9922c] border-r-transparent border-b-transparent border-l-transparent animate-spin" />
+            <div className="absolute inset-0 rounded-full border-4 border-border" />
+            <div className="absolute inset-0 rounded-full border-4 border-t-brand border-r-transparent border-b-transparent border-l-transparent animate-spin" />
           </div>
           <div className="text-center">
-            <p className="text-[#1c1813] text-sm font-semibold">
+            <p className="text-ink text-sm font-semibold">
               {isEditMode ? 'Salvando alterações…' : 'Cadastrando produto…'}
             </p>
-            <p className="text-xs text-[#9c8e84] mt-1">Por favor, aguarde</p>
+            <p className="text-xs text-ink-3 mt-1">Por favor, aguarde</p>
           </div>
         </div>
       )}
 
       {/* Success popup */}
       {showSuccess && (
-        <div className="fixed inset-0 z-50 bg-[#faf8f5]/70 backdrop-blur-sm flex items-center justify-center">
-          <div className="bg-white border border-[#e8e2d8] rounded-2xl px-8 py-7 flex flex-col items-center gap-4 shadow-2xl mx-4">
+        <div className="fixed inset-0 z-50 bg-surface/70 backdrop-blur-sm flex items-center justify-center">
+          <div className="bg-canvas border border-border rounded-2xl px-8 py-7 flex flex-col items-center gap-4 shadow-2xl mx-4">
             <div className="relative">
               <div className="w-16 h-16 rounded-full bg-green-50 border-2 border-green-200 flex items-center justify-center">
                 <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -782,10 +803,10 @@ export default function ProductFormPage() {
               <div className="absolute inset-0 w-16 h-16 rounded-full border-2 border-green-300/60 animate-ping" />
             </div>
             <div className="text-center">
-              <p className="text-[#1c1813] font-semibold text-base">
+              <p className="text-ink font-semibold text-base">
                 {isEditMode ? 'Produto atualizado!' : 'Produto cadastrado!'}
               </p>
-              <p className="text-[#9c8e84] text-sm mt-1">Redirecionando para seus produtos…</p>
+              <p className="text-ink-3 text-sm mt-1">Redirecionando para seus produtos…</p>
             </div>
           </div>
         </div>

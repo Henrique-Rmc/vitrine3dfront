@@ -15,7 +15,7 @@ export interface ProductListProps {
 }
 
 const DragHandle = () => (
-  <svg className="w-4 h-4 text-[#d4cec5] cursor-grab active:cursor-grabbing shrink-0" viewBox="0 0 16 16" fill="currentColor">
+  <svg className="w-4 h-4 text-border-2 cursor-grab active:cursor-grabbing shrink-0" viewBox="0 0 16 16" fill="currentColor">
     <circle cx="5.5" cy="4"  r="1.2" /><circle cx="10.5" cy="4"  r="1.2" />
     <circle cx="5.5" cy="8"  r="1.2" /><circle cx="10.5" cy="8"  r="1.2" />
     <circle cx="5.5" cy="12" r="1.2" /><circle cx="10.5" cy="12" r="1.2" />
@@ -24,7 +24,7 @@ const DragHandle = () => (
 
 const StarIcon = ({ filled }: { filled: boolean }) => (
   <svg
-    className={`w-4 h-4 transition-colors ${filled ? 'text-[#c9922c]' : 'text-[#d4cec5]'}`}
+    className={`w-4 h-4 transition-colors ${filled ? 'text-brand' : 'text-border-2'}`}
     viewBox="0 0 24 24"
     fill={filled ? 'currentColor' : 'none'}
     stroke="currentColor"
@@ -48,11 +48,11 @@ const TrashIcon = () => (
 
 function Thumbnail({ src, alt }: { src: string | null; alt: string }) {
   return (
-    <div className="w-12 h-12 rounded-lg overflow-hidden bg-[#f4f1eb] shrink-0 flex items-center justify-center border border-[#e8e2d8]">
+    <div className="w-12 h-12 rounded-lg overflow-hidden bg-surface-2 shrink-0 flex items-center justify-center border border-border">
       {src ? (
         <img src={src} alt={alt} className="w-full h-full object-cover" />
       ) : (
-        <svg className="w-5 h-5 text-[#d4cec5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <svg className="w-5 h-5 text-border-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
         </svg>
       )}
@@ -111,8 +111,8 @@ export default function ProductList({
 
   if (products.length === 0) {
     return (
-      <div className="rounded-xl border border-[#e8e2d8] py-16 text-center bg-white shadow-sm">
-        <p className="text-sm text-[#9c8e84]">Nenhum produto encontrado.</p>
+      <div className="rounded-xl border border-border py-16 text-center bg-white shadow-sm">
+        <p className="text-sm text-ink-3">Nenhum produto encontrado.</p>
       </div>
     )
   }
@@ -132,11 +132,11 @@ export default function ProductList({
         onDrop={sortable      ? () => onDrop(product.id) : undefined}
         onDragEnd={sortable   ? resetDrag : undefined}
         className={[
-          'hover:bg-[#faf8f5] transition-all',
-          idx < products.length - 1 ? 'border-b border-[#f0ece5]' : '',
+          'hover:bg-surface transition-all',
+          idx < products.length - 1 ? 'border-b border-border' : '',
           deletingId === product.id ? 'opacity-50' : '',
-          isDragged ? 'opacity-30 bg-[#f4f1eb]' : '',
-          isOver    ? 'border-t-2 border-[#c9922c]' : '',
+          isDragged ? 'opacity-30 bg-surface-2' : '',
+          isOver    ? 'border-t-2 border-brand' : '',
         ].join(' ')}
       >
         {sortable && (
@@ -147,9 +147,9 @@ export default function ProductList({
         </td>
         <td className="px-4 py-3">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="font-medium text-[#1c1813]">{product.name}</p>
+            <p className="font-medium text-ink">{product.name}</p>
             {isFeatured && (
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-[#c9922c] bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-brand bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full">
                 Destaque
               </span>
             )}
@@ -166,7 +166,7 @@ export default function ProductList({
                   onClick={() => onMoveUp?.(product.id)}
                   disabled={idx === 0}
                   title="Mover para cima"
-                  className="p-2 rounded-lg text-[#9c8e84] hover:text-[#1c1813] hover:bg-[#f4f1eb] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  className="p-2 rounded-lg text-ink-3 hover:text-ink hover:bg-surface-2 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
@@ -176,7 +176,7 @@ export default function ProductList({
                   onClick={() => onMoveDown?.(product.id)}
                   disabled={idx === products.length - 1}
                   title="Mover para baixo"
-                  className="p-2 rounded-lg text-[#9c8e84] hover:text-[#1c1813] hover:bg-[#f4f1eb] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  className="p-2 rounded-lg text-ink-3 hover:text-ink hover:bg-surface-2 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
@@ -190,8 +190,8 @@ export default function ProductList({
                 disabled={!isFeatured && !canStar}
                 title={isFeatured ? 'Remover destaque' : canStar ? 'Adicionar ao destaque (máx. 5)' : 'Limite atingido'}
                 className={`p-2 rounded-lg transition-colors ${
-                  isFeatured ? 'text-[#c9922c] hover:bg-amber-50'
-                    : canStar ? 'text-[#d4cec5] hover:text-[#c9922c] hover:bg-amber-50'
+                  isFeatured ? 'text-brand hover:bg-amber-50'
+                    : canStar ? 'text-border-2 hover:text-brand hover:bg-amber-50'
                     : 'text-[#e8e2d8] cursor-not-allowed'
                 }`}
               >
@@ -202,7 +202,7 @@ export default function ProductList({
               onClick={() => onEdit(product)}
               disabled={!!deletingId}
               title="Editar"
-              className="p-2 rounded-lg text-[#9c8e84] hover:text-[#1c1813] hover:bg-[#f4f1eb] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded-lg text-ink-3 hover:text-ink hover:bg-surface-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <EditIcon />
             </button>
@@ -210,7 +210,7 @@ export default function ProductList({
               onClick={() => onDelete(product.id)}
               disabled={deletingId === product.id}
               title="Excluir"
-              className="p-2 rounded-lg text-[#9c8e84] hover:text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded-lg text-ink-3 hover:text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {deletingId === product.id
                 ? <span className="w-4 h-4 rounded-full border-2 border-red-300 border-t-red-600 animate-spin block" />
@@ -239,8 +239,8 @@ export default function ProductList({
         className={[
           'flex items-center gap-2.5 px-3 py-3 transition-all',
           deletingId === product.id ? 'opacity-50' : '',
-          isDragged ? 'opacity-30 bg-[#f4f1eb]' : '',
-          isOver    ? 'border-t-2 border-[#c9922c]' : '',
+          isDragged ? 'opacity-30 bg-surface-2' : '',
+          isOver    ? 'border-t-2 border-brand' : '',
         ].join(' ')}
       >
         {sortable && <DragHandle />}
@@ -248,7 +248,7 @@ export default function ProductList({
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <p className="text-sm font-medium text-[#1c1813] truncate">{product.name}</p>
+            <p className="text-sm font-medium text-ink truncate">{product.name}</p>
             {isFeatured && <StarIcon filled />}
           </div>
           <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
@@ -262,7 +262,7 @@ export default function ProductList({
               <button
                 onClick={() => onMoveUp?.(product.id)}
                 disabled={products.indexOf(product) === 0}
-                className="p-2 rounded-lg text-[#9c8e84] hover:text-[#1c1813] hover:bg-[#f4f1eb] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-lg text-ink-3 hover:text-ink hover:bg-surface-2 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
@@ -271,7 +271,7 @@ export default function ProductList({
               <button
                 onClick={() => onMoveDown?.(product.id)}
                 disabled={products.indexOf(product) === products.length - 1}
-                className="p-2 rounded-lg text-[#9c8e84] hover:text-[#1c1813] hover:bg-[#f4f1eb] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="p-2 rounded-lg text-ink-3 hover:text-ink hover:bg-surface-2 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
@@ -284,8 +284,8 @@ export default function ProductList({
               onClick={() => onToggleFeatured?.(product.id)}
               disabled={!isFeatured && !canStar}
               className={`p-2 rounded-lg transition-colors ${
-                isFeatured ? 'text-[#c9922c] hover:bg-amber-50'
-                  : canStar ? 'text-[#d4cec5] hover:text-[#c9922c]'
+                isFeatured ? 'text-brand hover:bg-amber-50'
+                  : canStar ? 'text-border-2 hover:text-brand'
                   : 'text-[#e8e2d8] cursor-not-allowed'
               }`}
             >
@@ -293,11 +293,11 @@ export default function ProductList({
             </button>
           )}
           <button onClick={() => onEdit(product)} disabled={!!deletingId}
-            className="p-2 rounded-lg text-[#9c8e84] hover:text-[#1c1813] hover:bg-[#f4f1eb] disabled:opacity-50 transition-colors">
+            className="p-2 rounded-lg text-ink-3 hover:text-ink hover:bg-surface-2 disabled:opacity-50 transition-colors">
             <EditIcon />
           </button>
           <button onClick={() => onDelete(product.id)} disabled={deletingId === product.id}
-            className="p-2 rounded-lg text-[#9c8e84] hover:text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors">
+            className="p-2 rounded-lg text-ink-3 hover:text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors">
             {deletingId === product.id
               ? <span className="w-4 h-4 rounded-full border-2 border-red-300 border-t-red-600 animate-spin block" />
               : <TrashIcon />}
@@ -308,17 +308,17 @@ export default function ProductList({
   }
 
   return (
-    <div className="rounded-xl border border-[#e8e2d8] overflow-hidden bg-white shadow-sm">
+    <div className="rounded-xl border border-border overflow-hidden bg-white shadow-sm">
       {/* Desktop table */}
       <div className="hidden sm:block overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-[#faf8f5] border-b border-[#e8e2d8]">
+            <tr className="bg-surface border-b border-border">
               {sortable && <th className="w-8" />}
-              <th className="text-left px-4 py-3 text-xs font-semibold text-[#9c8e84] uppercase tracking-wide w-16">Imagem</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-[#9c8e84] uppercase tracking-wide">Nome</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-[#9c8e84] uppercase tracking-wide">Status</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-[#9c8e84] uppercase tracking-wide">Ações</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-ink-3 uppercase tracking-wide w-16">Imagem</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-ink-3 uppercase tracking-wide">Nome</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-ink-3 uppercase tracking-wide">Status</th>
+              <th className="text-right px-4 py-3 text-xs font-semibold text-ink-3 uppercase tracking-wide">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -328,7 +328,7 @@ export default function ProductList({
       </div>
 
       {/* Mobile cards */}
-      <div className="sm:hidden divide-y divide-[#f0ece5]">
+      <div className="sm:hidden divide-y divide-border">
         {products.map((product) => mobileCard(product))}
       </div>
     </div>

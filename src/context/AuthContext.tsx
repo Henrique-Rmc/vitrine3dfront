@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
+import { flushSync } from 'react-dom'
 import type { User } from '../types'
-import { loginUser, logoutUser, refreshToken } from '../services/authService'
+import { loginUser, loginWithGoogle, logoutUser, refreshToken } from '../services/authService'
 import { tokenStore } from '../services/tokenStore'
 
 const USER_KEY = 'auth_user'
@@ -13,6 +14,7 @@ interface AuthContextValue {
   /** true while the silent refresh attempt on mount is in flight */
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
+  loginGoogle: (accessToken: string) => Promise<{ isNewUser: boolean }>
   logout: () => void
   updateUser: (updates: Partial<Omit<User, 'password'>>) => void
 }
@@ -50,9 +52,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   async function login(email: string, password: string) {
     const { token: newToken, user: loggedUser } = await loginUser({ email, password })
     tokenStore.set(newToken)
-    setToken(newToken)
-    setUser(loggedUser)
+    // flushSync garante que o estado de auth é commitado no DOM antes de retornar,
+    // evitando race condition com navigate() em rotas protegidas.
+    flushSync(() => {
+      setToken(newToken)
+      setUser(loggedUser)
+    })
     localStorage.setItem(USER_KEY, JSON.stringify(loggedUser))
+  }
+
+  async function loginGoogle(accessToken: string): Promise<{ isNewUser: boolean }> {
+    const { token: newToken, user: loggedUser } = await loginWithGoogle(accessToken)
+    const isNew = !loggedUser.slug
+    tokenStore.set(newToken)
+    flushSync(() => {
+      setToken(newToken)
+      setUser(loggedUser)
+    })
+    localStorage.setItem(USER_KEY, JSON.stringify(loggedUser))
+    return { isNewUser: isNew }
   }
 
   function logout() {
@@ -75,7 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, isLoading, login, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, isLoading, login, loginGoogle, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   )

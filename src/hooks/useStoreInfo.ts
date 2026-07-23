@@ -9,6 +9,7 @@ interface StoreUser {
   storeDescription: string
   whatsappNumber: string
   logoUrl: string
+  coverImageUrl?: string | null
 }
 
 export interface StoreInfo {
@@ -17,6 +18,7 @@ export interface StoreInfo {
   storeDescription: string
   whatsappNumber: string
   logoUrl: string
+  coverImageUrl: string | null
   products: Product[]
   featuredProducts: Product[]
   loading: boolean
@@ -34,6 +36,7 @@ export function useStoreInfo(storeSlug: string): StoreInfo {
   const [storeDescription, setStoreDescription] = useState('')
   const [whatsappNumber, setWhatsappNumber] = useState('')
   const [logoUrl, setLogoUrl]               = useState('')
+  const [coverImageUrl, setCoverImageUrl]   = useState<string | null>(null)
   const [products, setProducts]             = useState<Product[]>([])
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
   const [hasMore, setHasMore]               = useState(false)
@@ -65,6 +68,7 @@ export function useStoreInfo(storeSlug: string): StoreInfo {
       setStoreDescription(storeUser.storeDescription)
       setWhatsappNumber(storeUser.whatsappNumber)
       setLogoUrl(storeUser.logoUrl)
+      setCoverImageUrl(storeUser.coverImageUrl ?? null)
       setProducts(publicPage.content)
       setFeaturedProducts(featured)
       setHasMore(!publicPage.last)
@@ -97,6 +101,7 @@ export function useStoreInfo(storeSlug: string): StoreInfo {
     storeDescription,
     whatsappNumber,
     logoUrl,
+    coverImageUrl,
     products,
     featuredProducts,
     loading,

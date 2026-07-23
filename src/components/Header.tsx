@@ -10,7 +10,7 @@ interface HeaderProps {
 
 export default function Header({ mobileMenuOpen, toggleMobileMenu, showHamburger = true, onQRCode }: HeaderProps) {
   return (
-    <header className="md:hidden sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-[#e8e2d8]">
+    <header className="md:hidden sticky top-0 z-50 bg-canvas/95 backdrop-blur border-b border-border">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="shrink-0 hover:opacity-80 transition-opacity">
@@ -22,7 +22,7 @@ export default function Header({ mobileMenuOpen, toggleMobileMenu, showHamburger
             {onQRCode && (
               <button
                 onClick={onQRCode}
-                className="md:hidden p-2 rounded-lg text-[#9c8e84] hover:text-[#1c1813] hover:bg-[#f4f1eb] transition-colors"
+                className="md:hidden p-2 rounded-lg text-ink-3 hover:text-ink hover:bg-surface-2 transition-colors"
                 aria-label="Gerar QR Code"
                 title="Gerar QR Code"
               >
@@ -35,7 +35,7 @@ export default function Header({ mobileMenuOpen, toggleMobileMenu, showHamburger
 
             {/* Hamburger — visitors only */}
             <button
-              className={`md:hidden p-2 rounded-lg text-[#9c8e84] hover:text-[#1c1813] hover:bg-[#f4f1eb] transition-colors ${!showHamburger ? 'invisible pointer-events-none' : ''}`}
+              className={`md:hidden p-2 rounded-lg text-ink-3 hover:text-ink hover:bg-surface-2 transition-colors ${!showHamburger ? 'invisible pointer-events-none' : ''}`}
               aria-label={mobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
               aria-expanded={mobileMenuOpen}
               onClick={toggleMobileMenu}

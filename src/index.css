@@ -5,6 +5,125 @@
   --font-display: 'Playfair Display', Georgia, ui-serif, serif;
 }
 
+/* ── Raw semantic tokens (light mode defaults) ───────────────────────────── */
+:root {
+  color-scheme: light;
+
+  /* Surfaces */
+  --c-surface:   #faf8f5;
+  --c-surface-2: #f4f1eb;
+  --c-surface-3: #ede8df;
+  --c-canvas:    #ffffff;
+
+  /* Text */
+  --c-ink:   #1c1813;
+  --c-ink-2: #6b5d52;
+  --c-ink-3: #9c8e84;
+  --c-ink-4: #c4b8ae;
+
+  /* Borders */
+  --c-border:   #e8e2d8;
+  --c-border-2: #d4cec5;
+
+  /* Brand */
+  --c-brand:     #c9922c;
+  --c-brand-dim: #b07d1e;
+
+  /* CTA – inverts between light and dark mode */
+  --c-cta:    #1c1813;
+  --c-cta-2:  #2c2620;
+  --c-cta-3:  #3c3228;
+  --c-cta-fg: #ffffff;
+}
+
+/* ── Dark mode via system preference ─────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+
+    --c-surface:   #131110;
+    --c-surface-2: #1d1a17;
+    --c-surface-3: #252119;
+    --c-canvas:    #1a1714;
+
+    --c-ink:   #f0ebe3;
+    --c-ink-2: #b8a99a;
+    --c-ink-3: #756960;
+    --c-ink-4: #4a3e36;
+
+    --c-border:   #2e2822;
+    --c-border-2: #3d342c;
+
+    --c-brand:     #d4a43a;
+    --c-brand-dim: #c49030;
+
+    --c-cta:    #ede8df;
+    --c-cta-2:  #d4cec5;
+    --c-cta-3:  #c4b8ae;
+    --c-cta-fg: #1c1813;
+  }
+}
+
+/* ── Dark mode forced via user preference stored in localStorage ─────────── */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --c-surface:   #131110;
+  --c-surface-2: #1d1a17;
+  --c-surface-3: #252119;
+  --c-canvas:    #1a1714;
+
+  --c-ink:   #f0ebe3;
+  --c-ink-2: #b8a99a;
+  --c-ink-3: #756960;
+  --c-ink-4: #4a3e36;
+
+  --c-border:   #2e2822;
+  --c-border-2: #3d342c;
+
+  --c-brand:     #d4a43a;
+  --c-brand-dim: #c49030;
+
+  --c-cta:    #ede8df;
+  --c-cta-2:  #d4cec5;
+  --c-cta-3:  #c4b8ae;
+  --c-cta-fg: #1c1813;
+}
+
+/* ── Tailwind theme tokens (inline = resolved at runtime via CSS var) ─────── */
+@theme inline {
+  --color-surface:    var(--c-surface);
+  --color-surface-2:  var(--c-surface-2);
+  --color-surface-3:  var(--c-surface-3);
+  --color-canvas:     var(--c-canvas);
+  --color-ink:        var(--c-ink);
+  --color-ink-2:      var(--c-ink-2);
+  --color-ink-3:      var(--c-ink-3);
+  --color-ink-4:      var(--c-ink-4);
+  --color-border:     var(--c-border);
+  --color-border-2:   var(--c-border-2);
+  --color-brand:      var(--c-brand);
+  --color-brand-dim:  var(--c-brand-dim);
+  --color-cta:        var(--c-cta);
+  --color-cta-2:      var(--c-cta-2);
+  --color-cta-3:      var(--c-cta-3);
+  --color-cta-fg:     var(--c-cta-fg);
+}
+
+/* ── Base ────────────────────────────────────────────────────────────────── */
+@layer base {
+  html {
+    background-color: var(--c-surface);
+    color: var(--c-ink);
+    @apply antialiased;
+  }
+
+  body {
+    @apply min-h-screen;
+  }
+}
+
+/* ── Animations ──────────────────────────────────────────────────────────── */
 @keyframes modal-backdrop-in {
   from { opacity: 0; }
   to   { opacity: 1; }
@@ -20,18 +139,14 @@
   to   { background-position:  200% 0; }
 }
 
-@layer base {
-  html {
-    @apply bg-[#faf8f5] text-[#1c1813] antialiased;
-  }
-
-  body {
-    @apply min-h-screen;
-  }
-}
-
+/* ── Skeleton (auto-adapts to dark mode via CSS vars) ────────────────────── */
 .skeleton {
-  background: linear-gradient(90deg, #ede8df 25%, #f4f1eb 50%, #ede8df 75%);
+  background: linear-gradient(
+    90deg,
+    var(--c-surface-3) 25%,
+    var(--c-surface-2) 50%,
+    var(--c-surface-3) 75%
+  );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }

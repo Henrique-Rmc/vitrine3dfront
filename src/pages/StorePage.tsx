@@ -8,6 +8,7 @@ import ProductModal from '../components/ProductModal'
 import ProductSkeleton from '../components/ProductSkeleton'
 import { useStoreInfo } from '../hooks/useStoreInfo'
 import { listProductTypes, type ProductType } from '../services/productTypeService'
+import { listEffectiveAttributes, type AttributeDefinition } from '../services/attributeService'
 import { readActiveAttributes } from '../utils/attributeFilters'
 import type { Product } from '../types'
 
@@ -16,16 +17,16 @@ const SKELETON_COUNT = 8
 function typeTab(active: boolean) {
   return `px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-200 border ${
     active
-      ? 'bg-[#1c1813] border-[#1c1813] text-white shadow-sm'
-      : 'border-[#e8e2d8] text-[#6b5d52] bg-white hover:border-[#d4cec5] hover:text-[#1c1813]'
+      ? 'bg-cta border-cta text-cta-fg shadow-sm'
+      : 'border-border text-ink-2 bg-white hover:border-border-2 hover:text-ink'
   }`
 }
 
 function chip(active: boolean) {
   return `px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 border ${
     active
-      ? 'bg-[#1c1813] border-[#1c1813] text-white shadow-sm'
-      : 'border-[#e8e2d8] text-[#6b5d52] bg-white hover:border-[#d4cec5] hover:text-[#1c1813]'
+      ? 'bg-cta border-cta text-cta-fg shadow-sm'
+      : 'border-border text-ink-2 bg-white hover:border-border-2 hover:text-ink'
   }`
 }
 
@@ -38,6 +39,7 @@ export default function StorePage() {
     storeDescription,
     whatsappNumber,
     logoUrl,
+    coverImageUrl,
     products,
     featuredProducts,
     loading,
@@ -48,9 +50,20 @@ export default function StorePage() {
   } = useStoreInfo(storeSlug)
 
   const [searchParams, setSearchParams] = useSearchParams()
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
-  const [productTypes, setProductTypes]       = useState<ProductType[]>([])
-  const [selectedTypeId, setSelectedTypeId]   = useState<number | null>(null)
+  const [selectedProduct, setSelectedProduct]     = useState<Product | null>(null)
+  const [productTypes, setProductTypes]           = useState<ProductType[]>([])
+  const [selectedTypeId, setSelectedTypeId]       = useState<number | null>(null)
+  const [filterPanelOpen, setFilterPanelOpen]     = useState(false)
+  const [attrDefinitions, setAttrDefinitions]     = useState<AttributeDefinition[]>([])
+
+  useEffect(() => {
+    if (!filterPanelOpen) return
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setFilterPanelOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [filterPanelOpen])
 
   useEffect(() => {
     if (!storeId) return
@@ -58,6 +71,14 @@ export default function StorePage() {
       .then(setProductTypes)
       .catch(() => {})
   }, [storeId])
+
+  // Load attribute definitions (source of filter labels) whenever type changes
+  useEffect(() => {
+    if (!storeId) return
+    listEffectiveAttributes(storeId, selectedTypeId ?? undefined)
+      .then((defs) => setAttrDefinitions(defs.filter((d) => d.filterable !== false)))
+      .catch(() => {})
+  }, [storeId, selectedTypeId])
 
   const visibleProducts = useMemo(
     () => products.filter((p) => p.isVisible),
@@ -75,6 +96,7 @@ export default function StorePage() {
   )
 
   const hasActiveFilter = Object.keys(activeAttributes).length > 0
+  const activeCount = Object.keys(activeAttributes).length
 
   // Filter products by selected product type
   const typeFilteredProducts = useMemo(() => {
@@ -82,21 +104,27 @@ export default function StorePage() {
     return visibleProducts.filter((p) => p.productTypeId === selectedTypeId)
   }, [visibleProducts, selectedTypeId])
 
-  // Derive attribute chips from type-filtered products
+  // Derive attribute filter options from definitions + actual product values.
+  // Keys are attribute `key`s; values are unique sorted values from loaded products.
+  // Only attributes that have at least one value in the current product set are shown.
   const attributeMap = useMemo(() => {
-    const map = new Map<string, string[]>()
+    const filterableKeys = new Set(attrDefinitions.map((d) => d.key))
+    const map = new Map<string, { label: string; values: string[] }>()
     for (const p of typeFilteredProducts) {
       if (!p.attributes) continue
       for (const [key, rawValue] of Object.entries(p.attributes)) {
-        if (rawValue == null) continue
+        if (!filterableKeys.has(key) || rawValue == null) continue
         const value = String(rawValue)
-        if (!map.has(key)) map.set(key, [])
-        if (!map.get(key)!.includes(value)) map.get(key)!.push(value)
+        if (!map.has(key)) {
+          const def = attrDefinitions.find((d) => d.key === key)
+          map.set(key, { label: def?.label ?? key, values: [] })
+        }
+        if (!map.get(key)!.values.includes(value)) map.get(key)!.values.push(value)
       }
     }
-    for (const values of map.values()) values.sort()
+    for (const entry of map.values()) entry.values.sort()
     return map
-  }, [typeFilteredProducts])
+  }, [typeFilteredProducts, attrDefinitions])
 
   const catalogProducts = useMemo(() => {
     return typeFilteredProducts.filter((p) => {
@@ -123,6 +151,11 @@ export default function StorePage() {
   function handleTypeChange(typeId: number | null) {
     setSelectedTypeId(typeId)
     setSearchParams({}, { replace: true })
+    setFilterPanelOpen(false)
+  }
+
+  function clearAllFilters() {
+    setSearchParams({}, { replace: true })
   }
 
   function sectionTitle() {
@@ -135,15 +168,15 @@ export default function StorePage() {
   }
 
   const hasTypeTabs = productTypes.length > 0
-  // Show attr chips when type is selected, OR when there are no type tabs (backward-compat)
+  // Show attr chips only when there are filterable attributes with values in the current view
   const showAttrChips = attributeMap.size > 0 && (selectedTypeId !== null || !hasTypeTabs)
   const showFilterBar = !loading && (hasTypeTabs || showAttrChips)
 
   if (!loading && error) {
     return (
       <div className="flex flex-col items-center justify-center py-32 px-6 text-center">
-        <p className="text-[#6b5d52] text-sm mb-2">{error}</p>
-        <p className="text-[#c4b8ae] text-xs">/{storeSlug}</p>
+        <p className="text-ink-2 text-sm mb-2">{error}</p>
+        <p className="text-ink-4 text-xs">/{storeSlug}</p>
       </div>
     )
   }
@@ -155,16 +188,15 @@ export default function StorePage() {
         storeName={storeName || 'Carregando…'}
         storeDescription={storeDescription}
         logoUrl={logoUrl}
-        productCount={visibleProducts.length}
       />
 
-      {/* Combined filter bar: type tabs + attribute chips */}
+      {/* Combined filter bar: type tabs + filter trigger */}
       {showFilterBar && (
-        <div className="sticky top-14 z-40 bg-white/95 backdrop-blur-sm border-b border-[#e8e2d8]">
+        <div className="sticky top-16 md:top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-border">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             {/* ProductType tabs */}
             {hasTypeTabs && (
-              <div className={`flex items-center gap-2 overflow-x-auto scrollbar-none py-2.5 ${showAttrChips ? 'border-b border-[#f0ece5]' : ''}`}>
+              <div className={`flex items-center gap-2 overflow-x-auto scrollbar-none py-2.5 ${showAttrChips ? 'border-b border-border' : ''}`}>
                 <button onClick={() => handleTypeChange(null)} className={typeTab(selectedTypeId === null)}>
                   Todos
                 </button>
@@ -176,26 +208,157 @@ export default function StorePage() {
               </div>
             )}
 
-            {/* Attribute chips — only when type is selected (or no type tabs exist) */}
-            {showAttrChips && Array.from(attributeMap.entries()).map(([key, values]) => (
-              <div key={key} className="flex items-center gap-2 overflow-x-auto scrollbar-none py-2.5 border-b border-[#f0ece5] last:border-b-0">
-                <span className="text-[11px] font-semibold text-[#9c8e84] uppercase tracking-wide shrink-0 w-20 truncate">
-                  {key}
-                </span>
-                <button onClick={() => setFilter(key, null)} className={chip(getActive(key) === null)}>
-                  Todos
+            {/* Filter trigger row */}
+            {showAttrChips && (
+              <div className="flex items-center gap-2 py-2.5 overflow-x-auto scrollbar-none">
+                <button
+                  onClick={() => setFilterPanelOpen((o) => !o)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 shrink-0 ${
+                    filterPanelOpen || activeCount > 0
+                      ? 'bg-cta border-cta text-cta-fg shadow-sm'
+                      : 'border-border text-ink-2 bg-white hover:border-border-2 hover:text-ink'
+                  }`}
+                >
+                  <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
+                  </svg>
+                  Filtros
+                  {activeCount > 0 && (
+                    <span className="flex items-center justify-center w-4 h-4 rounded-full bg-white/25 text-[10px] font-bold">
+                      {activeCount}
+                    </span>
+                  )}
                 </button>
-                {values.map((value) => {
-                  const isBool = values.length <= 2 && values.every((v) => v === 'true' || v === 'false')
-                  const label = isBool ? (value === 'true' ? 'Sim' : 'Não') : value
-                  return (
-                    <button key={value} onClick={() => setFilter(key, value)} className={chip(getActive(key) === value)}>
-                      {label}
+
+                {/* Active filter summary chips */}
+                {Object.entries(activeAttributes).map(([key, value]) => (
+                  <span key={key} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-2 border border-border text-xs font-medium text-ink-2 shrink-0">
+                    <span className="text-ink-3">{key}:</span>
+                    {value}
+                    <button
+                      onClick={() => setFilter(key, null)}
+                      className="ml-0.5 hover:text-ink transition-colors"
+                      aria-label={`Remover filtro ${key}`}
+                    >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
                     </button>
-                  )
-                })}
+                  </span>
+                ))}
               </div>
-            ))}
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Desktop inline filter panel */}
+      {showAttrChips && filterPanelOpen && (
+        <div className="hidden md:block border-b border-border bg-surface">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
+            <div className="space-y-4">
+              {Array.from(attributeMap.entries()).map(([key, { label, values }]) => (
+                <div key={key} className="flex items-start gap-4">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-ink-3 pt-1.5 w-24 shrink-0">
+                    {label}
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    <button onClick={() => setFilter(key, null)} className={chip(getActive(key) === null)}>
+                      Todos
+                    </button>
+                    {values.map((value) => {
+                      const isBool = values.length <= 2 && values.every((v) => v === 'true' || v === 'false')
+                      const display = isBool ? (value === 'true' ? 'Sim' : 'Não') : value
+                      return (
+                        <button key={value} onClick={() => setFilter(key, value)} className={chip(getActive(key) === value)}>
+                          {display}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+              {activeCount > 0 && (
+                <button
+                  onClick={clearAllFilters}
+                  className="text-xs text-ink-3 hover:text-ink transition-colors mt-1"
+                >
+                  Limpar todos os filtros
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile bottom sheet */}
+      {showAttrChips && filterPanelOpen && (
+        <div className="md:hidden fixed inset-0 z-50">
+          <div
+            className="absolute inset-0 bg-black/30 backdrop-blur-[1px]"
+            onClick={() => setFilterPanelOpen(false)}
+          />
+          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[80vh] flex flex-col shadow-2xl">
+            {/* Handle */}
+            <div className="flex justify-center pt-3 pb-1 shrink-0">
+              <div className="w-8 h-1 rounded-full bg-border" />
+            </div>
+            {/* Sheet header */}
+            <div className="flex items-center justify-between px-5 py-3 border-b border-border shrink-0">
+              <p className="text-sm font-bold text-ink">Filtros</p>
+              <div className="flex items-center gap-3">
+                {activeCount > 0 && (
+                  <button
+                    onClick={clearAllFilters}
+                    className="text-xs text-ink-3 hover:text-ink transition-colors"
+                  >
+                    Limpar todos
+                  </button>
+                )}
+                <button
+                  onClick={() => setFilterPanelOpen(false)}
+                  aria-label="Fechar filtros"
+                  className="p-1 rounded-md text-ink-3 hover:text-ink transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            {/* Attribute groups */}
+            <div className="overflow-y-auto flex-1 px-5 py-5 space-y-6">
+              {Array.from(attributeMap.entries()).map(([key, { label, values }]) => (
+                <div key={key}>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-3 mb-3">
+                    {label}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <button onClick={() => setFilter(key, null)} className={chip(getActive(key) === null)}>
+                      Todos
+                    </button>
+                    {values.map((value) => {
+                      const isBool = values.length <= 2 && values.every((v) => v === 'true' || v === 'false')
+                      const display = isBool ? (value === 'true' ? 'Sim' : 'Não') : value
+                      return (
+                        <button key={value} onClick={() => setFilter(key, value)} className={chip(getActive(key) === value)}>
+                          {display}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Footer CTA */}
+            <div className="px-5 py-4 border-t border-border shrink-0">
+              <button
+                onClick={() => setFilterPanelOpen(false)}
+                className="w-full py-3 rounded-xl bg-cta hover:bg-cta-2 text-cta-fg text-sm font-semibold transition-colors"
+              >
+                Ver {catalogProducts.length} produto{catalogProducts.length !== 1 ? 's' : ''}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -214,9 +377,9 @@ export default function StorePage() {
         {/* Catalog */}
         <section>
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-base font-bold text-[#1c1813]">{sectionTitle()}</h2>
+            <h2 className="text-base font-bold text-ink">{sectionTitle()}</h2>
             {!loading && (
-              <span className="text-sm text-[#9c8e84]">
+              <span className="text-sm text-ink-3">
                 {catalogProducts.length} produto{catalogProducts.length !== 1 ? 's' : ''}
                 {hasMore ? '+' : ''}
               </span>
@@ -240,11 +403,19 @@ export default function StorePage() {
 
           {!loading && catalogProducts.length === 0 && (
             <div className="py-24 text-center">
-              <p className="text-[#9c8e84] text-sm">
+              <p className="text-ink-3 text-sm">
                 {hasActiveFilter || selectedTypeId !== null
                   ? 'Nenhum produto encontrado com esses filtros.'
                   : 'Nenhum produto disponível.'}
               </p>
+              {(hasActiveFilter || selectedTypeId !== null) && (
+                <button
+                  onClick={() => { clearAllFilters(); setSelectedTypeId(null) }}
+                  className="mt-3 text-sm text-brand hover:text-brand-dim transition-colors font-medium"
+                >
+                  Limpar filtros
+                </button>
+              )}
             </div>
           )}
 
@@ -253,11 +424,11 @@ export default function StorePage() {
               <button
                 onClick={loadMore}
                 disabled={isLoadingMore}
-                className="flex items-center gap-2 px-8 py-3 rounded-full border border-[#e8e2d8] text-[#6b5d52] hover:text-[#1c1813] hover:border-[#d4cec5] disabled:opacity-60 text-sm font-medium transition-colors bg-white shadow-sm"
+                className="flex items-center gap-2 px-8 py-3 rounded-full border border-border text-ink-2 hover:text-ink hover:border-border-2 disabled:opacity-60 text-sm font-medium transition-colors bg-white shadow-sm"
               >
                 {isLoadingMore ? (
                   <>
-                    <span className="w-4 h-4 rounded-full border-2 border-[#d4cec5] border-t-[#9c8e84] animate-spin" />
+                    <span className="w-4 h-4 rounded-full border-2 border-border-2 border-t-ink-3 animate-spin" />
                     Carregando…
                   </>
                 ) : (

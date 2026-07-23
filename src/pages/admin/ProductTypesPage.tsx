@@ -10,7 +10,7 @@ import {
 import { labelToKey } from '../../services/attributeService'
 
 const inputClass =
-  'w-full rounded-lg bg-[#f4f1eb] border border-[#e8e2d8] px-3 py-2 text-sm text-[#1c1813] placeholder-[#c4b8ae] focus:outline-none focus:ring-2 focus:ring-[#c9922c]/40 focus:border-[#c9922c]/60 transition-colors'
+  'w-full rounded-lg bg-surface-2 border border-border px-3 py-2 text-sm text-ink placeholder-ink-4 focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/60 transition-colors'
 
 export default function ProductTypesPage() {
   const { user } = useAuth()
@@ -93,15 +93,15 @@ export default function ProductTypesPage() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-xl font-bold text-[#1c1813]">Tipos de Produto</h1>
-          <p className="text-sm text-[#9c8e84] mt-0.5">
+          <h1 className="text-xl font-bold text-ink">Tipos de Produto</h1>
+          <p className="text-sm text-ink-3 mt-0.5">
             Sub-categorias da sua loja — ex.: Camisa, Action Figure, Colar
           </p>
         </div>
         {!isCreating && (
           <button
             onClick={() => setIsCreating(true)}
-            className="shrink-0 flex items-center gap-1.5 px-3 py-2.5 rounded-lg bg-[#1c1813] hover:bg-[#2c2620] text-white text-sm font-semibold transition-colors"
+            className="shrink-0 flex items-center gap-1.5 px-3 py-2.5 rounded-lg bg-cta hover:bg-cta-2 text-cta-fg text-sm font-semibold transition-colors"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -136,11 +136,11 @@ export default function ProductTypesPage() {
 
       {/* Create form */}
       {isCreating && (
-        <form onSubmit={handleCreate} className="mb-6 rounded-xl border border-[#e8e2d8] bg-white p-4 space-y-4 shadow-sm">
-          <p className="text-sm font-semibold text-[#1c1813]">Novo tipo de produto</p>
+        <form onSubmit={handleCreate} className="mb-6 rounded-xl border border-border bg-canvas p-4 space-y-4 shadow-sm">
+          <p className="text-sm font-semibold text-ink">Novo tipo de produto</p>
 
           <div>
-            <label className="block text-xs font-medium text-[#6b5d52] mb-1">
+            <label className="block text-xs font-medium text-ink-2 mb-1">
               Nome <span className="text-red-500">*</span>
             </label>
             <input
@@ -152,7 +152,7 @@ export default function ProductTypesPage() {
               placeholder="ex: Camisa, Action Figure, Colar, Calça"
               className={inputClass}
             />
-            <p className="mt-1 text-[11px] text-[#9c8e84]">
+            <p className="mt-1 text-[11px] text-ink-3">
               Aparecerá como aba na vitrine pública da sua loja.
             </p>
           </div>
@@ -168,17 +168,17 @@ export default function ProductTypesPage() {
               type="button"
               onClick={() => { setIsCreating(false); setNewLabel(''); setCreateError(null) }}
               disabled={isSaving}
-              className="flex-1 py-2 rounded-lg border border-[#e8e2d8] text-[#6b5d52] hover:bg-[#f4f1eb] text-sm font-medium transition-colors disabled:opacity-50"
+              className="flex-1 py-2 rounded-lg border border-border text-ink-2 hover:bg-surface-2 text-sm font-medium transition-colors disabled:opacity-50"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isSaving || !newLabel.trim()}
-              className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-[#1c1813] hover:bg-[#2c2620] text-white text-sm font-semibold transition-colors disabled:opacity-60"
+              className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-cta hover:bg-cta-2 text-cta-fg text-sm font-semibold transition-colors disabled:opacity-60"
             >
               {isSaving
-                ? <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                ? <span className="w-4 h-4 rounded-full border-2 border-cta-fg/40 border-t-cta-fg animate-spin" />
                 : 'Adicionar'}
             </button>
           </div>
@@ -188,48 +188,48 @@ export default function ProductTypesPage() {
       {/* Loading */}
       {isLoading ? (
         <div className="flex justify-center py-20">
-          <span className="w-6 h-6 rounded-full border-2 border-[#c9922c] border-t-transparent animate-spin" />
+          <span className="w-6 h-6 rounded-full border-2 border-brand border-t-transparent animate-spin" />
         </div>
       ) : types.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
-          <div className="w-14 h-14 rounded-xl bg-[#f4f1eb] border border-[#e8e2d8] flex items-center justify-center">
-            <svg className="w-7 h-7 text-[#d4cec5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <div className="w-14 h-14 rounded-xl bg-surface-2 border border-border flex items-center justify-center">
+            <svg className="w-7 h-7 text-border-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
             </svg>
           </div>
           <div>
-            <p className="text-[#1c1813] font-semibold text-sm">Nenhum tipo criado</p>
-            <p className="text-[#9c8e84] text-xs mt-1 max-w-xs">
+            <p className="text-ink font-semibold text-sm">Nenhum tipo criado</p>
+            <p className="text-ink-3 text-xs mt-1 max-w-xs">
               Crie pelo menos um tipo de produto para poder cadastrar produtos na sua loja.
             </p>
           </div>
           {!isCreating && (
             <button
               onClick={() => setIsCreating(true)}
-              className="px-4 py-2 rounded-lg bg-[#f4f1eb] border border-[#e8e2d8] hover:bg-[#ede8df] text-[#6b5d52] text-sm font-medium transition-colors"
+              className="px-4 py-2 rounded-lg bg-surface-2 border border-border hover:bg-surface-3 text-ink-2 text-sm font-medium transition-colors"
             >
               Adicionar primeiro tipo
             </button>
           )}
         </div>
       ) : (
-        <div className="rounded-xl border border-[#e8e2d8] overflow-hidden bg-white shadow-sm">
+        <div className="rounded-xl border border-border overflow-hidden bg-canvas shadow-sm">
           {types.map((type, i) => {
             const isActing = actingId === type.id
             const isLast = i === types.length - 1
             return (
               <div
                 key={type.id}
-                className={`flex items-center gap-3 px-4 py-3.5 ${!isLast ? 'border-b border-[#f0ece5]' : ''}`}
+                className={`flex items-center gap-3 px-4 py-3.5 ${!isLast ? 'border-b border-border' : ''}`}
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-[#1c1813]">{type.label}</p>
-                  <p className="text-[11px] text-[#c4b8ae] mt-0.5 font-mono">{type.key}</p>
+                  <p className="text-sm font-medium text-ink">{type.label}</p>
+                  <p className="text-[11px] text-ink-4 mt-0.5 font-mono">{type.key}</p>
                 </div>
                 <Link
                   to="/admin/products"
-                  className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium text-[#9c8e84] hover:text-[#6b5d52] hover:bg-[#f4f1eb] border border-[#e8e2d8] transition-colors"
+                  className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium text-ink-3 hover:text-ink-2 hover:bg-surface-2 border border-border transition-colors"
                 >
                   Ver produtos
                 </Link>

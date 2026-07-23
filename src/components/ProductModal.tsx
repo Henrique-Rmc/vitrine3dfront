@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Product } from '../types'
 import { buildWhatsAppUrl } from '../utils/whatsapp'
-import { registerWhatsAppClick } from '../services/productService'
+import { registerWhatsAppClick, registerAffiliateClick } from '../services/productService'
 
 interface ProductModalProps {
   product: Product
@@ -11,6 +11,7 @@ interface ProductModalProps {
 
 export default function ProductModal({ product, whatsappNumber, onClose }: ProductModalProps) {
   const { name, description } = product
+  const isAffiliate = Boolean(product.affiliateUrl)
   const whatsappUrl = buildWhatsAppUrl(whatsappNumber, name)
 
   // Resolve image list: prefer imageUrls array, fall back to singular imageUrl
@@ -84,11 +85,11 @@ export default function ProductModal({ product, whatsappNumber, onClose }: Produ
         role="dialog"
         aria-modal="true"
         aria-label={name}
-        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-6 bg-[#1c1813]/40 backdrop-blur-sm animate-[modal-backdrop-in_0.2s_ease-out]"
+        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-6 bg-cta/40 backdrop-blur-sm animate-[modal-backdrop-in_0.2s_ease-out]"
         onClick={onClose}
       >
         <div
-          className="relative w-full sm:max-w-2xl max-h-[92dvh] sm:max-h-[85vh] flex flex-col sm:flex-row overflow-hidden bg-white border border-[#e8e2d8] rounded-t-2xl sm:rounded-2xl shadow-2xl animate-[modal-panel-in_0.2s_ease-out]"
+          className="relative w-full sm:max-w-2xl max-h-[92dvh] sm:max-h-[85vh] flex flex-col sm:flex-row overflow-hidden bg-canvas border border-border rounded-t-2xl sm:rounded-2xl shadow-2xl animate-[modal-panel-in_0.2s_ease-out]"
           onClick={(e) => e.stopPropagation()}
         >
           {/* ── Image gallery panel ─────────────────────────────────────── */}
@@ -96,7 +97,7 @@ export default function ProductModal({ product, whatsappNumber, onClose }: Produ
 
             {/* Main image */}
             <div
-              className="relative aspect-square sm:aspect-auto sm:flex-1 bg-[#f4f1eb] overflow-hidden select-none"
+              className="relative aspect-square sm:aspect-auto sm:flex-1 bg-surface-2 overflow-hidden select-none"
               onTouchStart={onTouchStart}
               onTouchEnd={onTouchEnd}
             >
@@ -109,7 +110,7 @@ export default function ProductModal({ product, whatsappNumber, onClose }: Produ
                 />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <svg className="w-16 h-16 text-[#d4cec5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                  <svg className="w-16 h-16 text-border-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                   </svg>
                 </div>
@@ -120,7 +121,7 @@ export default function ProductModal({ product, whatsappNumber, onClose }: Produ
                 <button
                   onClick={prev}
                   aria-label="Foto anterior"
-                  className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/85 backdrop-blur-sm border border-[#e8e2d8] flex items-center justify-center text-[#6b5d52] hover:bg-white hover:text-[#1c1813] transition-colors shadow-sm"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-canvas/85 backdrop-blur-sm border border-border flex items-center justify-center text-ink-2 hover:bg-canvas hover:text-ink transition-colors shadow-sm"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -133,7 +134,7 @@ export default function ProductModal({ product, whatsappNumber, onClose }: Produ
                 <button
                   onClick={next}
                   aria-label="Próxima foto"
-                  className="absolute right-12 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/85 backdrop-blur-sm border border-[#e8e2d8] flex items-center justify-center text-[#6b5d52] hover:bg-white hover:text-[#1c1813] transition-colors shadow-sm"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-canvas/85 backdrop-blur-sm border border-border flex items-center justify-center text-ink-2 hover:bg-canvas hover:text-ink transition-colors shadow-sm"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -152,7 +153,7 @@ export default function ProductModal({ product, whatsappNumber, onClose }: Produ
               <button
                 onClick={onClose}
                 aria-label="Fechar"
-                className="absolute top-3 right-3 rounded-full bg-white/90 backdrop-blur-sm p-1.5 text-[#9c8e84] hover:text-[#1c1813] border border-[#e8e2d8] transition-colors"
+                className="absolute top-3 right-3 rounded-full bg-canvas/90 backdrop-blur-sm p-1.5 text-ink-3 hover:text-ink border border-border transition-colors"
               >
                 <XIcon />
               </button>
@@ -160,7 +161,7 @@ export default function ProductModal({ product, whatsappNumber, onClose }: Produ
 
             {/* Thumbnail strip — only when multiple images */}
             {hasMultiple && (
-              <div className="flex gap-1.5 px-2 py-2 bg-[#f4f1eb] border-t border-[#e8e2d8] overflow-x-auto scrollbar-none">
+              <div className="flex gap-1.5 px-2 py-2 bg-surface-2 border-t border-border overflow-x-auto scrollbar-none">
                 {images.map((src, i) => (
                   <button
                     key={i}
@@ -168,7 +169,7 @@ export default function ProductModal({ product, whatsappNumber, onClose }: Produ
                     aria-label={`Ver foto ${i + 1}`}
                     className={`shrink-0 w-11 h-11 rounded-lg overflow-hidden transition-all ${
                       i === currentIndex
-                        ? 'ring-2 ring-[#c9922c] ring-offset-1 ring-offset-[#f4f1eb]'
+                        ? 'ring-2 ring-brand ring-offset-1 ring-offset-surface-2'
                         : 'opacity-50 hover:opacity-80'
                     }`}
                   >
@@ -181,34 +182,49 @@ export default function ProductModal({ product, whatsappNumber, onClose }: Produ
 
           {/* ── Details panel ───────────────────────────────────────────── */}
           <div className="flex flex-col gap-5 p-5 sm:p-6 overflow-y-auto flex-1">
-            <h2 className="text-xl font-bold text-[#1c1813] leading-tight">{name}</h2>
+            <h2 className="text-xl font-bold text-ink leading-tight">{name}</h2>
 
             {product.price != null && (
-              <p className="text-[#c9922c] font-bold text-base border-t border-[#f0ece5] pt-4">
+              <p className="text-brand font-bold text-base border-t border-border pt-4">
                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)}
               </p>
             )}
 
             {description && (
-              <div className="border-t border-[#f0ece5] pt-4">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-[#9c8e84] mb-2">
+              <div className="border-t border-border pt-4">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-ink-3 mb-2">
                   Descrição
                 </p>
-                <p className="text-sm text-[#6b5d52] leading-relaxed">{description}</p>
+                <p className="text-sm text-ink-2 leading-relaxed">{description}</p>
               </div>
             )}
 
             <div className="mt-auto pt-2 flex flex-col gap-2">
-              <button
-                onClick={handleWhatsAppClick}
-                className="flex items-center justify-center gap-2.5 rounded-xl bg-green-600 hover:bg-green-500 active:bg-green-700 px-5 py-3.5 text-sm font-semibold text-white transition-colors"
-              >
-                <WhatsAppIcon />
-                {product.price != null ? 'Fazer Pedido via WhatsApp' : 'Solicitar Orçamento via WhatsApp'}
-              </button>
+              {isAffiliate ? (
+                <button
+                  onClick={() => {
+                    registerAffiliateClick(product.id).catch(() => {})
+                    window.open(product.affiliateUrl!, '_blank', 'noopener,noreferrer')
+                  }}
+                  className="flex items-center justify-center gap-2.5 rounded-xl bg-cta hover:bg-cta-2 active:bg-cta-3 px-5 py-3.5 text-sm font-semibold text-cta-fg transition-colors"
+                >
+                  <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                  </svg>
+                  Ver produto
+                </button>
+              ) : (
+                <button
+                  onClick={handleWhatsAppClick}
+                  className="flex items-center justify-center gap-2.5 rounded-xl bg-green-600 hover:bg-green-500 active:bg-green-700 px-5 py-3.5 text-sm font-semibold text-white transition-colors"
+                >
+                  <WhatsAppIcon />
+                  {product.price != null ? 'Fazer Pedido via WhatsApp' : 'Solicitar Orçamento via WhatsApp'}
+                </button>
+              )}
               <a
                 href={`/denunciar?url=${encodeURIComponent(window.location.href)}`}
-                className="text-center text-xs text-[#c4b8ae] hover:text-[#9c8e84] transition-colors"
+                className="text-center text-xs text-ink-4 hover:text-ink-3 transition-colors"
               >
                 Reportar este produto
               </a>
@@ -220,11 +236,11 @@ export default function ProductModal({ product, whatsappNumber, onClose }: Produ
       {/* ── WhatsApp redirect warning ──────────────────────────────────── */}
       {showWhatsAppWarning && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#1c1813]/50 backdrop-blur-sm"
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-cta/50 backdrop-blur-sm"
           onClick={() => setShowWhatsAppWarning(false)}
         >
           <div
-            className="w-full max-w-sm bg-white rounded-2xl shadow-2xl border border-[#e8e2d8] p-6"
+            className="w-full max-w-sm bg-canvas rounded-2xl shadow-2xl border border-border p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start gap-3 mb-4">
@@ -234,8 +250,8 @@ export default function ProductModal({ product, whatsappNumber, onClose }: Produ
                 </svg>
               </div>
               <div>
-                <h3 className="text-sm font-bold text-[#1c1813]">Você está saindo do VitreIn</h3>
-                <p className="text-xs text-[#6b5d52] mt-1 leading-relaxed">
+                <h3 className="text-sm font-bold text-ink">Você está saindo do VitreIn</h3>
+                <p className="text-xs text-ink-2 mt-1 leading-relaxed">
                   Lembre-se que o VitreIn <strong>não gerencia pagamentos, envios ou entregas</strong>.
                   Toda negociação é diretamente com o vendedor e de responsabilidade exclusiva das partes.
                 </p>
@@ -244,7 +260,7 @@ export default function ProductModal({ product, whatsappNumber, onClose }: Produ
             <div className="flex gap-2">
               <button
                 onClick={() => setShowWhatsAppWarning(false)}
-                className="flex-1 py-2.5 rounded-lg border border-[#e8e2d8] text-sm font-medium text-[#6b5d52] hover:bg-[#f4f1eb] transition-colors"
+                className="flex-1 py-2.5 rounded-lg border border-border text-sm font-medium text-ink-2 hover:bg-surface-2 transition-colors"
               >
                 Cancelar
               </button>

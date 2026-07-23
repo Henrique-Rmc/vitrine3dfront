@@ -29,13 +29,13 @@ export default function AdminSidebar({
 
   return (
     <>
-      <aside className="hidden md:flex fixed left-0 top-0 h-full w-60 z-40 flex-col bg-white border-r border-[#e8e2d8]">
+      <aside className="hidden md:flex fixed left-0 top-0 h-full w-60 z-40 flex-col bg-canvas border-r border-border">
         {/* Brand */}
-        <div className="h-16 flex items-center gap-2.5 px-5 border-b border-[#e8e2d8] shrink-0">
+        <div className="h-16 flex items-center gap-2.5 px-5 border-b border-border shrink-0">
           <Link to="/" className="hover:opacity-80 transition-opacity">
             <Logo height={26} />
           </Link>
-          <span className="text-[10px] font-semibold uppercase tracking-widest text-[#9c8e84] bg-[#f4f1eb] px-1.5 py-0.5 rounded">
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-ink-3 bg-surface-2 px-1.5 py-0.5 rounded">
             Admin
           </span>
         </div>
@@ -49,8 +49,8 @@ export default function AdminSidebar({
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-[#c9922c]/10 text-[#c9922c] font-semibold'
-                    : 'text-[#9c8e84] hover:text-[#1c1813] hover:bg-[#f4f1eb]'
+                    ? 'bg-brand/10 text-brand font-semibold'
+                    : 'text-ink-3 hover:text-ink hover:bg-surface-2'
                 }`
               }
             >
@@ -63,11 +63,11 @@ export default function AdminSidebar({
 
           {/* Divider + secondary actions */}
           {storeSlug && (
-            <div className="pt-3 mt-2 border-t border-[#f0ece5] space-y-0.5">
+            <div className="pt-3 mt-2 border-t border-border space-y-0.5">
               {/* QR Code button */}
               <button
                 onClick={() => setShowQR(true)}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#9c8e84] hover:text-[#1c1813] hover:bg-[#f4f1eb] transition-colors"
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-ink-3 hover:text-ink hover:bg-surface-2 transition-colors"
               >
                 <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
@@ -81,7 +81,7 @@ export default function AdminSidebar({
                 to={`/${storeSlug}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#9c8e84] hover:text-[#1c1813] hover:bg-[#f4f1eb] transition-colors"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-ink-3 hover:text-ink hover:bg-surface-2 transition-colors"
               >
                 <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
@@ -93,21 +93,21 @@ export default function AdminSidebar({
         </nav>
 
         {/* User + Logout */}
-        <div className="p-4 border-t border-[#e8e2d8] shrink-0">
+        <div className="p-4 border-t border-border shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-[#c9922c]/15 border border-[#c9922c]/30 flex items-center justify-center text-xs font-bold text-[#c9922c] shrink-0">
+            <div className="w-8 h-8 rounded-full bg-brand/15 border border-brand/30 flex items-center justify-center text-xs font-bold text-brand shrink-0">
               {initial}
             </div>
             <div className="flex-1 min-w-0">
               {storeName && (
-                <p className="text-xs font-semibold text-[#1c1813] truncate">{storeName}</p>
+                <p className="text-xs font-semibold text-ink truncate">{storeName}</p>
               )}
-              <p className="text-xs text-[#c4b8ae] truncate">{userName}</p>
+              <p className="text-xs text-ink-4 truncate">{userName}</p>
             </div>
             <button
               onClick={onLogout}
               title="Sair"
-              className="p-1.5 rounded-lg text-[#c4b8ae] hover:text-[#1c1813] hover:bg-[#f4f1eb] transition-colors shrink-0"
+              className="p-1.5 rounded-lg text-ink-4 hover:text-ink hover:bg-surface-2 transition-colors shrink-0"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />

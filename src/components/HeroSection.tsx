@@ -87,7 +87,7 @@ export default function HeroSection({ products, whatsappNumber, onOpenModal }: H
 
   return (
     <section className="mb-8">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9c8e84] mb-3">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-3 mb-3">
         Em Destaque
       </p>
 
@@ -100,7 +100,7 @@ export default function HeroSection({ products, whatsappNumber, onOpenModal }: H
             onClick={() => scrollBy('prev')}
             disabled={!canPrev}
             aria-label="Anterior"
-            className="hidden lg:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10 w-8 h-8 items-center justify-center rounded-full bg-white border border-[#e8e2d8] shadow-md text-[#6b5d52] hover:text-[#1c1813] hover:border-[#d4cec5] hover:shadow-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            className="hidden lg:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10 w-8 h-8 items-center justify-center rounded-full bg-white border border-border shadow-md text-ink-2 hover:text-ink hover:border-border-2 hover:shadow-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -138,7 +138,7 @@ export default function HeroSection({ products, whatsappNumber, onOpenModal }: H
             onClick={() => scrollBy('next')}
             disabled={!canNext}
             aria-label="Próximo"
-            className="hidden lg:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10 w-8 h-8 items-center justify-center rounded-full bg-white border border-[#e8e2d8] shadow-md text-[#6b5d52] hover:text-[#1c1813] hover:border-[#d4cec5] hover:shadow-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            className="hidden lg:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10 w-8 h-8 items-center justify-center rounded-full bg-white border border-border shadow-md text-ink-2 hover:text-ink hover:border-border-2 hover:shadow-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -157,8 +157,8 @@ export default function HeroSection({ products, whatsappNumber, onOpenModal }: H
               onClick={() => scrollToIndex(i)}
               className={`rounded-full transition-all duration-300 ${
                 i === activeIndex
-                  ? 'w-5 h-1.5 bg-[#1c1813]'
-                  : 'w-1.5 h-1.5 bg-[#d4cec5] hover:bg-[#9c8e84]'
+                  ? 'w-5 h-1.5 bg-cta'
+                  : 'w-1.5 h-1.5 bg-border-2 hover:bg-[#9c8e84]'
               }`}
             />
           ))}
@@ -180,11 +180,11 @@ function HeroCard({ product, whatsappNumber, onOpenModal }: HeroCardProps) {
 
   return (
     <article
-      className="h-full group bg-white border border-[#e8e2d8] rounded-xl overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col"
+      className="h-full group bg-white border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col"
       onClick={() => onOpenModal(product)}
     >
       {/* Imagem — altura fixa para todos os cards, independente do conteúdo */}
-      <div className="shrink-0 aspect-square overflow-hidden bg-[#f4f1eb]">
+      <div className="shrink-0 aspect-square overflow-hidden bg-surface-2">
         {imageUrl ? (
           <img
             src={imageUrl}
@@ -194,7 +194,7 @@ function HeroCard({ product, whatsappNumber, onOpenModal }: HeroCardProps) {
           />
         ) : (
           <div className="h-full flex items-center justify-center">
-            <svg className="w-12 h-12 text-[#d4cec5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+            <svg className="w-12 h-12 text-border-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
             </svg>
           </div>
@@ -203,14 +203,14 @@ function HeroCard({ product, whatsappNumber, onOpenModal }: HeroCardProps) {
 
       {/* Conteúdo — ocupa o restante da altura do card */}
       <div className="p-4 flex flex-col gap-2.5 flex-1">
-        <h3 className="text-base font-semibold text-[#1c1813] leading-snug line-clamp-2 flex-1">{name}</h3>
+        <h3 className="text-base font-semibold text-ink leading-snug line-clamp-2 flex-1">{name}</h3>
 
         {description && (
-          <p className="text-xs text-[#6b5d52] line-clamp-2">{description}</p>
+          <p className="text-xs text-ink-2 line-clamp-2">{description}</p>
         )}
 
         {product.price != null && (
-          <p className="text-base font-bold text-[#c9922c]">
+          <p className="text-base font-bold text-brand">
             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)}
           </p>
         )}

@@ -49,21 +49,21 @@ export default function VitrineSidebar() {
   /* ── Admin sidebar ────────────────────────────────────────────────────────── */
   if (isAuthenticated) {
     return (
-      <aside className="hidden md:flex fixed left-0 top-0 h-full w-60 z-40 flex-col bg-white border-r border-[#e8e2d8]">
+      <aside className="hidden md:flex fixed left-0 top-0 h-full w-60 z-40 flex-col bg-canvas border-r border-border">
         {/* Brand */}
-        <div className="h-16 flex items-center gap-2.5 px-5 border-b border-[#e8e2d8] shrink-0">
+        <div className="h-16 flex items-center gap-2.5 px-5 border-b border-border shrink-0">
           <Link to="/" className="hover:opacity-80 transition-opacity">
             <Logo height={26} />
           </Link>
-          <span className="text-[10px] font-semibold uppercase tracking-widest text-[#9c8e84] bg-[#f4f1eb] px-1.5 py-0.5 rounded">
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-ink-3 bg-surface-2 px-1.5 py-0.5 rounded">
             Admin
           </span>
         </div>
 
         {/* "Você está na sua vitrine" indicator */}
-        <div className="px-4 py-3 bg-[#f4f1eb] border-b border-[#e8e2d8] shrink-0">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-[#9c8e84]">Visualizando</p>
-          <p className="text-sm font-semibold text-[#c9922c] truncate mt-0.5">
+        <div className="px-4 py-3 bg-surface-2 border-b border-border shrink-0">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-ink-3">Visualizando</p>
+          <p className="text-sm font-semibold text-brand truncate mt-0.5">
             {user?.storeName ?? 'Minha vitrine'}
           </p>
         </div>
@@ -77,8 +77,8 @@ export default function VitrineSidebar() {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-[#c9922c]/10 text-[#c9922c] font-semibold'
-                    : 'text-[#9c8e84] hover:text-[#1c1813] hover:bg-[#f4f1eb]'
+                    ? 'bg-brand/10 text-brand font-semibold'
+                    : 'text-ink-3 hover:text-ink hover:bg-surface-2'
                 }`
               }
             >
@@ -91,21 +91,21 @@ export default function VitrineSidebar() {
         </nav>
 
         {/* User + Logout */}
-        <div className="p-4 border-t border-[#e8e2d8] shrink-0">
+        <div className="p-4 border-t border-border shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-[#c9922c]/15 border border-[#c9922c]/30 flex items-center justify-center text-xs font-bold text-[#c9922c] shrink-0">
+            <div className="w-8 h-8 rounded-full bg-brand/15 border border-brand/30 flex items-center justify-center text-xs font-bold text-brand shrink-0">
               {initial}
             </div>
             <div className="flex-1 min-w-0">
               {user?.storeName && (
-                <p className="text-xs font-semibold text-[#1c1813] truncate">{user.storeName}</p>
+                <p className="text-xs font-semibold text-ink truncate">{user.storeName}</p>
               )}
-              <p className="text-xs text-[#c4b8ae] truncate">{user?.userName ?? user?.email}</p>
+              <p className="text-xs text-ink-4 truncate">{user?.userName ?? user?.email}</p>
             </div>
             <button
               onClick={handleLogout}
               title="Sair"
-              className="p-1.5 rounded-lg text-[#c4b8ae] hover:text-[#1c1813] hover:bg-[#f4f1eb] transition-colors shrink-0"
+              className="p-1.5 rounded-lg text-ink-4 hover:text-ink hover:bg-surface-2 transition-colors shrink-0"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
@@ -119,49 +119,43 @@ export default function VitrineSidebar() {
 
   /* ── Public / non-logged sidebar ──────────────────────────────────────────── */
   return (
-    <aside className="hidden md:flex fixed left-0 top-0 h-full w-60 z-40 flex-col bg-white border-r border-[#e8e2d8]">
-      {/* Brand */}
-      <div className="h-16 flex items-center px-5 border-b border-[#e8e2d8] shrink-0">
-        <Link to="/" className="hover:opacity-80 transition-opacity">
-          <Logo height={26} />
-        </Link>
-      </div>
-
-      {/* CTA section */}
-      <div className="flex-1 px-4 py-6 flex flex-col gap-3">
-        <p className="text-xs text-[#9c8e84] leading-relaxed">
-          Qualquer vendedor pode ter uma vitrine digital elegante e profissional — de carros a artesanato, de imóveis a brinquedos.
+    <aside className="hidden md:flex fixed left-0 top-0 h-full w-60 z-40 flex-col bg-canvas border-r border-border">
+      {/* CTA section — no brand header at top; store owns the top of page */}
+      <div className="flex-1 px-4 pt-6 pb-4 flex flex-col gap-3 overflow-y-auto">
+        <p className="text-xs text-ink-3 leading-relaxed">
+          Lojas, autônomos, imóveis, serviços — qualquer negócio pode ter sua vitrine digital profissional. Primeiro mês gratuito.
         </p>
 
         <Link
           to="/admin/register"
-          className="flex items-center justify-center gap-2 rounded-lg bg-[#1c1813] hover:bg-[#2c2620] text-white text-sm font-semibold px-4 py-2.5 transition-colors"
+          className="flex items-center justify-center gap-2 rounded-lg bg-cta hover:bg-cta-2 text-cta-fg text-sm font-semibold px-4 py-2.5 transition-colors"
         >
           Criar minha vitrine
         </Link>
 
         <Link
           to="/admin/login"
-          className="flex items-center justify-center rounded-lg border border-[#e8e2d8] hover:border-[#d4cec5] text-[#6b5d52] hover:text-[#1c1813] text-sm font-medium px-4 py-2.5 transition-colors"
+          className="flex items-center justify-center rounded-lg border border-border hover:border-border-2 text-ink-2 hover:text-ink text-sm font-medium px-4 py-2.5 transition-colors"
         >
           Entrar
         </Link>
 
-        <div className="mt-4 pt-4 border-t border-[#f0ece5]">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-[#c4b8ae] mb-2">
-            Para vendedores de
+        <div className="mt-4 pt-4 border-t border-border">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-ink-4 mb-2">
+            Para todo tipo de negócio
           </p>
-          {['Arte & Artesanato', 'Imóveis & Terrenos', 'Veículos', 'Brinquedos', 'Moda', 'E muito mais…'].map((c) => (
-            <p key={c} className="text-xs text-[#9c8e84] py-0.5">{c}</p>
+          {['Lojas & Comércio', 'Autônomos', 'Imóveis', 'Veículos', 'Serviços', 'Arte & Artesanato'].map((c) => (
+            <p key={c} className="text-xs text-ink-3 py-0.5">{c}</p>
           ))}
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="p-4 border-t border-[#e8e2d8] shrink-0">
-        <p className="text-[10px] text-[#c4b8ae] text-center">
-          Vitrin &copy; {new Date().getFullYear()}
-        </p>
+      {/* Footer — passive Vitrin credit */}
+      <div className="px-4 py-3 border-t border-border shrink-0">
+        <Link to="/" className="flex items-center gap-2 hover:opacity-60 transition-opacity w-fit">
+          <Logo height={18} />
+          <span className="text-[10px] text-ink-4">· Criar minha vitrine →</span>
+        </Link>
       </div>
     </aside>
   )

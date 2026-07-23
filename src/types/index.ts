@@ -1,3 +1,12 @@
+export interface SubscriptionInfo {
+  plan: 'FREE' | 'BASIC' | 'PRO'
+  status: 'TRIAL' | 'ACTIVE' | 'PAST_DUE' | 'CANCELLED' | 'EXPIRED'
+  startedAt?: string | null
+  trialEndsAt?: string | null
+  expiresAt?: string | null
+  active: boolean
+}
+
 export interface User {
   id: string
   email: string
@@ -7,9 +16,14 @@ export interface User {
   whatsappNumber: string
   storeDescription: string
   logoUrl: string
+  coverImageUrl?: string | null
   createdAt: string
   updatedAt: string
   isActive: boolean
+  role?: string | null
+  emailVerified?: boolean | null
+  profileType?: 'STANDARD' | 'AFFILIATE' | null
+  subscription?: SubscriptionInfo | null
   stateId?: number | null
   stateName?: string | null
   stateAbbreviation?: string | null
@@ -43,6 +57,8 @@ export interface Product {
   storeId: string
   whatsappUrl?: string
   clickCount?: number
+  affiliateUrl?: string | null
+  affiliateClickCount?: number | null
   attributes?: Record<string, unknown>
   productTypeId?: number | null
   productTypeLabel?: string | null
