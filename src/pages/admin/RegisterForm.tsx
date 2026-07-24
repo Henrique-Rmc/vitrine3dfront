@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import { registerUser, uploadLogo } from '../../services/authService'
+import { uploadLogo } from '../../services/authService'
 import { listStates, listCitiesByState, type BrazilState, type BrazilCity } from '../../services/locationService'
 import { compressImage } from '../../services/imageOptimizationService'
 import { useAuth } from '../../context/AuthContext'
@@ -135,7 +135,7 @@ function FormField({ label, hint, error, required, children }: {
 
 export default function RegisterForm() {
   const navigate = useNavigate()
-  const { login } = useAuth()
+  const { register } = useAuth()
 
   const [form, setForm] = useState<RegisterFormData>(EMPTY_FORM)
   const [formErrors, setFormErrors] = useState<FormErrors>({})
@@ -241,7 +241,7 @@ export default function RegisterForm() {
     setFormErrors({})
     setIsLoading(true)
     try {
-      const created = await registerUser({
+      const user = await register({
         email: form.email,
         password: form.password,
         userName: form.userName,
@@ -251,8 +251,7 @@ export default function RegisterForm() {
         stateId: form.stateId!,
         ...(form.cityId !== null && { cityId: form.cityId }),
       })
-      if (logoFile) await uploadLogo(created.id, logoFile).catch(() => undefined)
-      await login(form.email, form.password)
+      if (logoFile) await uploadLogo(user.id, logoFile).catch(() => undefined)
       navigate('/admin/onboarding', { replace: true })
     } catch (err) {
       setFormErrors(extractFormErrors(err))

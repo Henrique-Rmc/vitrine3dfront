@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import { registerUser, uploadLogo } from '../../services/authService'
+import { uploadLogo } from '../../services/authService'
 import { listStates, listCitiesByState, type BrazilState, type BrazilCity } from '../../services/locationService'
 import { compressImage } from '../../services/imageOptimizationService'
 import { useAuth } from '../../context/AuthContext'
 import Logo from '../../components/Logo'
+import SearchableSelect from '../../components/SearchableSelect'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -63,14 +64,6 @@ function inputClass(hasError: boolean) {
   }`
 }
 
-function selectClass(hasError: boolean) {
-  return `w-full rounded-lg bg-surface-2 border px-4 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 disabled:opacity-50 cursor-pointer transition-colors ${
-    hasError
-      ? 'border-red-400 focus:ring-red-400/30'
-      : 'border-border focus:ring-brand/40 focus:border-brand/60'
-  }`
-}
-
 function FormField({ label, hint, error, required, children }: {
   label: string
   hint?: React.ReactNode
@@ -95,7 +88,7 @@ function FormField({ label, hint, error, required, children }: {
 
 export default function AffiliateRegisterPage() {
   const navigate = useNavigate()
-  const { login } = useAuth()
+  const { registerAffiliate } = useAuth()
 
   const [form, setForm] = useState<FormData>(EMPTY_FORM)
   const [formErrors, setFormErrors] = useState<FormErrors>({})
@@ -182,7 +175,7 @@ export default function AffiliateRegisterPage() {
     setFormErrors({})
     setIsLoading(true)
     try {
-      const created = await registerUser({
+      const user = await registerAffiliate({
         email: form.email,
         password: form.password,
         userName: form.userName,
@@ -191,11 +184,9 @@ export default function AffiliateRegisterPage() {
         storeDescription: form.storeDescription,
         stateId: form.stateId!,
         ...(form.cityId !== null && { cityId: form.cityId }),
-        profileType: 'AFFILIATE',
       })
-      if (logoFile) await uploadLogo(created.id, logoFile).catch(() => undefined)
-      await login(form.email, form.password)
-      navigate('/admin/products')
+      if (logoFile) await uploadLogo(user.id, logoFile).catch(() => undefined)
+      navigate('/admin/onboarding', { replace: true })
     } catch (err) {
       setFormErrors(extractFormErrors(err))
     } finally {
@@ -329,28 +320,30 @@ export default function AffiliateRegisterPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField label="Estado" required error={formErrors.stateId}>
-                <select required disabled={isLoading || loadingStates}
+                <SearchableSelect
+                  required
                   value={form.stateId !== null ? String(form.stateId) : ''}
-                  onChange={(e) => handleStateChange(e.target.value)}
-                  className={selectClass(!!formErrors.stateId)}>
-                  <option value="">{loadingStates ? 'Carregando…' : 'Selecione'}</option>
-                  {states.map((s) => <option key={s.id} value={s.id}>{s.name} ({s.abbreviation})</option>)}
-                </select>
+                  onChange={handleStateChange}
+                  options={states.map((s) => ({ value: String(s.id), label: `${s.name} (${s.abbreviation})` }))}
+                  placeholder={loadingStates ? 'Carregando…' : 'Selecione'}
+                  disabled={isLoading || loadingStates}
+                  hasError={!!formErrors.stateId}
+                />
               </FormField>
 
               <FormField label="Cidade" required error={formErrors.cityId}>
-                <select
+                <SearchableSelect
                   required={!isCustomCity}
-                  disabled={isLoading || !form.stateId || loadingCities}
                   value={citySelectValue}
-                  onChange={(e) => handleCityChange(e.target.value)}
-                  className={selectClass(!!formErrors.cityId)}>
-                  <option value="">
-                    {loadingCities ? 'Carregando…' : form.stateId ? 'Selecione' : 'Selecione o estado'}
-                  </option>
-                  {cities.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  <option value={CUSTOM_CITY_VALUE}>Outra cidade</option>
-                </select>
+                  onChange={handleCityChange}
+                  options={[
+                    ...cities.map((c) => ({ value: String(c.id), label: c.name })),
+                    { value: CUSTOM_CITY_VALUE, label: 'Outra cidade / digitar' },
+                  ]}
+                  placeholder={loadingCities ? 'Carregando…' : form.stateId ? 'Selecione' : 'Selecione o estado'}
+                  disabled={isLoading || !form.stateId || loadingCities}
+                  hasError={!!formErrors.cityId}
+                />
               </FormField>
             </div>
 

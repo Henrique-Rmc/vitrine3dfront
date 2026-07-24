@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import {
-  listEffectiveAttributes,
+  listMyAttributes,
   createCustomAttribute,
   deleteCustomAttribute,
   labelToKey,
   type AttributeDefinition,
 } from '../../services/attributeService'
 import { listProductTypes, type ProductType } from '../../services/productTypeService'
+import SearchableSelect from '../../components/SearchableSelect'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -20,6 +21,8 @@ const TYPE_LABEL: Record<AttributeDefinition['type'], string> = {
 
 const inputClass =
   'w-full rounded-lg bg-surface-2 border border-border px-3 py-2 text-sm text-ink placeholder-ink-4 focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/60 transition-colors'
+
+type Scope = 'global' | number
 
 // ── Small components ───────────────────────────────────────────────────────────
 
@@ -34,28 +37,25 @@ function TypeBadge({ type }: { type: AttributeDefinition['type'] }) {
 function OnboardingModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 bg-surface/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white border border-border rounded-2xl max-w-md w-full p-7 shadow-2xl">
+      <div className="bg-canvas border border-border rounded-2xl max-w-md w-full p-7 shadow-2xl">
         <div className="w-12 h-12 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center mb-5">
           <svg className="w-6 h-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
           </svg>
         </div>
-
         <h2 className="text-xl font-bold text-ink mb-4">Sobre filtros</h2>
-
         <div className="space-y-3 text-sm text-ink-2 leading-relaxed">
           <p>
             Filtros são as características que descrevem seus produtos e permitem que os clientes encontrem exatamente o que procuram na sua loja.
           </p>
           <p>
-            Cada filtro é reutilizado em todos os produtos da sua loja — por exemplo, "Material" aparece no cadastro de todo produto, mas cada um tem seu próprio valor (Ouro, Prata, etc.). Alguns filtros são obrigatórios (não deixam o produto ser salvo sem um valor), outros são opcionais.
+            Filtros <span className="font-medium text-ink">Gerais</span> aparecem em todos os tipos de produto. Filtros de um tipo específico aparecem apenas nos produtos daquele tipo.
           </p>
           <p className="font-medium text-ink">
             Configure seus filtros com cuidado — eles são muito importantes para a organização da sua loja e para os clientes conseguirem filtrar seus produtos.
           </p>
         </div>
-
         <button
           onClick={onClose}
           className="mt-6 w-full py-2.5 rounded-lg bg-cta hover:bg-cta-2 text-cta-fg text-sm font-semibold transition-colors"
@@ -67,17 +67,6 @@ function OnboardingModal({ onClose }: { onClose: () => void }) {
   )
 }
 
-// ── Create form ────────────────────────────────────────────────────────────────
-
-interface NewAttrForm {
-  label: string
-  productTypeId?: number
-}
-
-const emptyNewAttrForm = (): NewAttrForm => ({
-  label: '',
-})
-
 // ── Main page ──────────────────────────────────────────────────────────────────
 
 export default function AttributesPage() {
@@ -85,9 +74,7 @@ export default function AttributesPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const storeId = user?.id ?? ''
 
-  // Onboarding
   const [showOnboarding, setShowOnboarding] = useState(searchParams.get('onboarding') === '1')
-
   function closeOnboarding() {
     setShowOnboarding(false)
     const next = new URLSearchParams(searchParams)
@@ -95,46 +82,62 @@ export default function AttributesPage() {
     setSearchParams(next, { replace: true })
   }
 
+  // Scope
+  const [scope, setScope] = useState<Scope>('global')
+
   // Data
-  const [customAttributes, setCustomAttributes] = useState<AttributeDefinition[]>([])
-  const [productTypes, setProductTypes]         = useState<ProductType[]>([])
-  const [isLoading, setIsLoading]               = useState(true)
-  const [error, setError]                       = useState<string | null>(null)
+  const [allAttributes, setAllAttributes] = useState<AttributeDefinition[]>([])
+  const [productTypes, setProductTypes]   = useState<ProductType[]>([])
+  const [isLoading, setIsLoading]         = useState(true)
+  const [error, setError]                 = useState<string | null>(null)
 
   // Per-item action state
   const [actingId, setActingId]       = useState<number | null>(null)
   const [actingError, setActingError] = useState<string | null>(null)
 
   // Create form
-  const [isCreating, setIsCreating]     = useState(false)
-  const [newAttr, setNewAttr]           = useState<NewAttrForm>(emptyNewAttrForm)
-  const [isSaving, setIsSaving]         = useState(false)
-  const [createError, setCreateError]   = useState<string | null>(null)
+  const [isCreating, setIsCreating]   = useState(false)
+  const [newLabel, setNewLabel]       = useState('')
+  const [isSaving, setIsSaving]       = useState(false)
+  const [createError, setCreateError] = useState<string | null>(null)
+
+  // Attributes visible under current scope
+  const visibleAttributes = scope === 'global'
+    ? allAttributes.filter((a) => a.productTypeId == null)
+    : allAttributes.filter((a) => a.productTypeId === (scope as number))
+
+  const scopeLabel = scope === 'global'
+    ? 'Geral — todos os tipos'
+    : productTypes.find((t) => t.id === scope)?.label ?? 'Tipo selecionado'
+
+  const scopeOptions = [
+    { value: 'global', label: 'Geral — todos os tipos' },
+    ...productTypes.map((t) => ({ value: String(t.id), label: t.label })),
+  ]
 
   async function loadAll() {
     if (!storeId) return
     setIsLoading(true)
     setError(null)
     try {
-      const [global, types] = await Promise.all([
-        listEffectiveAttributes(storeId),
+      const [globalAttrs, types] = await Promise.all([
+        listMyAttributes(),
         listProductTypes(storeId),
       ])
       setProductTypes(types)
 
-      // The endpoint without productTypeId returns only global attributes.
-      // Fetch per-type lists to also capture type-scoped attributes.
-      const perType = await Promise.all(types.map((t) => listEffectiveAttributes(storeId, t.id)))
+      const perType = await Promise.all(types.map((t) => listMyAttributes(t.id)))
 
       const seen = new Set<number>()
-      const all = [...global, ...perType.flat()].filter((a) => {
+      const all = [...globalAttrs, ...perType.flat()].filter((a) => {
         if (seen.has(a.id)) return false
         seen.add(a.id)
         return true
       })
 
-      setCustomAttributes(all.filter((a) => a.custom))
-    } catch {
+      setAllAttributes(all.filter((a) => a.custom !== false))
+    } catch (err) {
+      console.error('[Filtros] loadAll error:', err)
       setError('Não foi possível carregar os filtros.')
     } finally {
       setIsLoading(false)
@@ -143,51 +146,50 @@ export default function AttributesPage() {
 
   useEffect(() => { loadAll() }, [storeId]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  function handleScopeChange(value: string) {
+    setScope(value === 'global' ? 'global' : Number(value))
+    // Close create form when switching scope
+    setIsCreating(false)
+    setNewLabel('')
+    setCreateError(null)
+    setActingError(null)
+  }
+
   async function handleDelete(attr: AttributeDefinition) {
-    if (!window.confirm(`Excluir o atributo "${attr.label}"? Essa ação não pode ser desfeita.`)) return
+    if (!window.confirm(`Excluir o filtro "${attr.label}"? Essa ação não pode ser desfeita.`)) return
     setActingId(attr.id)
     setActingError(null)
     try {
       await deleteCustomAttribute(storeId, attr.id)
-      setCustomAttributes((prev) => prev.filter((a) => a.id !== attr.id))
+      setAllAttributes((prev) => prev.filter((a) => a.id !== attr.id))
     } catch (err: unknown) {
       const code = (err as { response?: { data?: { code?: string } } })?.response?.data?.code
       if (code === 'ATTRIBUTE_IN_USE') {
         setActingError(`"${attr.label}" está em uso em algum produto. Remova o valor dos produtos antes de excluir.`)
       } else {
-        setActingError('Erro ao excluir atributo.')
+        setActingError('Erro ao excluir filtro.')
       }
     } finally {
       setActingId(null)
     }
   }
 
-  // ── Create form handlers ────────────────────────────────────────────────────
-
-  function setNewField<K extends keyof NewAttrForm>(k: K, value: NewAttrForm[K]) {
-    setNewAttr((prev) => ({ ...prev, [k]: value }))
-    setCreateError(null)
-  }
-
   function cancelCreate() {
     setIsCreating(false)
-    setNewAttr(emptyNewAttrForm())
+    setNewLabel('')
     setCreateError(null)
   }
 
-  async function handleCreate(e: React.FormEvent) {
+  async function handleCreate(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
-    const label = newAttr.label.trim()
+    const label = newLabel.trim()
     if (!label) return
 
     const key = labelToKey(label)
-    if (!key) {
-      setCreateError('O nome precisa conter pelo menos uma letra.')
-      return
-    }
+    if (!key) { setCreateError('O nome precisa conter pelo menos uma letra.'); return }
 
-    if (customAttributes.some((a) => a.key === key)) {
-      setCreateError('Já existe uma característica com esse nome. Tente um nome diferente.')
+    if (allAttributes.some((a) => a.key === key)) {
+      setCreateError('Já existe um filtro com esse nome. Tente um nome diferente.')
       return
     }
 
@@ -196,12 +198,13 @@ export default function AttributesPage() {
     try {
       const created = await createCustomAttribute(storeId, label, key, {
         required: false,
-        ...(newAttr.productTypeId != null ? { productTypeId: newAttr.productTypeId } : {}),
+        filterable: true,
+        ...(scope !== 'global' ? { productTypeId: scope as number } : {}),
       })
-      setCustomAttributes((prev) => [...prev, created])
+      setAllAttributes((prev) => [...prev, created])
       cancelCreate()
     } catch {
-      setCreateError('Não foi possível criar a característica. Tente novamente.')
+      setCreateError('Não foi possível criar o filtro. Tente novamente.')
     } finally {
       setIsSaving(false)
     }
@@ -231,7 +234,7 @@ export default function AttributesPage() {
               </svg>
               Sobre filtros
             </button>
-            {!isCreating && (
+            {!isCreating && !isLoading && (
               <button
                 onClick={() => setIsCreating(true)}
                 className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg bg-cta hover:bg-cta-2 text-cta-fg text-sm font-semibold transition-colors"
@@ -239,11 +242,27 @@ export default function AttributesPage() {
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
-                Adicionar atributo
+                Adicionar filtro
               </button>
             )}
           </div>
         </div>
+
+        {/* Scope selector — only shown when there are product types */}
+        {!isLoading && productTypes.length > 0 && (
+          <div className="mb-5">
+            <label className="block text-xs font-semibold uppercase tracking-wide text-ink-3 mb-1.5">
+              Tipo de produto
+            </label>
+            <SearchableSelect
+              value={scope === 'global' ? 'global' : String(scope)}
+              onChange={handleScopeChange}
+              options={scopeOptions}
+              placeholder="Selecione um tipo…"
+              searchPlaceholder="Buscar tipo…"
+            />
+          </div>
+        )}
 
         {/* Errors */}
         {(error || actingError) && (
@@ -259,12 +278,12 @@ export default function AttributesPage() {
 
         {/* Create form */}
         {isCreating && (
-          <form onSubmit={handleCreate} className="mb-6 rounded-xl border border-border bg-white p-4 space-y-4 shadow-sm">
+          <form onSubmit={handleCreate} className="mb-6 rounded-xl border border-border bg-canvas p-4 space-y-4 shadow-sm">
             <div>
-              <p className="text-sm font-semibold text-ink">Nova característica</p>
+              <p className="text-sm font-semibold text-ink">Novo filtro</p>
               <p className="text-xs text-ink-3 mt-0.5">
-                Use com cuidado —{' '}
-                <span className="font-medium text-amber-700">características demais podem deixar o cadastro confuso para você e sua equipe.</span>
+                Será adicionado em{' '}
+                <span className="font-medium text-ink-2">{scopeLabel}</span>
               </p>
             </div>
 
@@ -276,8 +295,8 @@ export default function AttributesPage() {
                 type="text"
                 required
                 autoFocus
-                value={newAttr.label}
-                onChange={(e) => setNewField('label', e.target.value)}
+                value={newLabel}
+                onChange={(e) => { setNewLabel(e.target.value); setCreateError(null) }}
                 placeholder="ex: Cor, Tamanho, Material, Acabamento"
                 className={inputClass}
               />
@@ -285,27 +304,6 @@ export default function AttributesPage() {
                 Como essa informação vai aparecer no formulário de cada produto.
               </p>
             </div>
-
-            {productTypes.length > 0 && (
-              <div>
-                <label className="block text-xs font-medium text-ink-2 mb-1">
-                  Tipo de produto (opcional)
-                </label>
-                <select
-                  value={newAttr.productTypeId ?? ''}
-                  onChange={(e) => setNewField('productTypeId', e.target.value ? Number(e.target.value) : undefined)}
-                  className={inputClass}
-                >
-                  <option value="">Geral — aparece em todos os tipos</option>
-                  {productTypes.map((pt) => (
-                    <option key={pt.id} value={pt.id}>{pt.label}</option>
-                  ))}
-                </select>
-                <p className="mt-1 text-[11px] text-ink-3">
-                  Deixe em branco para o filtro aparecer em todos os tipos de produto.
-                </p>
-              </div>
-            )}
 
             <p className="text-[11px] text-ink-3 bg-surface-2 border border-border rounded-lg px-3 py-2">
               Filtros personalizados são listas de opções — você adiciona os valores disponíveis ao cadastrar produtos.
@@ -328,11 +326,11 @@ export default function AttributesPage() {
               </button>
               <button
                 type="submit"
-                disabled={isSaving || !newAttr.label.trim()}
+                disabled={isSaving || !newLabel.trim()}
                 className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-cta hover:bg-cta-2 text-cta-fg text-sm font-semibold transition-colors disabled:opacity-60"
               >
                 {isSaving
-                  ? <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                  ? <span className="w-4 h-4 rounded-full border-2 border-cta-fg/40 border-t-cta-fg animate-spin" />
                   : 'Adicionar'}
               </button>
             </div>
@@ -344,8 +342,7 @@ export default function AttributesPage() {
           <div className="flex justify-center py-20">
             <span className="w-6 h-6 rounded-full border-2 border-brand border-t-transparent animate-spin" />
           </div>
-        ) : customAttributes.length === 0 ? (
-          /* Empty state */
+        ) : visibleAttributes.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
             <div className="w-14 h-14 rounded-xl bg-surface-2 border border-border flex items-center justify-center">
               <svg className="w-7 h-7 text-border-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -353,9 +350,11 @@ export default function AttributesPage() {
               </svg>
             </div>
             <div>
-              <p className="text-ink font-semibold text-sm">Nenhum filtro configurado</p>
+              <p className="text-ink font-semibold text-sm">Nenhum filtro em "{scopeLabel}"</p>
               <p className="text-ink-3 text-xs mt-1 max-w-xs">
-                Adicione filtros para descrever as características dos seus produtos.
+                {scope === 'global'
+                  ? 'Filtros globais aparecem em todos os tipos de produto.'
+                  : 'Filtros específicos do tipo aparecem apenas nos produtos deste tipo.'}
               </p>
             </div>
             {!isCreating && (
@@ -370,15 +369,14 @@ export default function AttributesPage() {
         ) : (
           <section>
             <p className="text-xs font-semibold uppercase tracking-wide text-ink-3 mb-3">
-              Filtros personalizados
+              {scopeLabel}
             </p>
-            <div className="rounded-xl border border-border overflow-hidden bg-white shadow-sm">
-              {customAttributes.map((attr, i) => (
+            <div className="rounded-xl border border-border overflow-hidden bg-canvas shadow-sm">
+              {visibleAttributes.map((attr, i) => (
                 <AttributeRow
                   key={attr.id}
                   attr={attr}
-                  productTypes={productTypes}
-                  isLast={i === customAttributes.length - 1}
+                  isLast={i === visibleAttributes.length - 1}
                   isActing={actingId === attr.id}
                   onDelete={() => handleDelete(attr)}
                 />
@@ -395,13 +393,11 @@ export default function AttributesPage() {
 
 function AttributeRow({
   attr,
-  productTypes,
   isLast,
   isActing,
   onDelete,
 }: {
   attr: AttributeDefinition
-  productTypes: ProductType[]
   isLast: boolean
   isActing: boolean
   onDelete: () => void
@@ -409,10 +405,6 @@ function AttributeRow({
   const spinner = (
     <span className="w-3 h-3 rounded-full border-2 border-current/30 border-t-current animate-spin inline-block" />
   )
-
-  const typeName = attr.productTypeId
-    ? productTypes.find((t) => t.id === attr.productTypeId)?.label
-    : null
 
   return (
     <div className={`flex items-center gap-3 px-4 py-3 ${!isLast ? 'border-b border-border' : ''}`}>
@@ -427,11 +419,6 @@ function AttributeRow({
           )}
           {attr.unit && (
             <span className="text-[10px] text-ink-3">({attr.unit})</span>
-          )}
-          {typeName && (
-            <span className="text-[10px] text-ink-3 bg-surface-2 border border-border px-1.5 py-0.5 rounded">
-              Tipo: {typeName}
-            </span>
           )}
         </div>
         {attr.type === 'ENUM' && (

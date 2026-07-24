@@ -39,6 +39,12 @@ const NAV_ITEMS: NavItem[] = [
 ]
 
 
+function accountLabel(user: ReturnType<typeof useAuth>['user']): string {
+  if (user?.role === 'ADMIN') return 'Admin'
+  if (user?.profileType === 'AFFILIATE') return 'Loja de Afiliado'
+  return 'Loja'
+}
+
 export default function AdminLayout() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
@@ -55,6 +61,7 @@ export default function AdminLayout() {
         userName={user?.userName ?? user?.email}
         storeName={user?.storeName}
         storeSlug={user?.slug}
+        accountLabel={accountLabel(user)}
         onLogout={handleLogout}
       />
 

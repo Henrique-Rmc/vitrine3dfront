@@ -22,6 +22,14 @@ export async function listEffectiveAttributes(storeId: string, productTypeId?: n
   return [...data].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
 }
 
+export async function listMyAttributes(productTypeId?: number): Promise<AttributeDefinition[]> {
+  const url = productTypeId != null
+    ? `/api/users/me/attributes?productTypeId=${productTypeId}`
+    : `/api/users/me/attributes`
+  const { data } = await apiClient.get<AttributeDefinition[]>(url)
+  return [...data].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+}
+
 export interface CustomAttributePayload {
   required?: boolean
   sortOrder?: number

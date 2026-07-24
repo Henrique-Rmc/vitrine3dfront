@@ -69,8 +69,10 @@ export default function App() {
           {/* ── Admin: public (only for guests) ── */}
           <Route element={<PublicOnlyRoute />}>
             <Route path="/admin/login" element={<LoginPage />} />
-            <Route path="/admin/register" element={<RegisterPage />} />
           </Route>
+
+          {/* ── Register: open route — navigates away after auth commit ── */}
+          <Route path="/admin/register" element={<RegisterPage />} />
 
           {/* ── Onboarding (protected, own full-screen layout) ── */}
           <Route element={<ProtectedRoute />}>

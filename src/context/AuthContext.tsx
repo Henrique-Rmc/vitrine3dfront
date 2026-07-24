@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { flushSync } from 'react-dom'
 import type { User } from '../types'
-import { loginUser, loginWithGoogle, logoutUser, refreshToken } from '../services/authService'
+import { loginUser, loginWithGoogle, logoutUser, refreshToken, registerUser, registerAffiliate as registerAffiliateUser, fetchUserProfile } from '../services/authService'
+import type { RegisterRequest, AffiliateRegisterRequest } from '../services/authService'
 import { tokenStore } from '../services/tokenStore'
 
 const USER_KEY = 'auth_user'
@@ -13,6 +14,8 @@ interface AuthContextValue {
   isAuthenticated: boolean
   /** true while the silent refresh attempt on mount is in flight */
   isLoading: boolean
+  register: (payload: RegisterRequest) => Promise<Omit<User, 'password'>>
+  registerAffiliate: (payload: AffiliateRegisterRequest) => Promise<Omit<User, 'password'>>
   login: (email: string, password: string) => Promise<void>
   loginGoogle: (accessToken: string) => Promise<{ isNewUser: boolean }>
   logout: () => void
@@ -48,6 +51,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .catch(() => { /* no valid cookie — stay unauthenticated */ })
       .finally(() => setIsLoading(false))
   }, [])
+
+  async function register(payload: RegisterRequest): Promise<Omit<User, 'password'>> {
+    const { token: newToken, user: newUser } = await registerUser(payload)
+    tokenStore.set(newToken)
+    flushSync(() => {
+      setToken(newToken)
+      setUser(newUser)
+    })
+    localStorage.setItem(USER_KEY, JSON.stringify(newUser))
+
+    // Fetch full profile in background — populates slug, stateName, etc.
+    // Token is already in tokenStore so the request is authenticated.
+    fetchUserProfile(newUser.id)
+      .then((profile) => {
+        const fullUser = {
+          ...newUser,
+          ...profile,
+          // Preserve values set at registration that the profile endpoint may not return
+          profileType: profile.profileType ?? newUser.profileType,
+          role: profile.role ?? newUser.role,
+        }
+        setUser(fullUser)
+        localStorage.setItem(USER_KEY, JSON.stringify(fullUser))
+      })
+      .catch(() => undefined)
+
+    return newUser
+  }
+
+  async function registerAffiliate(payload: AffiliateRegisterRequest): Promise<Omit<User, 'password'>> {
+    const { token: newToken, user: newUser } = await registerAffiliateUser(payload)
+    tokenStore.set(newToken)
+    flushSync(() => {
+      setToken(newToken)
+      setUser(newUser)
+    })
+    localStorage.setItem(USER_KEY, JSON.stringify(newUser))
+
+    fetchUserProfile(newUser.id)
+      .then((profile) => {
+        const fullUser = {
+          ...newUser,
+          ...profile,
+          profileType: profile.profileType ?? newUser.profileType,
+          role: profile.role ?? newUser.role,
+        }
+        setUser(fullUser)
+        localStorage.setItem(USER_KEY, JSON.stringify(fullUser))
+      })
+      .catch(() => undefined)
+
+    return newUser
+  }
 
   async function login(email: string, password: string) {
     const { token: newToken, user: loggedUser } = await loginUser({ email, password })
@@ -93,7 +149,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, isLoading, login, loginGoogle, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, isLoading, register, registerAffiliate, login, loginGoogle, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   )

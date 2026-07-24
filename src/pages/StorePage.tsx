@@ -52,6 +52,32 @@ export default function StorePage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [selectedProduct, setSelectedProduct]     = useState<Product | null>(null)
   const [productTypes, setProductTypes]           = useState<ProductType[]>([])
+
+  const productParam = searchParams.get('produto')
+
+  useEffect(() => {
+    if (!productParam || products.length === 0) return
+    const found = products.find((p) => String(p.id) === productParam)
+    if (found) setSelectedProduct((prev) => (prev?.id === found.id ? prev : found))
+  }, [productParam, products])
+
+  function handleOpenModal(product: Product) {
+    setSelectedProduct(product)
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      next.set('produto', String(product.id))
+      return next
+    }, { replace: true })
+  }
+
+  function handleCloseModal() {
+    setSelectedProduct(null)
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      next.delete('produto')
+      return next
+    }, { replace: true })
+  }
   const [selectedTypeId, setSelectedTypeId]       = useState<number | null>(null)
   const [filterPanelOpen, setFilterPanelOpen]     = useState(false)
   const [attrDefinitions, setAttrDefinitions]     = useState<AttributeDefinition[]>([])
@@ -370,7 +396,7 @@ export default function StorePage() {
           <HeroSection
             products={featuredProducts}
             whatsappNumber={whatsappNumber}
-            onOpenModal={setSelectedProduct}
+            onOpenModal={handleOpenModal}
           />
         )}
 
@@ -396,7 +422,7 @@ export default function StorePage() {
                     key={product.id}
                     product={product}
                     whatsappNumber={whatsappNumber}
-                    onOpenModal={setSelectedProduct}
+                    onOpenModal={handleOpenModal}
                   />
                 ))}
           </div>
@@ -460,7 +486,7 @@ export default function StorePage() {
         <ProductModal
           product={selectedProduct}
           whatsappNumber={whatsappNumber}
-          onClose={() => setSelectedProduct(null)}
+          onClose={handleCloseModal}
         />
       )}
     </>

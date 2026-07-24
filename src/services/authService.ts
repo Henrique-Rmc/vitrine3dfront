@@ -122,17 +122,71 @@ export interface RegisterRequest {
   profileType?: 'STANDARD' | 'AFFILIATE'
 }
 
-export interface RegisterApiResponse {
-  id: string
-  email: string
-  userName: string
-  storeName: string
-  slug: string
+export async function registerUser(payload: RegisterRequest): Promise<LoginResponse> {
+  const { data } = await apiClient.post<LoginApiResponse>('/api/users/register', payload)
+
+  // Construct user from registration payload + auth response.
+  // Avoids a second GET /api/users/:id before the token is stored,
+  // which would fail with 401. Slug and location labels are empty
+  // initially and get populated on the next profile fetch.
+  return {
+    token: data.accessToken,
+    user: {
+      id: data.storeId!,
+      email: data.email,
+      userName: payload.userName,
+      storeName: payload.storeName,
+      slug: '',
+      whatsappNumber: payload.whatsappNumber,
+      storeDescription: payload.storeDescription,
+      logoUrl: null,
+      coverImageUrl: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      isActive: true,
+      role: data.role,
+      emailVerified: null,
+      profileType: payload.profileType ?? null,
+      subscription: null,
+      stateId: payload.stateId,
+      stateName: null,
+      stateAbbreviation: null,
+      cityId: payload.cityId ?? null,
+      cityName: null,
+    },
+  }
 }
 
-export async function registerUser(payload: RegisterRequest): Promise<RegisterApiResponse> {
-  const { data } = await apiClient.post<RegisterApiResponse>('/api/users/register', payload)
-  return data
+export type AffiliateRegisterRequest = Omit<RegisterRequest, 'profileType'>
+
+export async function registerAffiliate(payload: AffiliateRegisterRequest): Promise<LoginResponse> {
+  const { data } = await apiClient.post<LoginApiResponse>('/api/users/register/affiliate', payload)
+  return {
+    token: data.accessToken,
+    user: {
+      id: data.storeId!,
+      email: data.email,
+      userName: payload.userName,
+      storeName: payload.storeName,
+      slug: '',
+      whatsappNumber: payload.whatsappNumber,
+      storeDescription: payload.storeDescription,
+      logoUrl: null,
+      coverImageUrl: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      isActive: true,
+      role: data.role,
+      emailVerified: null,
+      profileType: 'AFFILIATE',
+      subscription: null,
+      stateId: payload.stateId,
+      stateName: null,
+      stateAbbreviation: null,
+      cityId: payload.cityId ?? null,
+      cityName: null,
+    },
+  }
 }
 
 // ── Google OAuth ──────────────────────────────────────────────────────────────
@@ -192,6 +246,35 @@ export async function loginWithGoogle(accessToken: string): Promise<LoginRespons
       cityId: profile.cityId ?? null,
       cityName: profile.cityName ?? null,
     },
+  }
+}
+
+// ── Fetch store profile ───────────────────────────────────────────────────────
+
+export async function fetchUserProfile(storeId: string): Promise<Omit<User, 'password'>> {
+  const { data } = await apiClient.get<StoreApiResponse>(`/api/users/${storeId}`)
+  return {
+    id: storeId,
+    email: data.email,
+    userName: data.userName,
+    storeName: data.storeName,
+    slug: data.slug,
+    whatsappNumber: data.whatsappNumber,
+    storeDescription: data.storeDescription,
+    logoUrl: data.logoUrl ?? '',
+    coverImageUrl: data.coverImageUrl ?? null,
+    createdAt: data.createdAt ?? '',
+    updatedAt: data.updatedAt ?? '',
+    isActive: data.isActive,
+    role: data.role ?? null,
+    emailVerified: data.emailVerified ?? null,
+    profileType: data.profileType ?? null,
+    subscription: data.subscription ?? null,
+    stateId: data.stateId ?? null,
+    stateName: data.stateName ?? null,
+    stateAbbreviation: data.stateAbbreviation ?? null,
+    cityId: data.cityId ?? null,
+    cityName: data.cityName ?? null,
   }
 }
 
