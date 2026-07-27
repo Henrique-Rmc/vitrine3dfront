@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import ErrorBanner from '../../components/ErrorBanner'
 import {
   listMyAttributes,
   createCustomAttribute,
   deleteCustomAttribute,
+  addOption,
   labelToKey,
   type AttributeDefinition,
 } from '../../services/attributeService'
@@ -38,8 +40,8 @@ function OnboardingModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 bg-surface/80 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-canvas border border-border rounded-2xl max-w-md w-full p-7 shadow-2xl">
-        <div className="w-12 h-12 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center mb-5">
-          <svg className="w-6 h-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <div className="w-12 h-12 rounded-xl bg-warning-bg border border-warning-border flex items-center justify-center mb-5">
+          <svg className="w-6 h-6 text-warning-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
           </svg>
@@ -95,11 +97,18 @@ export default function AttributesPage() {
   const [actingId, setActingId]       = useState<number | null>(null)
   const [actingError, setActingError] = useState<string | null>(null)
 
-  // Create form
+  // Create form — step 1
   const [isCreating, setIsCreating]   = useState(false)
   const [newLabel, setNewLabel]       = useState('')
   const [isSaving, setIsSaving]       = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
+
+  // Create form — step 2 (add values)
+  const [createdAttr, setCreatedAttr]     = useState<AttributeDefinition | null>(null)
+  const [valueInput, setValueInput]       = useState('')
+  const [addedValues, setAddedValues]     = useState<string[]>([])
+  const [isAddingValue, setIsAddingValue] = useState(false)
+  const [valueError, setValueError]       = useState<string | null>(null)
 
   // Attributes visible under current scope
   const visibleAttributes = scope === 'global'
@@ -178,6 +187,10 @@ export default function AttributesPage() {
     setIsCreating(false)
     setNewLabel('')
     setCreateError(null)
+    setCreatedAttr(null)
+    setValueInput('')
+    setAddedValues([])
+    setValueError(null)
   }
 
   async function handleCreate(e: React.SyntheticEvent<HTMLFormElement>) {
@@ -202,11 +215,34 @@ export default function AttributesPage() {
         ...(scope !== 'global' ? { productTypeId: scope as number } : {}),
       })
       setAllAttributes((prev) => [...prev, created])
-      cancelCreate()
+      setNewLabel('')
+      setCreatedAttr(created)
     } catch {
       setCreateError('Não foi possível criar o filtro. Tente novamente.')
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  async function handleAddValue(e: React.SyntheticEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const value = valueInput.trim()
+    if (!value || !createdAttr) return
+    if (addedValues.includes(value)) {
+      setValueInput('')
+      return
+    }
+    setIsAddingValue(true)
+    setValueError(null)
+    try {
+      const updated = await addOption(storeId, createdAttr.id, value)
+      setAddedValues((prev) => [...prev, value])
+      setAllAttributes((prev) => prev.map((a) => a.id === updated.id ? updated : a))
+      setValueInput('')
+    } catch {
+      setValueError('Não foi possível adicionar o valor. Tente novamente.')
+    } finally {
+      setIsAddingValue(false)
     }
   }
 
@@ -218,34 +254,36 @@ export default function AttributesPage() {
 
       <div className="max-w-2xl">
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 mb-6">
-          <div>
+        <div className="mb-6">
+          <div className="flex items-center justify-between gap-4 mb-3">
             <h1 className="text-xl font-bold text-ink">Meus Filtros</h1>
-            <p className="text-sm text-ink-3 mt-0.5">Características que descrevem seus produtos</p>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => setShowOnboarding(true)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border text-ink-3 hover:text-ink-2 hover:bg-surface-2 text-xs font-medium transition-colors"
-              title="Sobre filtros"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-              </svg>
-              Sobre filtros
-            </button>
-            {!isCreating && !isLoading && (
+            <div className="flex items-center gap-2 shrink-0">
               <button
-                onClick={() => setIsCreating(true)}
-                className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg bg-cta hover:bg-cta-2 text-cta-fg text-sm font-semibold transition-colors"
+                onClick={() => setShowOnboarding(true)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border text-ink-3 hover:text-ink-2 hover:bg-surface-2 text-xs font-medium transition-colors"
+                title="Sobre filtros"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
                 </svg>
-                Adicionar filtro
+                Sobre filtros
               </button>
-            )}
+              {!isCreating && !isLoading && (
+                <button
+                  onClick={() => setIsCreating(true)}
+                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg bg-cta hover:bg-cta-2 text-cta-fg text-sm font-semibold transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                  Adicionar filtro
+                </button>
+              )}
+            </div>
           </div>
+          <p className="text-sm text-ink-3">
+            Um filtro é uma característica que você quer destacar. O valor específico dela você vai preencher depois, ao cadastrar cada produto.
+          </p>
         </div>
 
         {/* Scope selector — only shown when there are product types */}
@@ -266,18 +304,13 @@ export default function AttributesPage() {
 
         {/* Errors */}
         {(error || actingError) && (
-          <div className="mb-4 flex items-start justify-between gap-3 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-            <span>{actingError ?? error}</span>
-            {error && (
-              <button onClick={loadAll} className="shrink-0 text-xs underline hover:text-red-800">
-                Tentar novamente
-              </button>
-            )}
-          </div>
+          <ErrorBanner className="mb-4" action={error ? { label: 'Tentar novamente', onClick: loadAll } : undefined}>
+            {actingError ?? error}
+          </ErrorBanner>
         )}
 
-        {/* Create form */}
-        {isCreating && (
+        {/* Step 1 — create filter */}
+        {isCreating && !createdAttr && (
           <form onSubmit={handleCreate} className="mb-6 rounded-xl border border-border bg-canvas p-4 space-y-4 shadow-sm">
             <div>
               <p className="text-sm font-semibold text-ink">Novo filtro</p>
@@ -305,15 +338,7 @@ export default function AttributesPage() {
               </p>
             </div>
 
-            <p className="text-[11px] text-ink-3 bg-surface-2 border border-border rounded-lg px-3 py-2">
-              Filtros personalizados são listas de opções — você adiciona os valores disponíveis ao cadastrar produtos.
-            </p>
-
-            {createError && (
-              <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                {createError}
-              </p>
-            )}
+            {createError && <ErrorBanner compact>{createError}</ErrorBanner>}
 
             <div className="flex gap-2">
               <button
@@ -331,10 +356,80 @@ export default function AttributesPage() {
               >
                 {isSaving
                   ? <span className="w-4 h-4 rounded-full border-2 border-cta-fg/40 border-t-cta-fg animate-spin" />
-                  : 'Adicionar'}
+                  : 'Criar filtro'}
               </button>
             </div>
           </form>
+        )}
+
+        {/* Step 2 — add values (optional) */}
+        {isCreating && createdAttr && (
+          <div className="mb-6 rounded-xl border border-border bg-canvas p-4 space-y-4 shadow-sm">
+            {/* Success indicator */}
+            <div className="flex items-start gap-3">
+              <div className="w-6 h-6 rounded-full bg-green-50 border border-green-200 flex items-center justify-center shrink-0 mt-0.5">
+                <svg className="w-3.5 h-3.5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-ink">
+                  Filtro <span className="text-brand">"{createdAttr.label}"</span> criado!
+                </p>
+                <p className="text-xs text-ink-3 mt-0.5">
+                  Adicione alguns valores agora para já ter uma ideia de como funciona — ou conclua e adicione depois ao cadastrar produtos.
+                </p>
+              </div>
+            </div>
+
+            {/* Value input */}
+            <div>
+              <label className="block text-xs font-medium text-ink-2 mb-1.5">
+                Valores possíveis <span className="font-normal text-ink-3">(opcional)</span>
+              </label>
+              <form onSubmit={handleAddValue} className="flex gap-2">
+                <input
+                  type="text"
+                  autoFocus
+                  value={valueInput}
+                  onChange={(e) => { setValueInput(e.target.value); setValueError(null) }}
+                  placeholder='ex: Casual, Social, Esportivo'
+                  className={inputClass}
+                />
+                <button
+                  type="submit"
+                  disabled={!valueInput.trim() || isAddingValue}
+                  className="shrink-0 px-3 py-2 rounded-lg border border-border bg-surface-2 hover:bg-surface-3 text-ink-2 text-sm font-medium transition-colors disabled:opacity-50"
+                >
+                  {isAddingValue
+                    ? <span className="w-4 h-4 rounded-full border-2 border-brand/40 border-t-brand animate-spin inline-block" />
+                    : 'Adicionar'}
+                </button>
+              </form>
+              <p className="mt-1 text-[11px] text-ink-3">Pressione Enter para adicionar cada valor.</p>
+            </div>
+
+            {/* Added chips */}
+            {addedValues.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {addedValues.map((v) => (
+                  <span key={v} className="px-2.5 py-1 rounded-full bg-surface-2 border border-border text-xs font-medium text-ink-2">
+                    {v}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {valueError && <ErrorBanner compact>{valueError}</ErrorBanner>}
+
+            <button
+              type="button"
+              onClick={cancelCreate}
+              className="w-full py-2.5 rounded-lg bg-cta hover:bg-cta-2 text-cta-fg text-sm font-semibold transition-colors"
+            >
+              Concluir
+            </button>
+          </div>
         )}
 
         {/* Loading */}
@@ -413,7 +508,7 @@ function AttributeRow({
           <span className="text-sm font-medium text-ink">{attr.label}</span>
           <TypeBadge type={attr.type} />
           {attr.required && (
-            <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+            <span className="text-[10px] font-semibold text-warning-text bg-warning-bg border border-warning-border px-1.5 py-0.5 rounded">
               Obrigatório
             </span>
           )}

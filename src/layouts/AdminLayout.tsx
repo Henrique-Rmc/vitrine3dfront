@@ -68,7 +68,12 @@ export default function AdminLayout() {
       <div className="flex-1 flex flex-col min-w-0 md:ml-60">
         {/* Mobile top bar */}
         <header className="md:hidden sticky top-0 z-30 bg-canvas border-b border-border h-14 px-4 flex items-center justify-between shrink-0 shadow-sm">
-          <Logo height={22} />
+          <div className="flex items-center gap-2">
+            <Logo height={22} />
+            <span className="text-[9px] font-semibold uppercase tracking-widest text-ink-3 bg-surface-2 px-1.5 py-0.5 rounded shrink-0">
+              {accountLabel(user)}
+            </span>
+          </div>
           <div className="flex items-center gap-3">
             <span className="text-xs text-ink-3 font-medium truncate max-w-32">{user?.storeName ?? user?.email}</span>
             <button

@@ -28,7 +28,7 @@ export default function StoreProfileHeader({
   }, [storeDescription])
 
   return (
-    <div className="bg-white border-b border-border">
+    <div className="bg-canvas border-b border-border">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-5 pb-6 sm:pt-6 sm:pb-8">
         <div className="flex flex-col sm:flex-row items-center gap-5 sm:gap-8">
           {/* Avatar — 30% larger than previous size */}

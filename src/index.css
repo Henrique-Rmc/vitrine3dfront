@@ -34,6 +34,17 @@
   --c-cta-2:  #2c2620;
   --c-cta-3:  #3c3228;
   --c-cta-fg: #ffffff;
+
+  /* Danger (error banners, destructive actions) */
+  --c-danger-bg:     #fef2f2;
+  --c-danger-border: #fecaca;
+  --c-danger-text:   #b91c1c;
+
+  /* Warning (info/warning banners) */
+  --c-warning-bg:     #fffbeb;
+  --c-warning-border: #fde68a;
+  --c-warning-text:   #92400e;
+  --c-warning-icon:   #d97706;
 }
 
 /* ── Dark mode via system preference ─────────────────────────────────────── */
@@ -61,6 +72,15 @@
     --c-cta-2:  #d4cec5;
     --c-cta-3:  #c4b8ae;
     --c-cta-fg: #1c1813;
+
+    --c-danger-bg:     #2a1414;
+    --c-danger-border: #4a1f1f;
+    --c-danger-text:   #f87171;
+
+    --c-warning-bg:     #2a2110;
+    --c-warning-border: #4a3b1f;
+    --c-warning-text:   #fbbf24;
+    --c-warning-icon:   #fbbf24;
   }
 }
 
@@ -88,6 +108,15 @@
   --c-cta-2:  #d4cec5;
   --c-cta-3:  #c4b8ae;
   --c-cta-fg: #1c1813;
+
+  --c-danger-bg:     #2a1414;
+  --c-danger-border: #4a1f1f;
+  --c-danger-text:   #f87171;
+
+  --c-warning-bg:     #2a2110;
+  --c-warning-border: #4a3b1f;
+  --c-warning-text:   #fbbf24;
+  --c-warning-icon:   #fbbf24;
 }
 
 /* ── Tailwind theme tokens (inline = resolved at runtime via CSS var) ─────── */
@@ -108,6 +137,13 @@
   --color-cta-2:      var(--c-cta-2);
   --color-cta-3:      var(--c-cta-3);
   --color-cta-fg:     var(--c-cta-fg);
+  --color-danger-bg:     var(--c-danger-bg);
+  --color-danger-border: var(--c-danger-border);
+  --color-danger-text:   var(--c-danger-text);
+  --color-warning-bg:     var(--c-warning-bg);
+  --color-warning-border: var(--c-warning-border);
+  --color-warning-text:   var(--c-warning-text);
+  --color-warning-icon:   var(--c-warning-icon);
 }
 
 /* ── Base ────────────────────────────────────────────────────────────────── */

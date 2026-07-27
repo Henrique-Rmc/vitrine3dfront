@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { useTheme } from '../../context/ThemeContext'
+import ErrorBanner from '../../components/ErrorBanner'
 import {
   updateUserProfile,
   uploadLogo,
@@ -212,11 +213,7 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {saveError && (
-                <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-                  {saveError}
-                </div>
-              )}
+              {saveError && <ErrorBanner>{saveError}</ErrorBanner>}
 
               <button
                 type="submit"

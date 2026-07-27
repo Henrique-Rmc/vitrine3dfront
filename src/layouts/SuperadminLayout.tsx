@@ -13,7 +13,7 @@ export default function SuperadminLayout() {
 
   return (
     <div className="min-h-screen bg-surface text-ink">
-      <header className="sticky top-0 z-30 bg-white border-b border-border h-14 px-6 flex items-center justify-between shadow-sm">
+      <header className="sticky top-0 z-30 bg-canvas border-b border-border h-14 px-6 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
           <Logo height={22} />
           <span className="text-xs font-semibold uppercase tracking-widest text-brand border border-brand/30 bg-brand/10 px-2 py-0.5 rounded">

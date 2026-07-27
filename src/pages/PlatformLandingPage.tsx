@@ -73,7 +73,7 @@ export default function PlatformLandingPage() {
           </h1>
 
           <p className="text-lg sm:text-xl text-ink-2 mb-10 max-w-2xl mx-auto leading-relaxed">
-            Do artesanato aos imóveis, de brinquedos a automóveis — qualquer vendedor pode criar sua vitrine digital em minutos e receber contatos diretamente pelo WhatsApp.
+            Näo é Marketplace. É sua loja, seu site, sem concorrencia — Qualquer vendedor pode criar sua vitrine digital em minutos e receber contatos diretamente pelo WhatsApp.
           </p>
 
           {/* Category pills */}

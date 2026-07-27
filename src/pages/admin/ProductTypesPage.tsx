@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import ErrorBanner from '../../components/ErrorBanner'
 import {
   listProductTypes,
   createProductType,
@@ -94,9 +95,6 @@ export default function ProductTypesPage() {
       <div className="flex items-start justify-between gap-4 mb-6">
         <div>
           <h1 className="text-xl font-bold text-ink">Tipos de Produto</h1>
-          <p className="text-sm text-ink-3 mt-0.5">
-            Sub-categorias da sua loja — ex.: Camisa, Action Figure, Colar
-          </p>
         </div>
         {!isCreating && (
           <button
@@ -112,26 +110,21 @@ export default function ProductTypesPage() {
       </div>
 
       {/* Info banner */}
-      <div className="mb-6 flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
-        <svg className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <div className="mb-6 flex items-start gap-3 rounded-xl bg-warning-bg border border-warning-border px-4 py-3 text-sm text-warning-text">
+        <svg className="w-4 h-4 shrink-0 mt-0.5 text-warning-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
         </svg>
         <p>
-          Cada produto precisa de um tipo. Os clientes verão os tipos como abas na sua vitrine para
-          filtrar produtos. Todo novo cadastro requer que você selecione um tipo.
+          Os tipos de produtos são os produtos que você trabalha na sua loja. Se trabalha com roupas,
+          pode ter os tipos Camisa, Calça, Shorts — cada produto cadastrado precisará ter um tipo.
         </p>
       </div>
 
       {/* Errors */}
       {(error || actingError) && (
-        <div className="mb-4 flex items-start justify-between gap-3 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-          <span>{actingError ?? error}</span>
-          {error && (
-            <button onClick={load} className="shrink-0 text-xs underline hover:text-red-800">
-              Tentar novamente
-            </button>
-          )}
-        </div>
+        <ErrorBanner className="mb-4" action={error ? { label: 'Tentar novamente', onClick: load } : undefined}>
+          {actingError ?? error}
+        </ErrorBanner>
       )}
 
       {/* Create form */}
@@ -152,15 +145,12 @@ export default function ProductTypesPage() {
               placeholder="ex: Camisa, Action Figure, Colar, Calça"
               className={inputClass}
             />
-            <p className="mt-1 text-[11px] text-ink-3">
-              Aparecerá como aba na vitrine pública da sua loja.
-            </p>
           </div>
 
           {createError && (
-            <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+            <ErrorBanner compact>
               {createError}
-            </p>
+            </ErrorBanner>
           )}
 
           <div className="flex gap-2">
@@ -225,10 +215,9 @@ export default function ProductTypesPage() {
               >
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-ink">{type.label}</p>
-                  <p className="text-[11px] text-ink-4 mt-0.5 font-mono">{type.key}</p>
                 </div>
                 <Link
-                  to="/admin/products"
+                  to={`/admin/products?typeId=${type.id}`}
                   className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium text-ink-3 hover:text-ink-2 hover:bg-surface-2 border border-border transition-colors"
                 >
                   Ver produtos

@@ -18,7 +18,7 @@ function typeTab(active: boolean) {
   return `px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-200 border ${
     active
       ? 'bg-cta border-cta text-cta-fg shadow-sm'
-      : 'border-border text-ink-2 bg-white hover:border-border-2 hover:text-ink'
+      : 'border-border text-ink-2 bg-canvas hover:border-border-2 hover:text-ink'
   }`
 }
 
@@ -26,7 +26,7 @@ function chip(active: boolean) {
   return `px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 border ${
     active
       ? 'bg-cta border-cta text-cta-fg shadow-sm'
-      : 'border-border text-ink-2 bg-white hover:border-border-2 hover:text-ink'
+      : 'border-border text-ink-2 bg-canvas hover:border-border-2 hover:text-ink'
   }`
 }
 
@@ -110,6 +110,20 @@ export default function StorePage() {
     [products],
   )
 
+  // Only expose types that have at least one visible product
+  const typesWithProducts = useMemo(
+    () => productTypes.filter((t) => visibleProducts.some((p) => p.productTypeId === t.id)),
+    [productTypes, visibleProducts],
+  )
+
+  // If the selected type tab becomes empty (no products), reset to "all"
+  useEffect(() => {
+    if (loading || selectedTypeId === null) return
+    if (!typesWithProducts.some((t) => t.id === selectedTypeId)) {
+      setSelectedTypeId(null)
+    }
+  }, [typesWithProducts, selectedTypeId, loading])
+
   const featuredProductIds = useMemo(
     () => new Set(featuredProducts.map((p) => p.id)),
     [featuredProducts],
@@ -176,7 +190,7 @@ export default function StorePage() {
   function handleTypeChange(typeId: number | null) {
     setSelectedTypeId(typeId)
     setSearchParams({}, { replace: true })
-    setFilterPanelOpen(false)
+    setFilterPanelOpen(typeId !== null)
   }
 
   function clearAllFilters() {
@@ -192,7 +206,7 @@ export default function StorePage() {
     return Object.values(activeAttributes).join(' · ')
   }
 
-  const hasTypeTabs = productTypes.length > 0
+  const hasTypeTabs = typesWithProducts.length > 0
   // Show attr chips only when there are filterable attributes with values in the current view
   const showAttrChips = attributeMap.size > 0 && (selectedTypeId !== null || !hasTypeTabs)
   const showFilterBar = !loading && (hasTypeTabs || showAttrChips)
@@ -217,7 +231,7 @@ export default function StorePage() {
 
       {/* Combined filter bar: type tabs + filter trigger */}
       {showFilterBar && (
-        <div className="sticky top-16 md:top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-border">
+        <div className="sticky top-16 md:top-0 z-40 bg-canvas/95 backdrop-blur-sm border-b border-border">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             {/* ProductType tabs */}
             {hasTypeTabs && (
@@ -225,7 +239,7 @@ export default function StorePage() {
                 <button onClick={() => handleTypeChange(null)} className={typeTab(selectedTypeId === null)}>
                   Todos
                 </button>
-                {productTypes.map((pt) => (
+                {typesWithProducts.map((pt) => (
                   <button key={pt.id} onClick={() => handleTypeChange(pt.id)} className={typeTab(selectedTypeId === pt.id)}>
                     {pt.label}
                   </button>
@@ -241,7 +255,7 @@ export default function StorePage() {
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-200 shrink-0 ${
                     filterPanelOpen || activeCount > 0
                       ? 'bg-cta border-cta text-cta-fg shadow-sm'
-                      : 'border-border text-ink-2 bg-white hover:border-border-2 hover:text-ink'
+                      : 'border-border text-ink-2 bg-canvas hover:border-border-2 hover:text-ink'
                   }`}
                 >
                   <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -323,7 +337,7 @@ export default function StorePage() {
             className="absolute inset-0 bg-black/30 backdrop-blur-[1px]"
             onClick={() => setFilterPanelOpen(false)}
           />
-          <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[80vh] flex flex-col shadow-2xl">
+          <div className="absolute bottom-0 left-0 right-0 bg-canvas rounded-t-2xl max-h-[80vh] flex flex-col shadow-2xl">
             {/* Handle */}
             <div className="flex justify-center pt-3 pb-1 shrink-0">
               <div className="w-8 h-1 rounded-full bg-border" />
@@ -449,7 +463,7 @@ export default function StorePage() {
               <button
                 onClick={loadMore}
                 disabled={isLoadingMore}
-                className="flex items-center gap-2 px-8 py-3 rounded-full border border-border text-ink-2 hover:text-ink hover:border-border-2 disabled:opacity-60 text-sm font-medium transition-colors bg-white shadow-sm"
+                className="flex items-center gap-2 px-8 py-3 rounded-full border border-border text-ink-2 hover:text-ink hover:border-border-2 disabled:opacity-60 text-sm font-medium transition-colors bg-canvas shadow-sm"
               >
                 {isLoadingMore ? (
                   <>

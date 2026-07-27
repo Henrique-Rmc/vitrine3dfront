@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { AuthProvider } from './context/AuthContext'
@@ -13,18 +14,21 @@ import LoginPage from './pages/admin/LoginPage'
 import RegisterPage from './pages/admin/RegisterPage'
 import AffiliateRegisterPage from './pages/admin/AffiliateRegisterPage'
 import VerifyEmailPage from './pages/VerifyEmailPage'
-import DashboardPage from './pages/admin/DashboardPage'
-import ProductManagement from './pages/admin/ProductManagement'
-import ProductFormPage from './pages/admin/ProductFormPage'
-import AttributesPage from './pages/admin/AttributesPage'
-import ProductTypesPage from './pages/admin/ProductTypesPage'
-import SettingsPage from './pages/admin/SettingsPage'
 import TermsOfUsePage from './pages/TermsOfUsePage'
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
 import ReportPage from './pages/ReportPage'
-import SuperadminStoresPage from './pages/superadmin/StoresPage'
-import SuperadminStatsPage from './pages/superadmin/StatsPage'
-import OnboardingPage from './pages/admin/OnboardingPage'
+
+// Admin/superadmin routes are behind auth, so they're safe to code-split —
+// visitors who never log in never pay for this JS.
+const DashboardPage = lazy(() => import('./pages/admin/DashboardPage'))
+const ProductManagement = lazy(() => import('./pages/admin/ProductManagement'))
+const ProductFormPage = lazy(() => import('./pages/admin/ProductFormPage'))
+const AttributesPage = lazy(() => import('./pages/admin/AttributesPage'))
+const ProductTypesPage = lazy(() => import('./pages/admin/ProductTypesPage'))
+const SettingsPage = lazy(() => import('./pages/admin/SettingsPage'))
+const OnboardingPage = lazy(() => import('./pages/admin/OnboardingPage'))
+const SuperadminStoresPage = lazy(() => import('./pages/superadmin/StoresPage'))
+const SuperadminStatsPage = lazy(() => import('./pages/superadmin/StatsPage'))
 
 function PublicOnlyRoute() {
   const { isAuthenticated, isLoading } = useAuth()
@@ -48,6 +52,7 @@ export default function App() {
     <BrowserRouter>
       <ThemeProvider>
       <AuthProvider>
+        <Suspense fallback={null}>
         <Routes>
           {/* ── Platform landing ── */}
           <Route path="/" element={<PlatformLandingPage />} />
@@ -104,6 +109,7 @@ export default function App() {
           {/* ── Fallback ── */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </Suspense>
       </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

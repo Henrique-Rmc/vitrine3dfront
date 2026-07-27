@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import ErrorBanner from '../components/ErrorBanner'
 
 const REPORT_REASONS = [
   'Violação de Direitos Autorais / Cópia Não Autorizada',
@@ -77,11 +78,7 @@ export default function ReportPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {error && (
-          <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-            {error}
-          </div>
-        )}
+        {error && <ErrorBanner>{error}</ErrorBanner>}
 
         <div>
           <label className="block text-sm font-medium text-ink-2 mb-1.5">
@@ -139,7 +136,7 @@ export default function ReportPage() {
           />
         </div>
 
-        <div className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-xs text-amber-800">
+        <div className="rounded-lg bg-warning-bg border border-warning-border px-4 py-3 text-xs text-warning-text">
           Ao enviar este formulário, seu cliente de e-mail será aberto com a denúncia pronta para confirmar o
           envio. Sua denúncia é tratada com sigilo.
         </div>

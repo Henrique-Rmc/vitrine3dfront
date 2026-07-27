@@ -111,7 +111,7 @@ export default function ProductList({
 
   if (products.length === 0) {
     return (
-      <div className="rounded-xl border border-border py-16 text-center bg-white shadow-sm">
+      <div className="rounded-xl border border-border py-16 text-center bg-canvas shadow-sm">
         <p className="text-sm text-ink-3">Nenhum produto encontrado.</p>
       </div>
     )
@@ -308,7 +308,7 @@ export default function ProductList({
   }
 
   return (
-    <div className="rounded-xl border border-border overflow-hidden bg-white shadow-sm">
+    <div className="rounded-xl border border-border overflow-hidden bg-canvas shadow-sm">
       {/* Desktop table */}
       <div className="hidden sm:block overflow-x-auto">
         <table className="w-full text-sm">

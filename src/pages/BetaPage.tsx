@@ -14,7 +14,7 @@ export default function BetaPage() {
     <div className="min-h-screen bg-surface flex flex-col">
 
       {/* Nav */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-border">
+      <header className="sticky top-0 z-30 bg-canvas/95 backdrop-blur border-b border-border">
         <div className="max-w-5xl mx-auto px-5 sm:px-8 h-14 flex items-center justify-between">
           <Link to="/"><Logo height={26} /></Link>
           <Link to="/admin/login" className="text-sm text-ink-3 hover:text-ink transition-colors font-medium">
@@ -43,7 +43,7 @@ export default function BetaPage() {
           </p>
 
           {/* Card */}
-          <div className="rounded-2xl border border-border bg-white shadow-sm p-6 sm:p-8 text-left mb-6">
+          <div className="rounded-2xl border border-border bg-canvas shadow-sm p-6 sm:p-8 text-left mb-6">
             <p className="text-xs font-semibold uppercase tracking-widest text-ink-3 mb-4">
               Para solicitar acesso
             </p>

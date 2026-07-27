@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Product } from '../types'
 import { buildWhatsAppUrl } from '../utils/whatsapp'
+import { formatCurrency } from '../utils/formatCurrency'
 import { registerWhatsAppClick, registerAffiliateClick } from '../services/productService'
 
 interface ProductCardProps {
@@ -72,7 +73,7 @@ export default function ProductCard({ product, whatsappNumber, onOpenModal }: Pr
         <div className="flex items-center justify-between gap-2 mt-auto pt-1">
           {product.price != null ? (
             <p className="text-sm font-bold text-brand">
-              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)}
+              {formatCurrency(product.price)}
             </p>
           ) : (
             <span className="text-xs text-ink-4">Sob consulta</span>

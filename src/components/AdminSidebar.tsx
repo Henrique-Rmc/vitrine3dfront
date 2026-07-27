@@ -33,11 +33,11 @@ export default function AdminSidebar({
     <>
       <aside className="hidden md:flex fixed left-0 top-0 h-full w-60 z-40 flex-col bg-canvas border-r border-border">
         {/* Brand */}
-        <div className="h-16 flex flex-col items-center justify-center gap-1 px-5 border-b border-border shrink-0">
+        <div className="h-16 flex items-center gap-2 px-5 border-b border-border shrink-0">
           <Link to="/" className="hover:opacity-80 transition-opacity">
             <Logo height={24} />
           </Link>
-          <span className="text-[9px] font-semibold uppercase tracking-widest text-ink-3 bg-surface-2 px-1.5 py-0.5 rounded">
+          <span className="text-[9px] font-semibold uppercase tracking-widest text-ink-3 bg-surface-2 px-1.5 py-0.5 rounded shrink-0">
             {accountLabel}
           </span>
         </div>

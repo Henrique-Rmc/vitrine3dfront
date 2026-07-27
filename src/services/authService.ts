@@ -119,7 +119,6 @@ export interface RegisterRequest {
   storeDescription: string
   stateId: number
   cityId?: number
-  profileType?: 'STANDARD' | 'AFFILIATE'
 }
 
 export async function registerUser(payload: RegisterRequest): Promise<LoginResponse> {
@@ -146,7 +145,7 @@ export async function registerUser(payload: RegisterRequest): Promise<LoginRespo
       isActive: true,
       role: data.role,
       emailVerified: null,
-      profileType: payload.profileType ?? null,
+      profileType: 'STANDARD',
       subscription: null,
       stateId: payload.stateId,
       stateName: null,

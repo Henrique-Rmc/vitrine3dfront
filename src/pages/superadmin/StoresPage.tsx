@@ -58,7 +58,7 @@ function ConfirmDialog({
 }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center px-4">
-      <div className="bg-white border border-border rounded-2xl px-6 py-6 max-w-sm w-full shadow-xl">
+      <div className="bg-canvas border border-border rounded-2xl px-6 py-6 max-w-sm w-full shadow-xl">
         <p className="text-sm text-ink mb-4">{message}</p>
         <div className="flex gap-3 justify-end">
           <button
@@ -178,7 +178,7 @@ export default function SuperadminStoresPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white border border-border rounded-xl px-4 py-4 mb-4 flex flex-wrap gap-3 items-end">
+      <div className="bg-canvas border border-border rounded-xl px-4 py-4 mb-4 flex flex-wrap gap-3 items-end">
         <div className="flex-1 min-w-48">
           <label className="block text-xs font-medium text-ink-2 mb-1">Busca</label>
           <div className="flex gap-2">
@@ -261,7 +261,7 @@ export default function SuperadminStoresPage() {
       ) : stores.length === 0 ? (
         <div className="text-center py-16 text-ink-3 text-sm">Nenhuma loja encontrada.</div>
       ) : (
-        <div className="bg-white border border-border rounded-xl overflow-hidden">
+        <div className="bg-canvas border border-border rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>

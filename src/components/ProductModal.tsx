@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Product } from '../types'
 import { buildWhatsAppUrl } from '../utils/whatsapp'
+import { formatCurrency } from '../utils/formatCurrency'
 import { registerWhatsAppClick, registerAffiliateClick } from '../services/productService'
 
 interface ProductModalProps {
@@ -195,7 +196,7 @@ export default function ProductModal({ product, whatsappNumber, onClose }: Produ
 
             {product.price != null && (
               <p className="text-brand font-bold text-base border-t border-border pt-4">
-                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.price)}
+                {formatCurrency(product.price)}
               </p>
             )}
 
@@ -273,8 +274,8 @@ export default function ProductModal({ product, whatsappNumber, onClose }: Produ
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start gap-3 mb-4">
-              <div className="w-9 h-9 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0 mt-0.5">
-                <svg className="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <div className="w-9 h-9 rounded-full bg-warning-bg border border-warning-border flex items-center justify-center shrink-0 mt-0.5">
+                <svg className="w-4 h-4 text-warning-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                 </svg>
               </div>

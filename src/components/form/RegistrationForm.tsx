@@ -1,0 +1,510 @@
+import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
+import { uploadLogo, type RegisterRequest } from '../../services/authService'
+import { listStates, listCitiesByState, type BrazilState, type BrazilCity } from '../../services/locationService'
+import { compressImage } from '../../services/imageOptimizationService'
+import SearchableSelect from '../SearchableSelect'
+import ErrorBanner from '../ErrorBanner'
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface RegistrationFormData {
+  userName: string
+  email: string
+  password: string
+  storeName: string
+  slug: string
+  whatsappNumber: string
+  storeDescription: string
+  stateId: number | null
+  cityId: number | null
+}
+
+type FormErrorKey = keyof RegistrationFormData | 'global'
+type FormErrors = Partial<Record<FormErrorKey, string>>
+
+const EMPTY_FORM: RegistrationFormData = {
+  userName: '',
+  email: '',
+  password: '',
+  storeName: '',
+  slug: '',
+  whatsappNumber: '',
+  storeDescription: '',
+  stateId: null,
+  cityId: null,
+}
+
+const CUSTOM_CITY_VALUE = '__custom__'
+const MIN_PASSWORD_LENGTH = 8
+
+function extractFormErrors(err: unknown, fallbackMessage: string): FormErrors {
+  if (!axios.isAxiosError(err)) return { global: 'Erro inesperado. Tente novamente.' }
+  if (!err.response) return { global: 'Sem resposta do servidor. Verifique sua conexão.' }
+  if (err.response.status === 502 || err.response.status === 503) {
+    return { global: 'Backend indisponível. Verifique se o servidor está rodando.' }
+  }
+  const data = err.response.data as Record<string, unknown> | undefined | null
+  if (!data || typeof data !== 'object') return { global: `Erro ${err.response.status}.` }
+
+  const errors: FormErrors = {}
+
+  if (Array.isArray(data.errors)) {
+    for (const e of data.errors as { field?: string; message?: string; defaultMessage?: string }[]) {
+      const msg = e.message ?? e.defaultMessage ?? ''
+      if (e.field) errors[e.field as FormErrorKey] = msg
+      else if (msg) errors.global = msg
+    }
+    if (Object.keys(errors).length) return errors
+  }
+
+  if (data.fieldErrors && typeof data.fieldErrors === 'object' && !Array.isArray(data.fieldErrors)) {
+    for (const [field, msg] of Object.entries(data.fieldErrors as Record<string, string>)) {
+      errors[field as FormErrorKey] = msg
+    }
+    if (Object.keys(errors).length) return errors
+  }
+
+  const knownFields: FormErrorKey[] = ['userName', 'email', 'password', 'storeName', 'whatsappNumber', 'storeDescription']
+  let foundFieldError = false
+  for (const field of knownFields) {
+    if (typeof data[field] === 'string') { errors[field] = data[field] as string; foundFieldError = true }
+  }
+  if (foundFieldError) return errors
+
+  if (typeof data.message === 'string') return { global: data.message }
+  if (typeof data.error === 'string')   return { global: data.error }
+
+  return { global: fallbackMessage }
+}
+
+// ── Style helpers ─────────────────────────────────────────────────────────────
+
+function fieldInputClass(hasError: boolean) {
+  return `w-full rounded-lg bg-surface-2 border px-4 py-2.5 text-sm text-ink placeholder-ink-4 focus:outline-none focus:ring-2 disabled:opacity-50 transition-colors ${
+    hasError
+      ? 'border-red-400 focus:ring-red-400/30'
+      : 'border-border focus:ring-brand/40 focus:border-brand/60'
+  }`
+}
+
+function generateSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .slice(0, 40)
+}
+
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+function Field({ label, hint, error, required, children }: {
+  label: string
+  hint?: React.ReactNode
+  error?: string
+  required?: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-ink-2 mb-1.5">
+        {label}
+        {required && <span className="text-red-500 ml-0.5">*</span>}
+      </label>
+      {children}
+      {error  && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      {!error && hint && <p className="mt-1 text-xs text-ink-3">{hint}</p>}
+    </div>
+  )
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
+interface RegistrationFormProps {
+  onSubmit: (payload: RegisterRequest) => Promise<{ id: string }>
+  fallbackErrorMessage: string
+  showSlugPreview?: boolean
+  storeNameLabel: string
+  storeNamePlaceholder: string
+  descriptionLabel: string
+  descriptionPlaceholder: string
+  descriptionHint: string
+  whatsappHint: string
+  logoLabel: string
+  logoHint: string
+  logoProcessingLabel: string
+  showLogoFileName?: boolean
+  includeCommercializationClause?: boolean
+  submitLabel: string
+  submitLoadingLabel: string
+}
+
+export default function RegistrationForm({
+  onSubmit,
+  fallbackErrorMessage,
+  showSlugPreview = false,
+  storeNameLabel,
+  storeNamePlaceholder,
+  descriptionLabel,
+  descriptionPlaceholder,
+  descriptionHint,
+  whatsappHint,
+  logoLabel,
+  logoHint,
+  logoProcessingLabel,
+  showLogoFileName = false,
+  includeCommercializationClause = false,
+  submitLabel,
+  submitLoadingLabel,
+}: RegistrationFormProps) {
+  const navigate = useNavigate()
+  const [form, setForm] = useState<RegistrationFormData>(EMPTY_FORM)
+  const [formErrors, setFormErrors] = useState<FormErrors>({})
+
+  const [states, setStates]               = useState<BrazilState[]>([])
+  const [cities, setCities]               = useState<BrazilCity[]>([])
+  const [loadingStates, setLoadingStates] = useState(true)
+  const [loadingCities, setLoadingCities] = useState(false)
+
+  const [logoFile, setLogoFile]             = useState<File | null>(null)
+  const [logoPreview, setLogoPreview]       = useState<string | null>(null)
+  const [isOptimizingLogo, setIsOptimizingLogo] = useState(false)
+  const [showPassword, setShowPassword]     = useState(false)
+  const [isCustomCity, setIsCustomCity]     = useState(false)
+  const [customCityName, setCustomCityName] = useState('')
+  const [isLoading, setIsLoading]           = useState(false)
+  const [acceptedTerms, setAcceptedTerms]   = useState(false)
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    listStates()
+      .then(setStates)
+      .catch(() => undefined)
+      .finally(() => setLoadingStates(false))
+  }, [])
+
+  useEffect(() => {
+    if (!form.stateId) { setCities([]); return }
+    setLoadingCities(true)
+    listCitiesByState(form.stateId)
+      .then(setCities)
+      .catch(() => setCities([]))
+      .finally(() => setLoadingCities(false))
+  }, [form.stateId])
+
+  function setField<K extends keyof RegistrationFormData>(key: K, value: RegistrationFormData[K]) {
+    setForm((prev) => ({ ...prev, [key]: value }))
+    clearFieldError(key)
+  }
+
+  function clearFieldError(field: FormErrorKey) {
+    setFormErrors((prev) => {
+      if (!prev[field]) return prev
+      const next = { ...prev }
+      delete next[field]
+      return next
+    })
+  }
+
+  function handleStoreNameChange(value: string) {
+    if (showSlugPreview) {
+      setForm((prev) => ({ ...prev, storeName: value, slug: generateSlug(value) }))
+      clearFieldError('slug')
+    } else {
+      setForm((prev) => ({ ...prev, storeName: value }))
+    }
+    clearFieldError('storeName')
+  }
+
+  function handleStateChange(rawId: string) {
+    const stateId = rawId ? Number(rawId) : null
+    setForm((prev) => ({ ...prev, stateId, cityId: null }))
+    setIsCustomCity(false)
+    setCustomCityName('')
+    clearFieldError('stateId')
+    clearFieldError('cityId')
+  }
+
+  function handleCityChange(value: string) {
+    if (value === CUSTOM_CITY_VALUE) {
+      setIsCustomCity(true)
+      setField('cityId', null)
+    } else {
+      setIsCustomCity(false)
+      setField('cityId', value ? Number(value) : null)
+    }
+  }
+
+  async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null
+    if (!file) return
+    setIsOptimizingLogo(true)
+    setLogoPreview(URL.createObjectURL(file))
+    try {
+      const compressed = await compressImage(file)
+      setLogoFile(compressed)
+      setLogoPreview(URL.createObjectURL(compressed))
+    } finally {
+      setIsOptimizingLogo(false)
+    }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    const clientErrors: FormErrors = {}
+    if (form.password.length < MIN_PASSWORD_LENGTH) {
+      clientErrors.password = `A senha deve ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`
+    }
+    if (!form.stateId) clientErrors.stateId = 'Selecione o estado.'
+    if (!form.cityId && !customCityName.trim()) clientErrors.cityId = 'Selecione ou informe a cidade.'
+    if (!acceptedTerms) {
+      clientErrors.global = 'Você precisa aceitar os Termos de Uso para criar uma conta.'
+    }
+    if (Object.keys(clientErrors).length) { setFormErrors(clientErrors); return }
+
+    setFormErrors({})
+    setIsLoading(true)
+    try {
+      const user = await onSubmit({
+        email: form.email,
+        password: form.password,
+        userName: form.userName,
+        storeName: form.storeName,
+        whatsappNumber: `55${form.whatsappNumber.replace(/\D/g, '')}`,
+        storeDescription: form.storeDescription,
+        stateId: form.stateId!,
+        ...(form.cityId !== null && { cityId: form.cityId }),
+      })
+      if (logoFile) await uploadLogo(user.id, logoFile).catch(() => undefined)
+      navigate('/admin/onboarding', { replace: true })
+    } catch (err) {
+      setFormErrors(extractFormErrors(err, fallbackErrorMessage))
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const citySelectValue = isCustomCity
+    ? CUSTOM_CITY_VALUE
+    : form.cityId !== null ? String(form.cityId) : ''
+
+  const passwordTooShort = form.password.length > 0 && form.password.length < MIN_PASSWORD_LENGTH
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {formErrors.global && <ErrorBanner icon>{formErrors.global}</ErrorBanner>}
+
+      <Field label="Seu nome" required error={formErrors.userName}>
+        <input type="text" required autoComplete="name" disabled={isLoading}
+          value={form.userName} onChange={(e) => setField('userName', e.target.value)}
+          placeholder="João Silva" className={fieldInputClass(!!formErrors.userName)} />
+      </Field>
+
+      <Field label="E-mail" required error={formErrors.email}>
+        <input type="email" required autoComplete="email" disabled={isLoading}
+          value={form.email} onChange={(e) => setField('email', e.target.value)}
+          placeholder="joao@exemplo.com" className={fieldInputClass(!!formErrors.email)} />
+      </Field>
+
+      <Field
+        label="Senha"
+        required
+        error={formErrors.password}
+        hint={
+          <span className={passwordTooShort ? 'text-red-500' : ''}>
+            Mínimo {MIN_PASSWORD_LENGTH} caracteres
+            {passwordTooShort && ` — ${form.password.length}/${MIN_PASSWORD_LENGTH}`}
+          </span>
+        }
+      >
+        <div className="relative">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            required
+            minLength={MIN_PASSWORD_LENGTH}
+            autoComplete="new-password"
+            disabled={isLoading}
+            value={form.password}
+            onChange={(e) => setField('password', e.target.value)}
+            placeholder={`Mínimo ${MIN_PASSWORD_LENGTH} caracteres`}
+            className={`${fieldInputClass(!!formErrors.password)} pr-11`}
+          />
+          <button
+            type="button"
+            tabIndex={-1}
+            onClick={() => setShowPassword((p) => !p)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-4 hover:text-ink-3 transition-colors"
+            aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+          >
+            {showPassword ? (
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            )}
+          </button>
+        </div>
+      </Field>
+
+      <Field
+        label={storeNameLabel}
+        required
+        error={formErrors.storeName}
+        hint={showSlugPreview && form.slug ? <>Sua loja ficará em: <span className="text-brand font-mono">/{form.slug}</span></> : undefined}
+      >
+        <input type="text" required disabled={isLoading}
+          value={form.storeName} onChange={(e) => handleStoreNameChange(e.target.value)}
+          placeholder={storeNamePlaceholder} className={fieldInputClass(!!formErrors.storeName)} />
+      </Field>
+
+      <Field label={descriptionLabel} required error={formErrors.storeDescription}
+        hint={descriptionHint}>
+        <textarea required rows={3} disabled={isLoading}
+          value={form.storeDescription}
+          onChange={(e) => setField('storeDescription', e.target.value)}
+          placeholder={descriptionPlaceholder}
+          className={`${fieldInputClass(!!formErrors.storeDescription)} resize-none`} />
+      </Field>
+
+      <Field label="WhatsApp" required error={formErrors.whatsappNumber}
+        hint={!formErrors.whatsappNumber ? whatsappHint : undefined}>
+        <div className={`flex rounded-lg overflow-hidden border bg-surface-2 focus-within:ring-2 transition-colors ${
+          formErrors.whatsappNumber ? 'border-red-400 focus-within:ring-red-400/30' : 'border-border focus-within:ring-brand/40'
+        } ${isLoading ? 'opacity-50' : ''}`}>
+          <span className="flex items-center px-3 text-sm font-medium text-ink-3 bg-surface-3 border-r border-border shrink-0 select-none">
+            +55
+          </span>
+          <input
+            type="tel" required disabled={isLoading}
+            value={form.whatsappNumber}
+            onChange={(e) => setField('whatsappNumber', e.target.value)}
+            placeholder="11 99999-8877"
+            className="flex-1 min-w-0 bg-transparent px-3 py-2.5 text-sm text-ink placeholder-ink-4 focus:outline-none"
+          />
+        </div>
+      </Field>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Field label="Estado" required error={formErrors.stateId}>
+          <SearchableSelect
+            required
+            disabled={isLoading || loadingStates}
+            value={form.stateId !== null ? String(form.stateId) : ''}
+            onChange={handleStateChange}
+            options={states.map((s) => ({ value: String(s.id), label: `${s.name} (${s.abbreviation})` }))}
+            placeholder={loadingStates ? 'Carregando…' : 'Selecione o estado'}
+            searchPlaceholder="Buscar estado…"
+            hasError={!!formErrors.stateId}
+          />
+        </Field>
+
+        <Field label="Cidade" required error={formErrors.cityId}>
+          <SearchableSelect
+            required={!isCustomCity}
+            disabled={isLoading || !form.stateId || loadingCities}
+            value={citySelectValue}
+            onChange={handleCityChange}
+            options={[
+              ...cities.map((c) => ({ value: String(c.id), label: c.name })),
+              { value: CUSTOM_CITY_VALUE, label: 'Outra cidade / digitar' },
+            ]}
+            placeholder={
+              loadingCities ? 'Carregando…'
+              : !form.stateId ? 'Selecione o estado primeiro'
+              : 'Selecione a cidade'
+            }
+            searchPlaceholder="Buscar cidade…"
+            hasError={!!formErrors.cityId}
+          />
+        </Field>
+      </div>
+
+      {isCustomCity && (
+        <Field label="Nome da cidade" required hint="Digite o nome exato da sua cidade.">
+          <input type="text" required autoFocus disabled={isLoading}
+            value={customCityName}
+            onChange={(e) => setCustomCityName(e.target.value)}
+            placeholder="Ex: São Sebastião do Passé"
+            className={fieldInputClass(false)} />
+        </Field>
+      )}
+
+      <Field label={logoLabel} hint={logoHint}>
+        <button
+          type="button"
+          disabled={isLoading || isOptimizingLogo}
+          onClick={() => fileInputRef.current?.click()}
+          className="w-full rounded-lg border-2 border-dashed border-border hover:border-border-2 bg-surface-2/60 hover:bg-surface-2 transition-colors px-4 py-5 flex flex-col items-center gap-2 disabled:opacity-50"
+        >
+          {isOptimizingLogo ? (
+            <>
+              <span className="w-6 h-6 rounded-full border-2 border-border border-t-brand animate-spin" />
+              <span className="text-xs text-ink-3">{logoProcessingLabel}</span>
+            </>
+          ) : logoPreview ? (
+            <>
+              <img src={logoPreview} alt="Logo preview" className="w-14 h-14 rounded-full object-cover border-2 border-border" />
+              {showLogoFileName && <span className="text-xs text-ink-3">{logoFile?.name}</span>}
+              <span className="text-xs text-brand">Trocar imagem</span>
+            </>
+          ) : (
+            <>
+              <svg className="w-7 h-7 text-border-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+              </svg>
+              <span className="text-sm text-ink-3">Clique para selecionar</span>
+            </>
+          )}
+        </button>
+        <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={handleLogoChange} />
+      </Field>
+
+      <label className="flex items-start gap-3 cursor-pointer group">
+        <input
+          type="checkbox"
+          checked={acceptedTerms}
+          onChange={(e) => {
+            setAcceptedTerms(e.target.checked)
+            if (e.target.checked) setFormErrors((prev) => { const next = { ...prev }; delete next.global; return next })
+          }}
+          className="mt-0.5 w-4 h-4 shrink-0 rounded border-border-2 text-brand accent-brand cursor-pointer"
+        />
+        <span className="text-xs text-ink-2 leading-relaxed">
+          Li e concordo com os{' '}
+          <a href="/termos-de-uso" target="_blank" rel="noopener noreferrer" className="text-brand hover:underline font-medium">
+            Termos de Uso
+          </a>{' '}
+          e a{' '}
+          <a href="/privacidade" target="_blank" rel="noopener noreferrer" className="text-brand hover:underline font-medium">
+            Política de Privacidade
+          </a>
+          {includeCommercializationClause
+            ? <>{', '}e confirmo que possuo os direitos de comercialização de todos os produtos que irei expor.</>
+            : '.'}
+        </span>
+      </label>
+
+      <button
+        type="submit"
+        disabled={isLoading || !acceptedTerms}
+        className="w-full flex items-center justify-center gap-2 rounded-lg bg-cta hover:bg-cta-2 disabled:opacity-60 disabled:cursor-not-allowed text-cta-fg font-semibold py-2.5 transition-colors mt-2"
+      >
+        {isLoading ? (
+          <><span className="w-4 h-4 rounded-full border-2 border-cta-fg/40 border-t-cta-fg animate-spin" /> {submitLoadingLabel}</>
+        ) : (
+          submitLabel
+        )}
+      </button>
+    </form>
+  )
+}

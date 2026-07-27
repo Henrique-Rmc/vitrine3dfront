@@ -3,7 +3,7 @@ import { getPlatformStats, type PlatformStats } from '../../services/adminServic
 
 function StatCard({ label, value, icon }: { label: string; value: number | string; icon: React.ReactNode }) {
   return (
-    <div className="bg-white border border-border rounded-xl px-6 py-5 flex items-start gap-4">
+    <div className="bg-canvas border border-border rounded-xl px-6 py-5 flex items-start gap-4">
       <div className="w-10 h-10 rounded-lg bg-surface-2 flex items-center justify-center shrink-0 text-brand">
         {icon}
       </div>
