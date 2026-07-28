@@ -4,7 +4,6 @@ import { useAuth } from '../context/AuthContext'
 import Header from '../components/Header'
 import MobileDrawer from '../components/MobileDrawer'
 import VitrineSidebar from '../components/VitrineSidebar'
-import QRCodeModal from '../components/QRCodeModal'
 
 const ADMIN_MOBILE_NAV = [
   {
@@ -31,8 +30,7 @@ const ADMIN_MOBILE_NAV = [
 
 export default function MainLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [showQR, setShowQR] = useState(false)
-  const { isAuthenticated, user } = useAuth()
+  const { isAuthenticated } = useAuth()
 
   return (
     <div className="min-h-screen bg-surface text-ink">
@@ -45,7 +43,6 @@ export default function MainLayout() {
           mobileMenuOpen={mobileMenuOpen}
           toggleMobileMenu={() => setMobileMenuOpen(p => !p)}
           showHamburger={!isAuthenticated}
-          onQRCode={isAuthenticated && user?.slug ? () => setShowQR(true) : undefined}
         />
 
         {/* Mobile drawer — only for non-authenticated visitors */}
@@ -77,14 +74,6 @@ export default function MainLayout() {
           </div>
         </footer>
       </div>
-
-      {showQR && user?.slug && (
-        <QRCodeModal
-          storeSlug={user.slug}
-          storeName={user.storeName}
-          onClose={() => setShowQR(false)}
-        />
-      )}
 
       {/* Mobile bottom nav — admin only, mirrors AdminLayout nav */}
       {isAuthenticated && (

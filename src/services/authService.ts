@@ -26,7 +26,7 @@ interface LoginApiResponse {
 
 // Full user/store profile — matches backend StoreResponse
 interface StoreApiResponse {
-  id: string
+  id: string   // presente em /api/users/{id} e /api/users/me; ausente em respostas de PUT (ignorado via fallbackId)
   email: string
   userName: string
   storeName: string
@@ -34,6 +34,7 @@ interface StoreApiResponse {
   storeDescription: string
   logoUrl: string | null
   coverImageUrl?: string | null
+  coverColor?: string | null
   isActive: boolean
   slug: string
   role?: string | null
@@ -45,6 +46,7 @@ interface StoreApiResponse {
   stateAbbreviation?: string | null
   cityId?: number | null
   cityName?: string | null
+  storeNameFont?: string | null
   createdAt?: string
   updatedAt?: string
 }
@@ -104,6 +106,8 @@ export async function loginUser(credentials: LoginRequest): Promise<LoginRespons
       stateAbbreviation: profile.stateAbbreviation ?? null,
       cityId: profile.cityId ?? null,
       cityName: profile.cityName ?? null,
+      storeNameFont: profile.storeNameFont ?? null,
+      coverColor: profile.coverColor ?? null,
     },
   }
 }
@@ -244,16 +248,17 @@ export async function loginWithGoogle(accessToken: string): Promise<LoginRespons
       stateAbbreviation: profile.stateAbbreviation ?? null,
       cityId: profile.cityId ?? null,
       cityName: profile.cityName ?? null,
+      storeNameFont: profile.storeNameFont ?? null,
+      coverColor: profile.coverColor ?? null,
     },
   }
 }
 
 // ── Fetch store profile ───────────────────────────────────────────────────────
 
-export async function fetchUserProfile(storeId: string): Promise<Omit<User, 'password'>> {
-  const { data } = await apiClient.get<StoreApiResponse>(`/api/users/${storeId}`)
+function mapStoreResponse(data: StoreApiResponse, fallbackId?: string): Omit<User, 'password'> {
   return {
-    id: storeId,
+    id: data.id ?? fallbackId ?? '',
     email: data.email,
     userName: data.userName,
     storeName: data.storeName,
@@ -274,7 +279,19 @@ export async function fetchUserProfile(storeId: string): Promise<Omit<User, 'pas
     stateAbbreviation: data.stateAbbreviation ?? null,
     cityId: data.cityId ?? null,
     cityName: data.cityName ?? null,
+    storeNameFont: data.storeNameFont ?? null,
+    coverColor: data.coverColor ?? null,
   }
+}
+
+export async function fetchUserProfile(storeId: string): Promise<Omit<User, 'password'>> {
+  const { data } = await apiClient.get<StoreApiResponse>(`/api/users/${storeId}`)
+  return mapStoreResponse(data, storeId)
+}
+
+export async function fetchMyProfile(): Promise<Omit<User, 'password'>> {
+  const { data } = await apiClient.get<StoreApiResponse>('/api/users/me')
+  return mapStoreResponse(data)
 }
 
 // ── Profile update ────────────────────────────────────────────────────────────
@@ -284,6 +301,8 @@ export interface UpdateProfileRequest {
   storeName: string
   whatsappNumber: string
   storeDescription: string
+  storeNameFont?: string | null
+  coverColor?: string | null
 }
 
 export async function updateUserProfile(

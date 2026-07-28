@@ -37,7 +37,7 @@ export default function QRCodeModal({ storeSlug, storeName, onClose }: QRCodeMod
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-1">
-          <h2 className="text-base font-bold text-ink">QR Code da Vitrine</h2>
+          <h2 className="text-base font-bold text-ink">QR Code da Sua loja</h2>
           <button
             onClick={onClose}
             className="p-1.5 text-ink-3 hover:text-ink rounded-lg hover:bg-surface-2 transition-colors"

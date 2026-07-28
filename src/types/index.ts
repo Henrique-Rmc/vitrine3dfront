@@ -17,6 +17,7 @@ export interface User {
   storeDescription: string
   logoUrl: string
   coverImageUrl?: string | null
+  coverColor?: string | null
   createdAt: string
   updatedAt: string
   isActive: boolean
@@ -29,6 +30,7 @@ export interface User {
   stateAbbreviation?: string | null
   cityId?: number | null
   cityName?: string | null
+  storeNameFont?: string | null
 }
 
 export interface Category {
