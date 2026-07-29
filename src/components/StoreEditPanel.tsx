@@ -67,7 +67,7 @@ export default function StoreEditPanel({
   }
 
   function handleColorPick(hex: string) {
-    onDraftChange({ coverColor: hex, coverPreviewUrl: undefined, coverFile: undefined })
+    onDraftChange({ coverColor: hex, coverPreviewUrl: null, coverFile: undefined })
   }
 
   function handleClearCover() {

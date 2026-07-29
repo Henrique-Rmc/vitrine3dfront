@@ -11,7 +11,7 @@ import { useStoreInfo } from '../hooks/useStoreInfo'
 import { listProductTypes, type ProductType } from '../services/productTypeService'
 import { listEffectiveAttributes, type AttributeDefinition } from '../services/attributeService'
 import { readActiveAttributes } from '../utils/attributeFilters'
-import { updateUserProfile, uploadCoverImage } from '../services/authService'
+import { updateUserProfile, uploadCoverImage, deleteCoverImage } from '../services/authService'
 import QRCodeModal from '../components/QRCodeModal'
 import type { Product } from '../types'
 
@@ -104,7 +104,13 @@ export default function StorePage() {
           coverColor: 'coverColor' in draft ? draft.coverColor : undefined,
         })
         if (draft.storeNameFont !== undefined) themePatch.storeNameFont = draft.storeNameFont
-        if ('coverColor' in draft) themePatch.coverColor = draft.coverColor
+        if ('coverColor' in draft) {
+          themePatch.coverColor = draft.coverColor
+          if (draft.coverColor !== null && coverImageUrl) {
+            await deleteCoverImage(user.id)
+            themePatch.coverImageUrl = null
+          }
+        }
       }
 
       applyTheme(themePatch)

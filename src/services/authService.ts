@@ -327,6 +327,11 @@ export async function uploadCoverImage(userId: string, file: File): Promise<Stor
   return data
 }
 
+export async function deleteCoverImage(userId: string): Promise<StoreApiResponse> {
+  const { data } = await apiClient.delete<StoreApiResponse>(`/api/users/${userId}/cover-image`)
+  return data
+}
+
 // ── Email verification ────────────────────────────────────────────────────────
 
 export async function verifyEmail(token: string): Promise<void> {

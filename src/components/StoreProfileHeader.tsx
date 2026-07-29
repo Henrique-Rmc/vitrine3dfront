@@ -48,9 +48,9 @@ export default function StoreProfileHeader({
 
   // Over any cover (photo or color) → always white + dark shadow for guaranteed legibility
   const nameColor     = hasCover ? 'text-white'          : 'text-ink'
-  const descColor     = hasCover ? 'text-white/85'       : 'text-ink-2'
-  const readMoreColor = hasCover ? 'text-white/65 hover:text-white' : 'text-brand hover:text-brand-dim'
-  const cityColor     = hasCover ? 'text-white/80'       : 'text-ink-3'
+  const descColor     = hasCover ? 'text-white'          : 'text-ink-2'
+  const readMoreColor = hasCover ? 'text-white/75 hover:text-white' : 'text-brand hover:text-brand-dim'
+  const cityColor     = hasCover ? 'text-white'          : 'text-ink-3'
 
   // Text shadow: short crisp shadow for edge definition + wide diffuse for separation from bg
   const textShadowStrong = hasCover ? '0 1px 3px rgba(0,0,0,0.9), 0 2px 12px rgba(0,0,0,0.6)' : undefined
