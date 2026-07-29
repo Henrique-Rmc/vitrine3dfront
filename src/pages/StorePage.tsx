@@ -56,8 +56,7 @@ export default function StorePage() {
     applyTheme,
   } = useStoreInfo(storeSlug)
 
-  const isOwner = (isAuthenticated && !!user?.slug && user.slug === storeSlug)
-    || (import.meta.env.DEV && storeId === 'mock-store')
+  const isOwner = isAuthenticated && !!user?.slug && user.slug === storeSlug
 
   // ── Live edit draft (owner only) ─────────────────────────────────────────
   const [draft, setDraft]       = useState<StoreDraft>({})
