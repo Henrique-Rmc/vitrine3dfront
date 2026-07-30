@@ -4,7 +4,7 @@ import Logo from '../../components/Logo'
 const WHATSAPP_URL =
   'https://wa.me/5588997121130?text=' +
   encodeURIComponent(
-    'Olá! Gostaria de criar uma loja de afiliados no Vitrinefront e preciso de ajuda do suporte para configurar minha conta.',
+    'Olá! Gostaria de criar uma loja de afiliados no Vitrin e preciso de ajuda do suporte para configurar minha conta.',
   )
 
 export default function AffiliateInfoPage() {
