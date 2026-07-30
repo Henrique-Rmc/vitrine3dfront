@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import ErrorBanner from '../../components/ErrorBanner'
 import {
@@ -15,6 +15,7 @@ const inputClass =
 
 export default function ProductTypesPage() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const storeId = user?.id ?? ''
 
   const [types, setTypes]     = useState<ProductType[]>([])
@@ -96,17 +97,29 @@ export default function ProductTypesPage() {
         <div>
           <h1 className="text-xl font-bold text-ink">Tipos de Produto</h1>
         </div>
-        {!isCreating && (
+        <div className="flex items-center gap-2 shrink-0">
           <button
-            onClick={() => setIsCreating(true)}
-            className="shrink-0 flex items-center gap-1.5 px-3 py-2.5 rounded-lg bg-cta hover:bg-cta-2 text-cta-fg text-sm font-semibold transition-colors"
+            onClick={() => navigate('/admin/onboarding?from=product-types')}
+            className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg border border-border hover:border-border-2 bg-canvas hover:bg-surface-2 text-ink-2 text-sm font-medium transition-colors"
+            title="Usar modelos de negócio para criar tipos e filtros automaticamente"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
             </svg>
-            Adicionar tipo
+            Modelos de negócio
           </button>
-        )}
+          {!isCreating && (
+            <button
+              onClick={() => setIsCreating(true)}
+              className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg bg-cta hover:bg-cta-2 text-cta-fg text-sm font-semibold transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              Adicionar tipo
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Info banner */}

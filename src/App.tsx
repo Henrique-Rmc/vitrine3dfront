@@ -13,6 +13,7 @@ import StorePage from './pages/StorePage'
 import LoginPage from './pages/admin/LoginPage'
 import RegisterPage from './pages/admin/RegisterPage'
 import AffiliateRegisterPage from './pages/admin/AffiliateRegisterPage'
+import AffiliateInfoPage from './pages/admin/AffiliateInfoPage'
 import VerifyEmailPage from './pages/VerifyEmailPage'
 import TermsOfUsePage from './pages/TermsOfUsePage'
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
@@ -78,6 +79,7 @@ export default function App() {
 
           {/* ── Register: open route — navigates away after auth commit ── */}
           <Route path="/admin/register" element={<RegisterPage />} />
+          <Route path="/admin/afiliados" element={<AffiliateInfoPage />} />
 
           {/* ── Onboarding (protected, own full-screen layout) ── */}
           <Route element={<ProtectedRoute />}>

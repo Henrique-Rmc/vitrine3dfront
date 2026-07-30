@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { createProductType } from '../../services/productTypeService'
 import { createCustomAttribute, addOption, labelToKey } from '../../services/attributeService'
@@ -530,6 +530,8 @@ function Step3Content({
 
 export default function OnboardingPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const fromTypes = searchParams.get('from') === 'product-types'
   const { user } = useAuth()
   const storeId = user?.id ?? ''
 
@@ -629,6 +631,10 @@ export default function OnboardingPage() {
             await addOption(storeId, attr.id, opcao)
           }
         }
+      }
+      if (fromTypes) {
+        navigate('/admin/product-types')
+        return
       }
       setWasPreset(true)
       setAppliedPresetName(selectedNegocio.nome)
@@ -757,7 +763,7 @@ export default function OnboardingPage() {
         </div>
       </div>
 
-      {step !== 3 && (
+      {step !== 3 && !fromTypes && (
         <button
           onClick={() => navigate('/admin/products')}
           className="mt-4 text-xs text-ink-4 hover:text-ink-3 transition-colors"
