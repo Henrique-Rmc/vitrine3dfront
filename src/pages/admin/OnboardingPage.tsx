@@ -700,7 +700,19 @@ export default function OnboardingPage() {
       <div className="w-full max-w-md bg-canvas border border-border rounded-2xl shadow-lg overflow-hidden">
         <div className="px-8 pt-7 pb-5 border-b border-border flex items-center justify-between">
           <Logo height={26} />
-          <span className="text-xs text-ink-4 font-medium">Primeiros passos</span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-ink-4 font-medium">Primeiros passos</span>
+            <button
+              onClick={() => navigate(fromTypes ? '/admin/product-types' : '/admin/products')}
+              className="w-7 h-7 flex items-center justify-center rounded-lg text-ink-4 hover:text-ink-2 hover:bg-surface-2 transition-colors"
+              aria-label="Fechar"
+              title="Fechar"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {showProgressBar && (
