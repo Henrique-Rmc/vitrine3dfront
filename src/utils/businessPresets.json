@@ -1,0 +1,304 @@
+{
+  "_instrucoes": "Arquivo estático de presets. Cada objeto dentro de 'negocios' representa um segmento (ex: Vestuário, Imóveis). 'filtros_gerais' se aplicam a TODOS os tipos_item daquele negócio. 'filtros_especificos' dentro de cada tipo_item só valem pra aquele tipo. Pra adicionar um novo negócio no futuro, basta acrescentar um novo objeto no array 'negocios' seguindo a mesma estrutura — nenhum código precisa mudar, só o conteúdo.",
+  "versao": "1.0",
+
+  "negocios": [
+    {
+      "id": "vestuario",
+      "nome": "Vestuário",
+      "descricao": "Lojas de roupas e acessórios",
+
+      "filtros_gerais": [
+        {
+          "id": "genero",
+          "nome": "Gênero",
+          "opcoes": ["Masculino", "Feminino", "Unisex"]
+        },
+        {
+          "id": "faixa_etaria",
+          "nome": "Faixa etária",
+          "opcoes": ["Infantil", "Adulto"]
+        }
+      ],
+
+      "tipos_item": [
+        {
+          "id": "camisa",
+          "nome": "Camisa",
+          "filtros_especificos": [
+            {
+              "id": "estilo_camisa",
+              "nome": "Estilo",
+              "opcoes": ["Social", "Polo", "Casual"]
+            }
+          ]
+        },
+        {
+          "id": "calca",
+          "nome": "Calça",
+          "filtros_especificos": [
+            {
+              "id": "tipo_calca",
+              "nome": "Tipo",
+              "opcoes": ["Jeans", "Social", "Moletom", "Legging"]
+            }
+          ]
+        },
+        {
+          "id": "short",
+          "nome": "Short",
+          "filtros_especificos": [
+            {
+              "id": "tipo_short",
+              "nome": "Tipo",
+              "opcoes": ["Esportivo", "Casual", "Praia"]
+            }
+          ]
+        },
+        {
+          "id": "cueca",
+          "nome": "Cueca",
+          "filtros_especificos": [
+            {
+              "id": "modelo_cueca",
+              "nome": "Modelo",
+              "opcoes": ["Boxer", "Slip", "Sunga"]
+            }
+          ]
+        },
+        {
+          "id": "calcinha",
+          "nome": "Calcinha",
+          "filtros_especificos": [
+            {
+              "id": "modelo_calcinha",
+              "nome": "Modelo",
+              "opcoes": ["Fio dental", "Boxer", "Cintura alta"]
+            }
+          ]
+        },
+        {
+          "id": "vestido",
+          "nome": "Vestido",
+          "filtros_especificos": [
+            {
+              "id": "ocasiao_vestido",
+              "nome": "Ocasião",
+              "opcoes": ["Festa", "Casual", "Trabalho", "Praia"]
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "imoveis",
+      "nome": "Corretores Imobiliários",
+      "descricao": "Corretores e imobiliárias que anunciam imóveis para venda ou aluguel",
+
+      "filtros_gerais": [
+        {
+          "id": "finalidade",
+          "nome": "Finalidade",
+          "opcoes": ["Venda", "Aluguel", "Temporada"]
+        },
+        {
+          "id": "condicao",
+          "nome": "Condição",
+          "opcoes": ["Novo", "Usado", "Na planta"]
+        }
+      ],
+
+      "tipos_item": [
+        {
+          "id": "apartamento",
+          "nome": "Apartamento",
+          "filtros_especificos": [
+            {
+              "id": "quartos_apto",
+              "nome": "Quartos",
+              "opcoes": ["1", "2", "3", "4+"]
+            },
+            {
+              "id": "vagas_garagem_apto",
+              "nome": "Vagas de garagem",
+              "opcoes": ["0", "1", "2", "3+"]
+            }
+          ]
+        },
+        {
+          "id": "casa",
+          "nome": "Casa",
+          "filtros_especificos": [
+            {
+              "id": "quartos_casa",
+              "nome": "Quartos",
+              "opcoes": ["1", "2", "3", "4+"]
+            },
+            {
+              "id": "tipo_casa",
+              "nome": "Tipo",
+              "opcoes": ["Térrea", "Sobrado", "Condomínio fechado"]
+            }
+          ]
+        },
+        {
+          "id": "terreno",
+          "nome": "Terreno",
+          "filtros_especificos": [
+            {
+              "id": "tipo_terreno",
+              "nome": "Tipo",
+              "opcoes": ["Urbano", "Rural", "Comercial"]
+            }
+          ]
+        },
+        {
+          "id": "sala_comercial",
+          "nome": "Sala comercial",
+          "filtros_especificos": [
+            {
+              "id": "andar_sala",
+              "nome": "Andar",
+              "opcoes": ["Térreo", "Intermediário", "Cobertura"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pecas_3d",
+      "nome": "Peças 3D",
+      "descricao": "Vendedores de peças e objetos impressos em impressora 3D",
+      "filtros_gerais": [
+        {
+          "id": "tipo_filamento",
+          "nome": "Tipo de filamento",
+          "opcoes": [
+            "PLA",
+            "ABS",
+            "PETG",
+            "TPU (flexível)",
+            "Resina"
+          ]
+        },
+        {
+          "id": "pintura",
+          "nome": "Pintura",
+          "opcoes": [
+            "Sem pintura",
+            "Pintado à mão",
+            "Pintura sob encomenda"
+          ]
+        },
+        {
+          "id": "tamanho_peca",
+          "nome": "Tamanho",
+          "opcoes": [
+            "Pequeno",
+            "Médio",
+            "Grande",
+            "Sob encomenda"
+          ]
+        },
+        {
+          "id": "acabamento",
+          "nome": "Acabamento",
+          "opcoes": [
+            "Padrão",
+            "Detalhado/Premium"
+          ]
+        }
+      ],
+      "tipos_item": [
+        {
+          "id": "religiao",
+          "nome": "Religião",
+          "filtros_especificos": [
+            {
+              "id": "tema_religiao",
+              "nome": "Tema",
+              "opcoes": [
+                "Católico",
+                "Evangélico",
+                "Espírita",
+                "Umbanda/Candomblé",
+                "Outras religiões"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "decoracao",
+          "nome": "Decoração",
+          "filtros_especificos": [
+            {
+              "id": "ambiente_decoracao",
+              "nome": "Ambiente",
+              "opcoes": [
+                "Sala",
+                "Quarto",
+                "Jardim",
+                "Escritório",
+                "Cozinha"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "desenhos",
+          "nome": "Desenhos",
+          "filtros_especificos": [
+            {
+              "id": "categoria_desenho",
+              "nome": "Categoria",
+              "opcoes": [
+                "Anime",
+                "Games",
+                "Filmes/Séries",
+                "Autoral"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "chaveiros",
+          "nome": "Chaveiros",
+          "filtros_especificos": []
+        },
+        {
+          "id": "miniaturas_jogos",
+          "nome": "Miniaturas de Jogos",
+          "filtros_especificos": [
+            {
+              "id": "sistema_jogo",
+              "nome": "Sistema de jogo",
+              "opcoes": [
+                "RPG de mesa",
+                "Wargame",
+                "Board game",
+                "Card game (acessórios)"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "utilidades",
+          "nome": "Utilidades",
+          "filtros_especificos": [
+            {
+              "id": "tipo_utilidade",
+              "nome": "Tipo",
+              "opcoes": [
+                "Organizador",
+                "Suporte",
+                "Ferramenta",
+                "Acessório para casa"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
