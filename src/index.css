@@ -146,6 +146,68 @@
   --color-warning-icon:   var(--c-warning-icon);
 }
 
+/* ── Neutral UI chrome — always uses app palette, never store theme ───────
+   Apply data-neutral-ui to sidebars, edit panels, modals, etc.
+   that should be immune to store-level CSS var overrides.              ── */
+[data-neutral-ui] {
+  --c-surface:   #faf8f5;
+  --c-surface-2: #f4f1eb;
+  --c-surface-3: #ede8df;
+  --c-canvas:    #ffffff;
+  --c-ink:       #1c1813;
+  --c-ink-2:     #6b5d52;
+  --c-ink-3:     #9c8e84;
+  --c-ink-4:     #c4b8ae;
+  --c-border:    #e8e2d8;
+  --c-border-2:  #d4cec5;
+  --c-brand:     #c9922c;
+  --c-brand-dim: #b07d1e;
+  --c-cta:       #1c1813;
+  --c-cta-2:     #2c2620;
+  --c-cta-3:     #3c3228;
+  --c-cta-fg:    #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) [data-neutral-ui] {
+    --c-surface:   #131110;
+    --c-surface-2: #1d1a17;
+    --c-surface-3: #252119;
+    --c-canvas:    #1a1714;
+    --c-ink:       #f0ebe3;
+    --c-ink-2:     #b8a99a;
+    --c-ink-3:     #756960;
+    --c-ink-4:     #4a3e36;
+    --c-border:    #2e2822;
+    --c-border-2:  #3d342c;
+    --c-brand:     #d4a43a;
+    --c-brand-dim: #c49030;
+    --c-cta:       #ede8df;
+    --c-cta-2:     #d4cec5;
+    --c-cta-3:     #c4b8ae;
+    --c-cta-fg:    #1c1813;
+  }
+}
+
+[data-theme='dark'] [data-neutral-ui] {
+  --c-surface:   #131110;
+  --c-surface-2: #1d1a17;
+  --c-surface-3: #252119;
+  --c-canvas:    #1a1714;
+  --c-ink:       #f0ebe3;
+  --c-ink-2:     #b8a99a;
+  --c-ink-3:     #756960;
+  --c-ink-4:     #4a3e36;
+  --c-border:    #2e2822;
+  --c-border-2:  #3d342c;
+  --c-brand:     #d4a43a;
+  --c-brand-dim: #c49030;
+  --c-cta:       #ede8df;
+  --c-cta-2:     #d4cec5;
+  --c-cta-3:     #c4b8ae;
+  --c-cta-fg:    #1c1813;
+}
+
 /* ── Base ────────────────────────────────────────────────────────────────── */
 @layer base {
   html {

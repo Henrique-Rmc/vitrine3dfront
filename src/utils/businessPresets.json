@@ -166,50 +166,144 @@
         }
       ]
     },
+
+    {
+      "id": "veiculos",
+      "nome": "Veículos",
+      "descricao": "Lojas que revendem veículos de múltiplas marcas, novos ou usados",
+
+      "_nota": "O filtro 'marca' abaixo tem lista aberta (dezenas de fabricantes). Considere no frontend usar um campo de busca/autocomplete em vez de uma lista fixa de checkboxes, ou manter essa lista num arquivo/tabela separada que cresce com o tempo.",
+
+      "filtros_gerais": [
+        {
+          "id": "marca",
+          "nome": "Marca",
+          "opcoes": ["Volkswagen", "Chevrolet", "Fiat", "Toyota", "Honda", "Ford", "Hyundai", "Renault", "Jeep", "Nissan"]
+        },
+        {
+          "id": "condicao_veiculo",
+          "nome": "Condição",
+          "opcoes": ["Novo", "Seminovo", "Usado"]
+        },
+        {
+          "id": "cambio",
+          "nome": "Câmbio",
+          "opcoes": ["Manual", "Automático", "CVT", "Automatizado"]
+        },
+        {
+          "id": "combustivel",
+          "nome": "Combustível",
+          "opcoes": ["Flex", "Gasolina", "Diesel", "Elétrico", "Híbrido"]
+        },
+        {
+          "id": "ano",
+          "nome": "Ano",
+          "opcoes": ["2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "2026", "2027"]
+        }
+      ],
+
+      "tipos_item": [
+        {
+          "id": "carro_passeio",
+          "nome": "Carro de passeio",
+          "filtros_especificos": [
+            {
+              "id": "carroceria_passeio",
+              "nome": "Carroceria",
+              "opcoes": ["Hatch", "Sedã", "Perua"]
+            },
+            {
+              "id": "portas_passeio",
+              "nome": "Portas",
+              "opcoes": ["2", "4"]
+            }
+          ]
+        },
+        {
+          "id": "suv",
+          "nome": "SUV",
+          "filtros_especificos": [
+            {
+              "id": "porte_suv",
+              "nome": "Porte",
+              "opcoes": ["Compacto", "Médio", "Grande"]
+            }
+          ]
+        },
+        {
+          "id": "caminhonete",
+          "nome": "Caminhonete",
+          "filtros_especificos": [
+            {
+              "id": "tracao_caminhonete",
+              "nome": "Tração",
+              "opcoes": ["4x2", "4x4"]
+            },
+            {
+              "id": "cabine_caminhonete",
+              "nome": "Cabine",
+              "opcoes": ["Simples", "Dupla"]
+            }
+          ]
+        },
+        {
+          "id": "moto",
+          "nome": "Moto",
+          "filtros_especificos": [
+            {
+              "id": "cilindrada_moto",
+              "nome": "Cilindrada",
+              "opcoes": ["Até 150cc", "151cc a 300cc", "301cc a 600cc", "Acima de 600cc"]
+            },
+            {
+              "id": "estilo_moto",
+              "nome": "Estilo",
+              "opcoes": ["Street", "Trail", "Scooter", "Custom", "Esportiva"]
+            }
+          ]
+        },
+        {
+          "id": "van_utilitario",
+          "nome": "Van / Utilitário",
+          "filtros_especificos": [
+            {
+              "id": "capacidade_carga_van",
+              "nome": "Capacidade de carga",
+              "opcoes": ["Até 1 tonelada", "1 a 3 toneladas", "Acima de 3 toneladas"]
+            }
+          ]
+        }
+      ]
+    },
+
     {
       "id": "pecas_3d",
       "nome": "Peças 3D",
       "descricao": "Vendedores de peças e objetos impressos em impressora 3D",
+
       "filtros_gerais": [
         {
           "id": "tipo_filamento",
           "nome": "Tipo de filamento",
-          "opcoes": [
-            "PLA",
-            "ABS",
-            "PETG",
-            "TPU (flexível)",
-            "Resina"
-          ]
+          "opcoes": ["PLA", "ABS", "PETG", "TPU (flexível)", "Resina"]
         },
         {
           "id": "pintura",
           "nome": "Pintura",
-          "opcoes": [
-            "Sem pintura",
-            "Pintado à mão",
-            "Pintura sob encomenda"
-          ]
+          "opcoes": ["Sem pintura", "Pintado à mão", "Pintura sob encomenda"]
         },
         {
           "id": "tamanho_peca",
           "nome": "Tamanho",
-          "opcoes": [
-            "Pequeno",
-            "Médio",
-            "Grande",
-            "Sob encomenda"
-          ]
+          "opcoes": ["Pequeno", "Médio", "Grande", "Sob encomenda"]
         },
         {
           "id": "acabamento",
           "nome": "Acabamento",
-          "opcoes": [
-            "Padrão",
-            "Detalhado/Premium"
-          ]
+          "opcoes": ["Padrão", "Detalhado/Premium"]
         }
       ],
+
       "tipos_item": [
         {
           "id": "religiao",
@@ -218,13 +312,7 @@
             {
               "id": "tema_religiao",
               "nome": "Tema",
-              "opcoes": [
-                "Católico",
-                "Evangélico",
-                "Espírita",
-                "Umbanda/Candomblé",
-                "Outras religiões"
-              ]
+              "opcoes": ["Católico", "Evangélico", "Espírita", "Umbanda/Candomblé", "Outras religiões"]
             }
           ]
         },
@@ -235,13 +323,7 @@
             {
               "id": "ambiente_decoracao",
               "nome": "Ambiente",
-              "opcoes": [
-                "Sala",
-                "Quarto",
-                "Jardim",
-                "Escritório",
-                "Cozinha"
-              ]
+              "opcoes": ["Sala", "Quarto", "Jardim", "Escritório", "Cozinha"]
             }
           ]
         },
@@ -252,12 +334,7 @@
             {
               "id": "categoria_desenho",
               "nome": "Categoria",
-              "opcoes": [
-                "Anime",
-                "Games",
-                "Filmes/Séries",
-                "Autoral"
-              ]
+              "opcoes": ["Anime", "Games", "Filmes/Séries", "Autoral"]
             }
           ]
         },
@@ -273,12 +350,7 @@
             {
               "id": "sistema_jogo",
               "nome": "Sistema de jogo",
-              "opcoes": [
-                "RPG de mesa",
-                "Wargame",
-                "Board game",
-                "Card game (acessórios)"
-              ]
+              "opcoes": ["RPG de mesa", "Wargame", "Board game", "Card game (acessórios)"]
             }
           ]
         },
@@ -289,14 +361,87 @@
             {
               "id": "tipo_utilidade",
               "nome": "Tipo",
-              "opcoes": [
-                "Organizador",
-                "Suporte",
-                "Ferramenta",
-                "Acessório para casa"
-              ]
+              "opcoes": ["Organizador", "Suporte", "Ferramenta", "Acessório para casa"]
             }
           ]
+        }
+      ]
+    },
+
+    {
+      "id": "anime_nerd",
+      "nome": "Loja de Anime",
+      "descricao": "Lojas de artigos de anime, geek e cultura pop",
+
+      "_nota": "O filtro 'franquia' abaixo tem lista aberta (dezenas de animes/séries), igual ao caso de 'marca' em veículos. Considere um campo de busca/autocomplete no frontend em vez de checkboxes fixos.",
+
+      "filtros_gerais": [
+        {
+          "id": "franquia",
+          "nome": "Franquia/Anime",
+          "opcoes": ["Naruto", "One Piece", "Dragon Ball", "Attack on Titan", "Demon Slayer", "Jujutsu Kaisen", "My Hero Academia", "Death Note", "Genérico/Sem franquia"]
+        },
+        {
+          "id": "licenca",
+          "nome": "Licenciamento",
+          "opcoes": ["Licenciado oficial", "Fanmade/Não oficial"]
+        }
+      ],
+
+      "tipos_item": [
+        {
+          "id": "camisa_anime",
+          "nome": "Camisa",
+          "filtros_especificos": [
+            {
+              "id": "modelo_camisa_anime",
+              "nome": "Modelo",
+              "opcoes": ["Manga curta", "Manga longa", "Regata", "Moletom"]
+            }
+          ]
+        },
+        {
+          "id": "boneco",
+          "nome": "Boneco",
+          "filtros_especificos": [
+            {
+              "id": "tipo_boneco",
+              "nome": "Tipo",
+              "opcoes": ["Action figure", "Nendoroid", "Figure estática", "Funko Pop"]
+            }
+          ]
+        },
+        {
+          "id": "photocard",
+          "nome": "Photocard",
+          "filtros_especificos": [
+            {
+              "id": "tipo_photocard",
+              "nome": "Tipo",
+              "opcoes": ["Oficial (álbum)", "Fanmade", "Holográfico"]
+            }
+          ]
+        },
+        {
+          "id": "poster",
+          "nome": "Poster",
+          "filtros_especificos": [
+            {
+              "id": "tamanho_poster",
+              "nome": "Tamanho",
+              "opcoes": ["A4", "A3", "A2", "Banner grande"]
+            }
+          ]
+        },
+        {
+          "id": "chaveiro_anime",
+          "nome": "Chaveiro",
+          "filtros_especificos": []
+        },
+        {
+          "id": "caneca_anime",
+          "nome": "Caneca",
+          "filtros_especificos": []
         }
       ]
     }

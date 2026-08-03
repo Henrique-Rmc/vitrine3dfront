@@ -49,7 +49,7 @@ export default function VitrineSidebar() {
   /* ── Admin sidebar ────────────────────────────────────────────────────────── */
   if (isAuthenticated) {
     return (
-      <aside className="hidden md:flex fixed left-0 top-0 h-full w-60 z-40 flex-col bg-canvas border-r border-border">
+      <aside data-neutral-ui className="hidden md:flex fixed left-0 top-0 h-full w-60 z-40 flex-col bg-canvas border-r border-border">
         {/* Brand */}
         <div className="h-16 flex items-center gap-2.5 px-5 border-b border-border shrink-0">
           <Link to="/" className="hover:opacity-80 transition-opacity">
@@ -119,7 +119,7 @@ export default function VitrineSidebar() {
 
   /* ── Public / non-logged sidebar ──────────────────────────────────────────── */
   return (
-    <aside className="hidden md:flex fixed left-0 top-0 h-full w-60 z-40 flex-col bg-canvas border-r border-border">
+    <aside data-neutral-ui className="hidden md:flex fixed left-0 top-0 h-full w-60 z-40 flex-col bg-canvas border-r border-border">
       {/* CTA section — no brand header at top; store owns the top of page */}
       <div className="flex-1 px-4 pt-6 pb-4 flex flex-col gap-3 overflow-y-auto">
         <p className="text-xs text-ink-3 leading-relaxed">

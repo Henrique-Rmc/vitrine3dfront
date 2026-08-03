@@ -54,7 +54,7 @@ export default function MainLayout() {
           <Outlet />
         </main>
 
-        <footer className="mt-16 border-t border-border">
+        <footer data-neutral-ui className="mt-16 border-t border-border">
           {/* Legal disclaimer */}
           <div className="bg-surface-2 border-b border-border px-4 py-3 text-center text-xs text-ink-3">
             O VitreIn é uma vitrine digital. As negociações ocorrem diretamente entre comprador e vendedor via WhatsApp,
@@ -77,7 +77,7 @@ export default function MainLayout() {
 
       {/* Mobile bottom nav — admin only, mirrors AdminLayout nav */}
       {isAuthenticated && (
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-canvas border-t border-border h-16 flex items-stretch shadow-[0_-1px_0_var(--color-border)]">
+        <nav data-neutral-ui className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-canvas border-t border-border h-16 flex items-stretch shadow-[0_-1px_0_var(--color-border)]">
           {ADMIN_MOBILE_NAV.map(({ to, label, icon }) => (
             <NavLink
               key={to}

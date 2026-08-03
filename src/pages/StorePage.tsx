@@ -11,7 +11,9 @@ import { useStoreInfo } from '../hooks/useStoreInfo'
 import { listProductTypes, type ProductType } from '../services/productTypeService'
 import { listEffectiveAttributes, type AttributeDefinition } from '../services/attributeService'
 import { readActiveAttributes } from '../utils/attributeFilters'
+import { searchProducts } from '../services/productService'
 import { updateUserProfile, uploadCoverImage, deleteCoverImage } from '../services/authService'
+import { themeToStyle, findTheme } from '../constants/storeThemes'
 import QRCodeModal from '../components/QRCodeModal'
 import type { Product } from '../types'
 
@@ -45,6 +47,7 @@ export default function StorePage() {
     coverImageUrl,
     coverColor,
     storeNameFont,
+    storeTheme,
     cityName,
     products,
     featuredProducts,
@@ -94,7 +97,7 @@ export default function StorePage() {
         if (res.coverImageUrl !== undefined) themePatch.coverImageUrl = res.coverImageUrl
       }
 
-      if (draft.storeNameFont !== undefined || 'coverColor' in draft) {
+      if (draft.storeNameFont !== undefined || 'coverColor' in draft || 'storeTheme' in draft) {
         await updateUserProfile(user.id, {
           userName: user.userName,
           storeName: user.storeName,
@@ -102,11 +105,14 @@ export default function StorePage() {
           storeDescription: user.storeDescription,
           storeNameFont: draft.storeNameFont,
           coverColor: 'coverColor' in draft ? draft.coverColor : undefined,
+          storeTheme: 'storeTheme' in draft ? draft.storeTheme : undefined,
         })
         if (draft.storeNameFont !== undefined) themePatch.storeNameFont = draft.storeNameFont
+        if ('storeTheme' in draft) themePatch.storeTheme = draft.storeTheme
         if ('coverColor' in draft) {
           themePatch.coverColor = draft.coverColor
-          if (draft.coverColor !== null && coverImageUrl) {
+          // Delete existing photo whenever a cover color change is committed (including explicit null → "remover capa")
+          if (coverImageUrl && !draft.coverFile) {
             await deleteCoverImage(user.id)
             themePatch.coverImageUrl = null
           }
@@ -124,6 +130,20 @@ export default function StorePage() {
   const resolvedFont       = draft.storeNameFont !== undefined ? draft.storeNameFont : storeNameFont
   const resolvedCoverUrl   = draft.coverPreviewUrl !== undefined ? draft.coverPreviewUrl : coverImageUrl
   const resolvedCoverColor = 'coverColor' in draft ? draft.coverColor : coverColor
+  const resolvedTheme      = 'storeTheme' in draft ? draft.storeTheme : storeTheme
+
+  // Apply store theme to document root so page bg + mobile header follow the theme.
+  // Only applied when an explicit theme is selected — null keeps native dark/light mode.
+  useEffect(() => {
+    const root = document.documentElement
+    if (!resolvedTheme || resolvedTheme === 'padrao') {
+      for (const k of Object.keys(findTheme('padrao').vars)) root.style.removeProperty(k)
+      return
+    }
+    const theme = findTheme(resolvedTheme)
+    for (const [k, v] of Object.entries(theme.vars)) root.style.setProperty(k, v)
+    return () => { for (const k of Object.keys(theme.vars)) root.style.removeProperty(k) }
+  }, [resolvedTheme])
 
   const [searchParams, setSearchParams] = useSearchParams()
   const [selectedProduct, setSelectedProduct]     = useState<Product | null>(null)
@@ -154,6 +174,9 @@ export default function StorePage() {
       return next
     }, { replace: true })
   }
+  const [keyword, setKeyword]                     = useState('')
+  const [searchResults, setSearchResults]         = useState<Product[]>([])
+  const [isSearching, setIsSearching]             = useState(false)
   const [selectedTypeId, setSelectedTypeId]       = useState<number | null>(null)
   const [filterPanelOpen, setFilterPanelOpen]     = useState(false)
   const [attrDefinitions, setAttrDefinitions]     = useState<AttributeDefinition[]>([])
@@ -181,6 +204,26 @@ export default function StorePage() {
       .then((defs) => setAttrDefinitions(defs.filter((d) => d.filterable !== false)))
       .catch(() => {})
   }, [storeId, selectedTypeId])
+
+  // Debounced server-side keyword search
+  useEffect(() => {
+    const q = keyword.trim()
+    if (!storeId || !q) { setSearchResults([]); return }
+    const timer = setTimeout(async () => {
+      setIsSearching(true)
+      try {
+        const res = await searchProducts(storeId, { keyword: q }, 0, 30)
+        setSearchResults(res.content.filter((p) => p.isVisible))
+      } catch {
+        setSearchResults([])
+      } finally {
+        setIsSearching(false)
+      }
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [keyword, storeId])
+
+  const isKeywordActive = keyword.trim().length > 0
 
   const visibleProducts = useMemo(
     () => products.filter((p) => p.isVisible),
@@ -275,6 +318,7 @@ export default function StorePage() {
   }
 
   function sectionTitle() {
+    if (isKeywordActive) return `Resultados para "${keyword.trim()}"`
     if (selectedTypeId !== null) {
       if (hasActiveFilter) return Object.values(activeAttributes).join(' · ')
       return productTypes.find((t) => t.id === selectedTypeId)?.label ?? 'Produtos'
@@ -286,7 +330,8 @@ export default function StorePage() {
   const hasTypeTabs = typesWithProducts.length > 0
   // Show attr chips only when there are filterable attributes with values in the current view
   const showAttrChips = attributeMap.size > 0 && (selectedTypeId !== null || !hasTypeTabs)
-  const showFilterBar = !loading && (hasTypeTabs || showAttrChips)
+  const showFilterBar = !loading
+  const displayProducts = isKeywordActive ? searchResults : catalogProducts
 
   if (!loading && error) {
     return (
@@ -299,48 +344,55 @@ export default function StorePage() {
 
   return (
     <>
-      {/* Store Profile */}
-      <StoreProfileHeader
-        storeName={storeName || 'Carregando…'}
-        storeDescription={storeDescription}
-        logoUrl={logoUrl}
-        coverImageUrl={resolvedCoverUrl}
-        coverColor={resolvedCoverColor}
-        storeNameFont={resolvedFont}
-        cityName={cityName}
-      />
-
-      {isOwner && (
-        <StoreEditPanel
-          storeName={storeName}
-          draft={draft}
-          currentFont={storeNameFont}
-          currentCoverUrl={coverImageUrl}
-          currentCoverColor={coverColor}
-          onDraftChange={patchDraft}
-          onSave={handleSave}
-          onDiscard={discardDraft}
-          isDirty={isDirty}
-          isSaving={isSaving}
-          onQRCode={() => setShowQR(true)}
+      <div style={themeToStyle(resolvedTheme)}>
+        <StoreProfileHeader
+          storeName={storeName || 'Carregando…'}
+          storeDescription={storeDescription}
+          logoUrl={logoUrl}
+          coverImageUrl={resolvedCoverUrl}
+          coverColor={resolvedCoverColor}
+          storeNameFont={resolvedFont}
+          cityName={cityName}
         />
-      )}
 
-      {showQR && user?.slug && (
-        <QRCodeModal
-          storeSlug={user.slug}
-          storeName={user.storeName}
-          onClose={() => setShowQR(false)}
-        />
-      )}
-
-      {/* Combined filter bar: type tabs + filter trigger */}
+      {/* Combined filter bar: search + type tabs + filter trigger */}
       {showFilterBar && (
         <div className="sticky top-16 md:top-0 z-40 bg-canvas/95 backdrop-blur-sm border-b border-border">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            {/* ProductType tabs */}
-            {hasTypeTabs && (
-              <div className={`flex items-center gap-2 overflow-x-auto scrollbar-none py-2.5 ${showAttrChips ? 'border-b border-border' : ''}`}>
+
+            {/* Search bar — always visible */}
+            <div className="py-2.5">
+              <div className="relative flex items-center">
+                <svg className="absolute left-3 w-4 h-4 text-ink-4 pointer-events-none shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
+                <input
+                  type="search"
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                  placeholder="Buscar produtos..."
+                  className="w-full pl-9 pr-9 py-2 rounded-lg bg-surface-2 border border-border focus:border-brand/60 focus:ring-2 focus:ring-brand/20 focus:outline-none text-sm text-ink placeholder-ink-4 transition-colors"
+                />
+                {isSearching && (
+                  <span className="absolute right-3 w-4 h-4 rounded-full border-2 border-brand/40 border-t-brand animate-spin" />
+                )}
+                {!isSearching && keyword && (
+                  <button
+                    onClick={() => setKeyword('')}
+                    className="absolute right-3 text-ink-4 hover:text-ink-2 transition-colors"
+                    aria-label="Limpar busca"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* ProductType tabs — hidden during search */}
+            {hasTypeTabs && !isKeywordActive && (
+              <div className={`flex items-center gap-2 overflow-x-auto scrollbar-none py-2.5 border-t border-border ${showAttrChips ? 'border-b-0' : ''}`}>
                 <button onClick={() => handleTypeChange(null)} className={typeTab(selectedTypeId === null)}>
                   Todos
                 </button>
@@ -353,7 +405,7 @@ export default function StorePage() {
             )}
 
             {/* Filter trigger row */}
-            {showAttrChips && (
+            {showAttrChips && !isKeywordActive && (
               <div className="flex items-center gap-2 py-2.5 overflow-x-auto scrollbar-none">
                 <button
                   onClick={() => setFilterPanelOpen((o) => !o)}
@@ -500,7 +552,7 @@ export default function StorePage() {
                 onClick={() => setFilterPanelOpen(false)}
                 className="w-full py-3 rounded-xl bg-cta hover:bg-cta-2 text-cta-fg text-sm font-semibold transition-colors"
               >
-                Ver {catalogProducts.length} produto{catalogProducts.length !== 1 ? 's' : ''}
+                Ver {displayProducts.length} produto{displayProducts.length !== 1 ? 's' : ''}
               </button>
             </div>
           </div>
@@ -522,20 +574,20 @@ export default function StorePage() {
         <section>
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-base font-bold text-ink">{sectionTitle()}</h2>
-            {!loading && (
+            {!loading && !isSearching && (
               <span className="text-sm text-ink-3">
-                {catalogProducts.length} produto{catalogProducts.length !== 1 ? 's' : ''}
-                {hasMore ? '+' : ''}
+                {displayProducts.length} produto{displayProducts.length !== 1 ? 's' : ''}
+                {!isKeywordActive && hasMore ? '+' : ''}
               </span>
             )}
           </div>
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {loading
+            {loading || (isKeywordActive && isSearching)
               ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
                   <ProductSkeleton key={i} />
                 ))
-              : catalogProducts.map((product) => (
+              : displayProducts.map((product) => (
                   <ProductCard
                     key={product.id}
                     product={product}
@@ -545,14 +597,23 @@ export default function StorePage() {
                 ))}
           </div>
 
-          {!loading && catalogProducts.length === 0 && (
+          {!loading && !isSearching && displayProducts.length === 0 && (
             <div className="py-24 text-center">
               <p className="text-ink-3 text-sm">
-                {hasActiveFilter || selectedTypeId !== null
-                  ? 'Nenhum produto encontrado com esses filtros.'
-                  : 'Nenhum produto disponível.'}
+                {isKeywordActive
+                  ? `Nenhum produto encontrado para "${keyword.trim()}".`
+                  : hasActiveFilter || selectedTypeId !== null
+                    ? 'Nenhum produto encontrado com esses filtros.'
+                    : 'Nenhum produto disponível.'}
               </p>
-              {(hasActiveFilter || selectedTypeId !== null) && (
+              {isKeywordActive ? (
+                <button
+                  onClick={() => setKeyword('')}
+                  className="mt-3 text-sm text-brand hover:text-brand-dim transition-colors font-medium"
+                >
+                  Limpar busca
+                </button>
+              ) : (hasActiveFilter || selectedTypeId !== null) && (
                 <button
                   onClick={() => { clearAllFilters(); setSelectedTypeId(null) }}
                   className="mt-3 text-sm text-brand hover:text-brand-dim transition-colors font-medium"
@@ -599,12 +660,38 @@ export default function StorePage() {
         </div>
       )}
 
-      {/* Product Modal */}
-      {selectedProduct && (
-        <ProductModal
-          product={selectedProduct}
-          whatsappNumber={whatsappNumber}
-          onClose={handleCloseModal}
+        {/* Product Modal */}
+        {selectedProduct && (
+          <ProductModal
+            product={selectedProduct}
+            whatsappNumber={whatsappNumber}
+            onClose={handleCloseModal}
+          />
+        )}
+      </div>{/* /theme wrapper */}
+
+      {/* Edit panel + QR modal — outside theme wrapper so tokens stay neutral */}
+      {isOwner && (
+        <StoreEditPanel
+          storeName={storeName}
+          draft={draft}
+          currentFont={storeNameFont}
+          currentCoverUrl={coverImageUrl}
+          currentCoverColor={coverColor}
+          currentTheme={storeTheme}
+          onDraftChange={patchDraft}
+          onSave={handleSave}
+          onDiscard={discardDraft}
+          isDirty={isDirty}
+          isSaving={isSaving}
+          onQRCode={() => setShowQR(true)}
+        />
+      )}
+      {showQR && user?.slug && (
+        <QRCodeModal
+          storeSlug={user.slug}
+          storeName={user.storeName}
+          onClose={() => setShowQR(false)}
         />
       )}
     </>

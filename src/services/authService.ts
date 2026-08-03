@@ -47,6 +47,7 @@ interface StoreApiResponse {
   cityId?: number | null
   cityName?: string | null
   storeNameFont?: string | null
+  storeTheme?: string | null
   createdAt?: string
   updatedAt?: string
 }
@@ -280,6 +281,7 @@ function mapStoreResponse(data: StoreApiResponse, fallbackId?: string): Omit<Use
     cityId: data.cityId ?? null,
     cityName: data.cityName ?? null,
     storeNameFont: data.storeNameFont ?? null,
+    storeTheme: data.storeTheme ?? null,
     coverColor: data.coverColor ?? null,
   }
 }
@@ -303,6 +305,7 @@ export interface UpdateProfileRequest {
   storeDescription: string
   storeNameFont?: string | null
   coverColor?: string | null
+  storeTheme?: string | null
 }
 
 export async function updateUserProfile(

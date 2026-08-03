@@ -31,6 +31,7 @@ export interface User {
   cityId?: number | null
   cityName?: string | null
   storeNameFont?: string | null
+  storeTheme?: string | null
 }
 
 export interface Category {

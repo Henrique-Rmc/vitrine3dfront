@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { STORE_FONTS, fontStyle } from '../constants/storeFonts'
 import { COVER_COLORS } from '../constants/storeCoverColors'
+import { STORE_THEMES } from '../constants/storeThemes'
 import { compressImage } from '../services/imageOptimizationService'
 
 // ── Draft shape — extend here as new editable fields are added ────────────────
@@ -9,6 +10,7 @@ export interface StoreDraft {
   coverFile?: File | null
   coverPreviewUrl?: string | null
   coverColor?: string | null
+  storeTheme?: string | null
 }
 
 interface StoreEditPanelProps {
@@ -17,6 +19,7 @@ interface StoreEditPanelProps {
   currentFont: string | null
   currentCoverUrl: string | null
   currentCoverColor: string | null
+  currentTheme: string | null
   onDraftChange: (patch: Partial<StoreDraft>) => void
   onSave: () => Promise<void>
   onDiscard: () => void
@@ -31,6 +34,7 @@ export default function StoreEditPanel({
   currentFont,
   currentCoverUrl,
   currentCoverColor,
+  currentTheme,
   onDraftChange,
   onSave,
   onDiscard,
@@ -47,9 +51,10 @@ export default function StoreEditPanel({
     ('coverColor' in draft && draft.coverColor !== null) || !!currentCoverColor ? 'color' : 'photo'
   )
 
-  const activeFont     = draft.storeNameFont !== undefined ? draft.storeNameFont : currentFont
-  const activeCoverUrl = draft.coverPreviewUrl !== undefined ? draft.coverPreviewUrl : currentCoverUrl
+  const activeFont       = draft.storeNameFont !== undefined ? draft.storeNameFont : currentFont
+  const activeCoverUrl   = draft.coverPreviewUrl !== undefined ? draft.coverPreviewUrl : currentCoverUrl
   const activeCoverColor = 'coverColor' in draft ? draft.coverColor : currentCoverColor
+  const activeTheme      = 'storeTheme' in draft ? draft.storeTheme : currentTheme
 
   async function handleCoverPick(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -70,8 +75,14 @@ export default function StoreEditPanel({
     onDraftChange({ coverColor: hex, coverPreviewUrl: null, coverFile: undefined })
   }
 
-  function handleClearCover() {
+  // Reverts unsaved photo selection from draft — does NOT delete server state
+  function handleClearDraftCover() {
     onDraftChange({ coverColor: undefined, coverPreviewUrl: undefined, coverFile: undefined })
+  }
+
+  // Explicitly deletes the current cover (color or photo) on next save
+  function handleDeleteCover() {
+    onDraftChange({ coverColor: null, coverPreviewUrl: null, coverFile: undefined })
   }
 
   async function handleSave() {
@@ -129,6 +140,7 @@ export default function StoreEditPanel({
 
       {/* Panel */}
       <div
+        data-neutral-ui
         className={`fixed z-50 flex flex-col bg-canvas border-border shadow-2xl transition-transform duration-300
           bottom-0 left-0 right-0 max-h-[85vh] rounded-t-2xl border-t
           md:bottom-0 md:top-0 md:left-auto md:right-0 md:w-80 md:max-h-none md:rounded-none md:border-t-0 md:border-l
@@ -209,7 +221,7 @@ export default function StoreEditPanel({
                   )}
                 </div>
                 {draft.coverPreviewUrl !== undefined && (
-                  <button type="button" onClick={handleClearCover} className="text-xs text-ink-3 hover:text-red-500 transition-colors">
+                  <button type="button" onClick={handleClearDraftCover} className="text-xs text-ink-3 hover:text-red-500 transition-colors">
                     Cancelar seleção
                   </button>
                 )}
@@ -221,19 +233,19 @@ export default function StoreEditPanel({
             {coverMode === 'color' && (
               <>
                 <div className="grid grid-cols-4 gap-2 mb-3">
-                  {/* "Sem cor" swatch */}
+                  {/* Swatch de remoção — deleta cor ou foto ao salvar */}
                   <button
                     type="button"
-                    onClick={handleClearCover}
-                    title="Sem cor"
+                    onClick={handleDeleteCover}
+                    title="Remover capa"
                     className={`aspect-square rounded-lg border-2 flex items-center justify-center transition-all ${
-                      !activeCoverColor
+                      activeCoverColor === null && draft.coverPreviewUrl === null
                         ? 'border-brand shadow-sm scale-105'
                         : 'border-border hover:border-border-2'
                     }`}
                     style={{ background: 'repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%) 0 0 / 10px 10px' }}
                   >
-                    {!activeCoverColor && (
+                    {activeCoverColor === null && draft.coverPreviewUrl === null && (
                       <svg className="w-4 h-4 text-ink-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                       </svg>
@@ -267,6 +279,55 @@ export default function StoreEditPanel({
                 )}
               </>
             )}
+          </section>
+
+          {/* ── Tema da vitrine ──────────────────────────────────────────── */}
+          <section>
+            <p className="text-xs font-semibold uppercase tracking-wide text-ink-3 mb-3">Tema da vitrine</p>
+            <div className="grid grid-cols-4 gap-2">
+              {STORE_THEMES.map((theme) => {
+                const active = (activeTheme ?? 'padrao') === theme.key
+                const canvas  = theme.vars['--c-canvas']
+                const surface = theme.vars['--c-surface']
+                const cta     = theme.vars['--c-cta']
+                return (
+                  <button
+                    key={theme.key}
+                    type="button"
+                    onClick={() => onDraftChange({ storeTheme: theme.key })}
+                    title={theme.name}
+                    className={`relative flex flex-col rounded-lg overflow-hidden border-2 transition-all ${
+                      active
+                        ? 'border-brand scale-[1.04] shadow-md'
+                        : 'border-border hover:border-border-2 hover:scale-[1.02]'
+                    }`}
+                  >
+                    {/* Canvas area */}
+                    <div className="h-8" style={{ backgroundColor: canvas }} />
+                    {/* Surface strip */}
+                    <div className="h-3" style={{ backgroundColor: surface }} />
+                    {/* CTA dot */}
+                    <div
+                      className="absolute bottom-1.5 right-1.5 w-2 h-2 rounded-full"
+                      style={{ backgroundColor: cta }}
+                    />
+                    {active && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-4 h-4 rounded-full bg-brand flex items-center justify-center">
+                          <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                          </svg>
+                        </div>
+                      </div>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+            {/* Active theme name */}
+            <p className="text-xs text-ink-3 text-center mt-2">
+              {STORE_THEMES.find((t) => t.key === (activeTheme ?? 'padrao'))?.name ?? 'Padrão'}
+            </p>
           </section>
 
           {/* ── Fonte do nome ─────────────────────────────────────────────── */}

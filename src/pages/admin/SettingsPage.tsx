@@ -9,7 +9,6 @@ import {
   fetchMyProfile,
 } from '../../services/authService'
 import { compressImage } from '../../services/imageOptimizationService'
-import { STORE_FONTS, loadGoogleFont, fontStyle } from '../../constants/storeFonts'
 
 const inputClass =
   'w-full rounded-lg bg-surface-2 border border-border px-3 py-2.5 text-sm text-ink placeholder-ink-4 focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/60 transition-colors'
@@ -30,11 +29,7 @@ export default function SettingsPage() {
     storeNameFont:    user?.storeNameFont    ?? '',
   })
 
-  useEffect(() => {
-    STORE_FONTS.forEach(loadGoogleFont)
-  }, [])
-
-  useEffect(() => {
+useEffect(() => {
     fetchMyProfile()
       .then((profile) => {
         setForm({
@@ -236,54 +231,7 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* Font picker */}
-              <div>
-                <label className="block text-sm font-medium text-ink-2 mb-1">Fonte do nome da loja</label>
-                <p className="text-xs text-ink-3 mb-3">Como o nome aparece na sua vitrine pública.</p>
-
-                {/* Live preview */}
-                <div className="rounded-lg bg-surface-2 border border-border px-4 py-3 mb-3 overflow-hidden">
-                  <p
-                    className="text-2xl font-extrabold text-ink leading-tight tracking-tight truncate"
-                    style={fontStyle(form.storeNameFont || null)}
-                  >
-                    {form.storeName || 'Nome da Loja'}
-                  </p>
-                </div>
-
-                {/* Grid of 20 fonts */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {STORE_FONTS.map((font) => {
-                    const active = (form.storeNameFont || 'Inter') === font.key
-                    return (
-                      <button
-                        key={font.key}
-                        type="button"
-                        onClick={() => setField('storeNameFont', font.key)}
-                        style={{ fontFamily: `'${font.key}', sans-serif` }}
-                        className={`relative flex flex-col items-start px-3 py-2.5 rounded-lg border-2 transition-all text-left ${
-                          active
-                            ? 'border-brand bg-brand/8 text-ink'
-                            : 'border-border bg-surface-2 text-ink-2 hover:border-border-2 hover:text-ink'
-                        }`}
-                      >
-                        <span className="text-sm font-semibold leading-snug truncate w-full">{font.label}</span>
-                        <span
-                          className="text-[10px] mt-0.5 text-ink-4 truncate w-full"
-                          style={{ fontFamily: 'inherit', fontWeight: 'normal' }}
-                        >
-                          {font.category}
-                        </span>
-                        {active && (
-                          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-brand" />
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {saveError && <ErrorBanner>{saveError}</ErrorBanner>}
+{saveError && <ErrorBanner>{saveError}</ErrorBanner>}
 
               <button
                 type="submit"
