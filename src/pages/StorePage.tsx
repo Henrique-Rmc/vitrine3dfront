@@ -11,7 +11,6 @@ import { useStoreInfo } from '../hooks/useStoreInfo'
 import { listProductTypes, type ProductType } from '../services/productTypeService'
 import { listEffectiveAttributes, type AttributeDefinition } from '../services/attributeService'
 import { readActiveAttributes } from '../utils/attributeFilters'
-import { searchProducts } from '../services/productService'
 import { updateUserProfile, uploadCoverImage, deleteCoverImage } from '../services/authService'
 import { themeToStyle, findTheme } from '../constants/storeThemes'
 import QRCodeModal from '../components/QRCodeModal'
@@ -175,8 +174,6 @@ export default function StorePage() {
     }, { replace: true })
   }
   const [keyword, setKeyword]                     = useState('')
-  const [searchResults, setSearchResults]         = useState<Product[]>([])
-  const [isSearching, setIsSearching]             = useState(false)
   const [selectedTypeId, setSelectedTypeId]       = useState<number | null>(null)
   const [filterPanelOpen, setFilterPanelOpen]     = useState(false)
   const [attrDefinitions, setAttrDefinitions]     = useState<AttributeDefinition[]>([])
@@ -205,27 +202,9 @@ export default function StorePage() {
       .catch(() => {})
   }, [storeId, selectedTypeId])
 
-  // Debounced server-side keyword search
-  useEffect(() => {
-    const q = keyword.trim()
-    if (!storeId || !q) { setSearchResults([]); return }
-    const timer = setTimeout(async () => {
-      setIsSearching(true)
-      try {
-        const res = await searchProducts(storeId, { keyword: q }, 0, 30)
-        setSearchResults(res.content.filter((p) => p.isVisible))
-      } catch {
-        setSearchResults([])
-      } finally {
-        setIsSearching(false)
-      }
-    }, 400)
-    return () => clearTimeout(timer)
-  }, [keyword, storeId])
-
   const isKeywordActive = keyword.trim().length > 0
 
-  const visibleProducts = useMemo(
+const visibleProducts = useMemo(
     () => products.filter((p) => p.isVisible),
     [products],
   )
@@ -331,7 +310,11 @@ export default function StorePage() {
   // Show attr chips only when there are filterable attributes with values in the current view
   const showAttrChips = attributeMap.size > 0 && (selectedTypeId !== null || !hasTypeTabs)
   const showFilterBar = !loading
-  const displayProducts = isKeywordActive ? searchResults : catalogProducts
+  const displayProducts = useMemo(() => {
+    if (!isKeywordActive) return catalogProducts
+    const q = keyword.trim().toLowerCase()
+    return visibleProducts.filter((p) => p.name.toLowerCase().includes(q))
+  }, [isKeywordActive, keyword, visibleProducts, catalogProducts])
 
   if (!loading && error) {
     return (
@@ -362,7 +345,7 @@ export default function StorePage() {
 
             {/* Search bar — always visible */}
             <div className="py-2.5">
-              <div className="relative flex items-center">
+              <div className="relative flex items-center w-full md:max-w-sm">
                 <svg className="absolute left-3 w-4 h-4 text-ink-4 pointer-events-none shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                 </svg>
@@ -373,10 +356,7 @@ export default function StorePage() {
                   placeholder="Buscar produtos..."
                   className="w-full pl-9 pr-9 py-2 rounded-lg bg-surface-2 border border-border focus:border-brand/60 focus:ring-2 focus:ring-brand/20 focus:outline-none text-sm text-ink placeholder-ink-4 transition-colors"
                 />
-                {isSearching && (
-                  <span className="absolute right-3 w-4 h-4 rounded-full border-2 border-brand/40 border-t-brand animate-spin" />
-                )}
-                {!isSearching && keyword && (
+                {keyword && (
                   <button
                     onClick={() => setKeyword('')}
                     className="absolute right-3 text-ink-4 hover:text-ink-2 transition-colors"
@@ -562,7 +542,7 @@ export default function StorePage() {
       {/* Content */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         {/* Hero — only on "all" view with no attribute filters */}
-        {!loading && selectedTypeId === null && !hasActiveFilter && featuredProducts.length > 0 && (
+        {!loading && !isKeywordActive && selectedTypeId === null && !hasActiveFilter && featuredProducts.length > 0 && (
           <HeroSection
             products={featuredProducts}
             whatsappNumber={whatsappNumber}
@@ -574,7 +554,7 @@ export default function StorePage() {
         <section>
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-base font-bold text-ink">{sectionTitle()}</h2>
-            {!loading && !isSearching && (
+            {!loading && (
               <span className="text-sm text-ink-3">
                 {displayProducts.length} produto{displayProducts.length !== 1 ? 's' : ''}
                 {!isKeywordActive && hasMore ? '+' : ''}
@@ -583,7 +563,7 @@ export default function StorePage() {
           </div>
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {loading || (isKeywordActive && isSearching)
+            {loading
               ? Array.from({ length: SKELETON_COUNT }).map((_, i) => (
                   <ProductSkeleton key={i} />
                 ))
@@ -597,7 +577,7 @@ export default function StorePage() {
                 ))}
           </div>
 
-          {!loading && !isSearching && displayProducts.length === 0 && (
+          {!loading && displayProducts.length === 0 && (
             <div className="py-24 text-center">
               <p className="text-ink-3 text-sm">
                 {isKeywordActive
