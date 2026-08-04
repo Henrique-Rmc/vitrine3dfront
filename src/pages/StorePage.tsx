@@ -97,20 +97,21 @@ export default function StorePage() {
       }
 
       if (draft.storeNameFont !== undefined || 'coverColor' in draft || 'storeTheme' in draft) {
+        // Always send current server values as fallback so the PUT doesn't reset
+        // fields that weren't part of this draft (PUT = full replace on the backend).
         await updateUserProfile(user.id, {
           userName: user.userName,
           storeName: user.storeName,
           whatsappNumber: user.whatsappNumber,
           storeDescription: user.storeDescription,
-          storeNameFont: draft.storeNameFont,
-          coverColor: 'coverColor' in draft ? draft.coverColor : undefined,
-          storeTheme: 'storeTheme' in draft ? draft.storeTheme : undefined,
+          storeNameFont: draft.storeNameFont !== undefined ? draft.storeNameFont : (storeNameFont ?? null),
+          coverColor: 'coverColor' in draft ? draft.coverColor : (coverColor ?? null),
+          storeTheme: 'storeTheme' in draft ? draft.storeTheme : (storeTheme ?? null),
         })
         if (draft.storeNameFont !== undefined) themePatch.storeNameFont = draft.storeNameFont
         if ('storeTheme' in draft) themePatch.storeTheme = draft.storeTheme
         if ('coverColor' in draft) {
           themePatch.coverColor = draft.coverColor
-          // Delete existing photo whenever a cover color change is committed (including explicit null → "remover capa")
           if (coverImageUrl && !draft.coverFile) {
             await deleteCoverImage(user.id)
             themePatch.coverImageUrl = null
@@ -123,7 +124,7 @@ export default function StorePage() {
     } finally {
       setIsSaving(false)
     }
-  }, [draft, user, storeId, applyTheme])
+  }, [draft, user, storeId, applyTheme, coverImageUrl, coverColor, storeTheme, storeNameFont])
 
   // Resolved values: draft takes priority over server values
   const resolvedFont       = draft.storeNameFont !== undefined ? draft.storeNameFont : storeNameFont
