@@ -313,7 +313,10 @@ const visibleProducts = useMemo(
   const displayProducts = useMemo(() => {
     if (!isKeywordActive) return catalogProducts
     const q = keyword.trim().toLowerCase()
-    return visibleProducts.filter((p) => p.name.toLowerCase().includes(q))
+    return visibleProducts.filter((p) =>
+      p.name.toLowerCase().includes(q) ||
+      (p.description ?? '').toLowerCase().includes(q)
+    )
   }, [isKeywordActive, keyword, visibleProducts, catalogProducts])
 
   if (!loading && error) {
