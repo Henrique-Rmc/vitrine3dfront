@@ -201,8 +201,11 @@ export default function AttributesPage() {
     const key = labelToKey(label)
     if (!key) { setCreateError('O nome precisa conter pelo menos uma letra.'); return }
 
-    if (allAttributes.some((a) => a.key === key)) {
-      setCreateError('Já existe um filtro com esse nome. Tente um nome diferente.')
+    const isDuplicateInScope = scope === 'global'
+      ? allAttributes.some((a) => a.key === key && !a.productTypeId)
+      : allAttributes.some((a) => a.key === key && a.productTypeId === scope)
+    if (isDuplicateInScope) {
+      setCreateError('Já existe um filtro com esse nome neste tipo. Tente um nome diferente.')
       return
     }
 
