@@ -59,10 +59,10 @@ export async function listAdminStores(
   size = 20,
 ): Promise<PageResponse<AdminStoreResponse>> {
   const params = new URLSearchParams()
-  if (filter.search)  params.set('filter.search', filter.search)
-  if (filter.active != null) params.set('filter.active', String(filter.active))
-  if (filter.plan)    params.set('filter.plan', filter.plan)
-  if (filter.status)  params.set('filter.status', filter.status)
+  if (filter.search)         params.set('search', filter.search)
+  if (filter.active != null) params.set('active', String(filter.active))
+  if (filter.plan)           params.set('plan', filter.plan)
+  if (filter.status)         params.set('status', filter.status)
   params.set('page', String(page))
   params.set('size', String(size))
   const { data } = await apiClient.get<PageResponse<AdminStoreResponse>>(

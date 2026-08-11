@@ -28,6 +28,34 @@ function PlanBadge({ plan }: { plan: string }) {
   )
 }
 
+function ExpiryCell({ store }: { store: AdminStoreResponse }) {
+  const sub = store.subscription
+  if (!sub) return <span className="text-ink-4">—</span>
+
+  // Pick the relevant expiry date depending on status
+  const dateStr =
+    sub.status === 'TRIAL' ? sub.trialEndsAt :
+    sub.status === 'ACTIVE' || sub.status === 'PAST_DUE' ? sub.expiresAt :
+    null
+
+  if (!dateStr) return <span className="text-ink-4">—</span>
+
+  const msLeft = new Date(dateStr).getTime() - Date.now()
+  const days = Math.ceil(msLeft / (1000 * 60 * 60 * 24))
+
+  if (days < 0) return <span className="text-red-600 text-xs font-semibold">Expirado</span>
+  if (days === 0) return <span className="text-red-600 text-xs font-semibold">Hoje</span>
+
+  const urgent = days <= 3
+  const label = days === 1 ? '1 dia' : `${days} dias`
+
+  return (
+    <span className={`text-xs font-medium ${urgent ? 'text-red-600 font-semibold' : 'text-ink-2'}`}>
+      {label}
+    </span>
+  )
+}
+
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     TRIAL: 'bg-purple-50 text-purple-700 border-purple-200',
@@ -667,6 +695,9 @@ export default function SuperadminStoresPage() {
                   <th className="text-left px-4 py-3 text-xs font-semibold text-ink-2 uppercase tracking-wide">
                     Plano / Status
                   </th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-ink-2 uppercase tracking-wide">
+                    Expira em
+                  </th>
                   <th className="text-right px-4 py-3 text-xs font-semibold text-ink-2 uppercase tracking-wide">
                     Ações
                   </th>
@@ -702,6 +733,9 @@ export default function SuperadminStoresPage() {
                           <PlanBadge plan={store.subscription?.plan ?? 'FREE'} />
                           <StatusBadge status={store.subscription?.status ?? 'TRIAL'} />
                         </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <ExpiryCell store={store} />
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-2">
