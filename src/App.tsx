@@ -30,6 +30,7 @@ const SettingsPage = lazy(() => import('./pages/admin/SettingsPage'))
 const OnboardingPage = lazy(() => import('./pages/admin/OnboardingPage'))
 const SuperadminStoresPage = lazy(() => import('./pages/superadmin/StoresPage'))
 const SuperadminStatsPage = lazy(() => import('./pages/superadmin/StatsPage'))
+const SuperadminProfilePage = lazy(() => import('./pages/superadmin/ProfilePage'))
 
 // PDV
 const PdvLayout = lazy(() => import('./pages/admin/pdv/PdvLayout'))
@@ -44,9 +45,10 @@ const PdvCaixaPage = lazy(() => import('./pages/admin/pdv/PdvCaixaPage'))
 const PdvEstoquePage = lazy(() => import('./pages/admin/pdv/PdvEstoquePage'))
 
 function PublicOnlyRoute() {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, isLoading, user } = useAuth()
   if (isLoading) return null
-  return isAuthenticated ? <Navigate to="/admin/products" replace /> : <Outlet />
+  if (!isAuthenticated) return <Outlet />
+  return <Navigate to={user?.role === 'ADMIN' ? '/superadmin/lojas' : '/admin/products'} replace />
 }
 
 function AdminOnlyRoute() {
@@ -130,6 +132,7 @@ export default function App() {
               <Route path="/superadmin" element={<Navigate to="/superadmin/lojas" replace />} />
               <Route path="/superadmin/lojas" element={<SuperadminStoresPage />} />
               <Route path="/superadmin/stats" element={<SuperadminStatsPage />} />
+              <Route path="/superadmin/perfil" element={<SuperadminProfilePage />} />
             </Route>
           </Route>
 

@@ -1,10 +1,12 @@
 export interface SubscriptionInfo {
-  plan: 'FREE' | 'BASIC' | 'PRO'
+  plan: 'FREE' | 'BASIC' | 'PRO' | 'PREMIUM'
   status: 'TRIAL' | 'ACTIVE' | 'PAST_DUE' | 'CANCELLED' | 'EXPIRED'
   startedAt?: string | null
   trialEndsAt?: string | null
   expiresAt?: string | null
   active: boolean
+  paymentProvider?: 'STRIPE' | 'PAGSEGURO' | 'ASAAS' | 'MANUAL' | null
+  externalId?: string | null
 }
 
 export interface User {

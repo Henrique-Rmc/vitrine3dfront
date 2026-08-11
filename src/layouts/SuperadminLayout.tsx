@@ -46,6 +46,18 @@ export default function SuperadminLayout() {
           >
             Stats
           </NavLink>
+          <NavLink
+            to="/superadmin/perfil"
+            className={({ isActive }) =>
+              `px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                isActive
+                  ? 'bg-surface-2 text-ink'
+                  : 'text-ink-3 hover:text-ink hover:bg-surface-2'
+              }`
+            }
+          >
+            Perfil
+          </NavLink>
           <button
             onClick={handleLogout}
             className="ml-4 px-3 py-1.5 rounded-lg text-sm font-medium text-ink-3 hover:text-red-600 hover:bg-red-50 transition-colors"
