@@ -20,7 +20,7 @@ export interface AdminStoreResponse {
 export interface AdminStoreFilter {
   search?: string
   active?: boolean
-  plan?: 'FREE' | 'BASIC' | 'PRO'
+  plan?: 'FREE' | 'BASIC' | 'PRO' | 'PREMIUM'
   status?: 'TRIAL' | 'ACTIVE' | 'PAST_DUE' | 'CANCELLED' | 'EXPIRED'
 }
 
@@ -42,7 +42,7 @@ export interface PlatformStats {
 }
 
 export interface SubscriptionUpdateRequest {
-  plan?: 'FREE' | 'BASIC' | 'PRO'
+  plan?: 'FREE' | 'BASIC' | 'PRO' | 'PREMIUM'
   status?: 'TRIAL' | 'ACTIVE' | 'PAST_DUE' | 'CANCELLED' | 'EXPIRED'
   trialEndsAt?: string | null
   expiresAt?: string | null

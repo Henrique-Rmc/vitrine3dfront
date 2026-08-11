@@ -7,6 +7,8 @@ import {
   type AdminStoreResponse,
   type AdminStoreFilter,
 } from '../../services/adminService'
+import { listPublicProducts } from '../../services/productService'
+import type { Product } from '../../types'
 
 // ── Badge helpers ─────────────────────────────────────────────────────────────
 
@@ -15,6 +17,7 @@ function PlanBadge({ plan }: { plan: string }) {
     FREE: 'bg-surface-2 text-ink-2 border-border',
     BASIC: 'bg-blue-50 text-blue-700 border-blue-200',
     PRO: 'bg-amber-50 text-amber-700 border-amber-200',
+    PREMIUM: 'bg-purple-50 text-purple-700 border-purple-200',
   }
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold uppercase border ${styles[plan] ?? styles.FREE}`}>
@@ -42,6 +45,146 @@ function StatusBadge({ status }: { status: string }) {
     <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold border ${styles[status] ?? styles.CANCELLED}`}>
       {labels[status] ?? status}
     </span>
+  )
+}
+
+// ── Store products modal ──────────────────────────────────────────────────────
+
+function StoreProductsModal({
+  store,
+  onClose,
+}: {
+  store: AdminStoreResponse
+  onClose: () => void
+}) {
+  const [products, setProducts] = useState<Product[]>([])
+  const [page, setPage] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
+  const [total, setTotal] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  const load = useCallback((p: number) => {
+    setLoading(true)
+    listPublicProducts(store.id, p, 15)
+      .then((res) => {
+        setProducts(res.content)
+        setTotalPages(res.totalPages)
+        setTotal(res.totalElements)
+        setPage(p)
+      })
+      .catch(() => setError('Erro ao carregar produtos.'))
+      .finally(() => setLoading(false))
+  }, [store.id])
+
+  useEffect(() => { load(0) }, [load])
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center px-4">
+      <div className="bg-canvas border border-border rounded-2xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border shrink-0">
+          <div>
+            <h2 className="text-base font-bold text-ink">{store.storeName}</h2>
+            <p className="text-xs text-ink-3">
+              @{store.slug} · {total} produto{total !== 1 ? 's' : ''}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-ink-4 hover:text-ink hover:bg-surface-2 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto">
+          {loading && (
+            <div className="flex justify-center py-12">
+              <span className="w-6 h-6 rounded-full border-2 border-brand border-t-transparent animate-spin" />
+            </div>
+          )}
+
+          {!loading && error && (
+            <p className="text-center text-ink-3 text-sm py-12">{error}</p>
+          )}
+
+          {!loading && !error && products.length === 0 && (
+            <p className="text-center text-ink-3 text-sm py-12">Nenhum produto visível.</p>
+          )}
+
+          {!loading && !error && products.length > 0 && (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-surface">
+                  <th className="text-left px-4 py-2.5 text-xs font-semibold text-ink-2 uppercase tracking-wide">Produto</th>
+                  <th className="text-right px-4 py-2.5 text-xs font-semibold text-ink-2 uppercase tracking-wide">Preço</th>
+                  <th className="text-right px-4 py-2.5 text-xs font-semibold text-ink-2 uppercase tracking-wide">Visível</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-surface-2">
+                {products.map((p) => (
+                  <tr key={p.id} className="hover:bg-surface transition-colors">
+                    <td className="px-4 py-2.5">
+                      <div className="flex items-center gap-3">
+                        {p.imageUrl ? (
+                          <img
+                            src={p.imageUrl}
+                            alt={p.name}
+                            className="w-8 h-8 rounded object-cover shrink-0 bg-surface-2"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded bg-surface-2 shrink-0" />
+                        )}
+                        <span className="font-medium text-ink truncate max-w-xs">{p.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-2.5 text-right text-ink-2 tabular-nums">
+                      {p.price != null
+                        ? p.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                        : '—'}
+                    </td>
+                    <td className="px-4 py-2.5 text-right">
+                      {p.isVisible ? (
+                        <span className="text-green-600 text-xs font-semibold">Sim</span>
+                      ) : (
+                        <span className="text-ink-3 text-xs">Não</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="border-t border-border px-4 py-3 flex items-center justify-between shrink-0">
+            <p className="text-xs text-ink-3">Página {page + 1} de {totalPages}</p>
+            <div className="flex gap-2">
+              <button
+                disabled={page === 0}
+                onClick={() => load(page - 1)}
+                className="px-3 py-1.5 rounded-lg border border-border bg-surface-2 text-xs font-medium text-ink-2 disabled:opacity-40 transition-colors"
+              >
+                ← Anterior
+              </button>
+              <button
+                disabled={page >= totalPages - 1}
+                onClick={() => load(page + 1)}
+                className="px-3 py-1.5 rounded-lg border border-border bg-surface-2 text-xs font-medium text-ink-2 disabled:opacity-40 transition-colors"
+              >
+                Próxima →
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -93,6 +236,7 @@ export default function SuperadminStoresPage() {
 
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [productsModal, setProductsModal] = useState<AdminStoreResponse | null>(null)
 
   const PAGE_SIZE = 20
 
@@ -148,7 +292,7 @@ export default function SuperadminStoresPage() {
     }
   }
 
-  async function handlePlanChange(id: string, plan: 'FREE' | 'BASIC' | 'PRO') {
+  async function handlePlanChange(id: string, plan: 'FREE' | 'BASIC' | 'PRO' | 'PREMIUM') {
     setActionLoading(id)
     try {
       const updated = await updateSubscription(id, { plan })
@@ -167,6 +311,13 @@ export default function SuperadminStoresPage() {
           message="Tem certeza que deseja excluir esta loja? Esta ação não pode ser desfeita."
           onConfirm={() => handleDelete(confirmDelete)}
           onCancel={() => setConfirmDelete(null)}
+        />
+      )}
+
+      {productsModal && (
+        <StoreProductsModal
+          store={productsModal}
+          onClose={() => setProductsModal(null)}
         />
       )}
 
@@ -226,6 +377,7 @@ export default function SuperadminStoresPage() {
             <option value="FREE">FREE</option>
             <option value="BASIC">BASIC</option>
             <option value="PRO">PRO</option>
+            <option value="PREMIUM">PREMIUM</option>
           </select>
         </div>
 
@@ -301,13 +453,14 @@ export default function SuperadminStoresPage() {
                           <PlanBadge plan={store.subscription?.plan ?? 'FREE'} />
                           <select
                             value={store.subscription?.plan ?? 'FREE'}
-                            onChange={(e) => handlePlanChange(store.id, e.target.value as 'FREE' | 'BASIC' | 'PRO')}
+                            onChange={(e) => handlePlanChange(store.id, e.target.value as 'FREE' | 'BASIC' | 'PRO' | 'PREMIUM')}
                             disabled={isActing}
                             className="mt-1 rounded border border-border bg-surface-2 px-1 py-0.5 text-xs text-ink-2 focus:outline-none cursor-pointer disabled:opacity-50"
                           >
                             <option value="FREE">FREE</option>
                             <option value="BASIC">BASIC</option>
                             <option value="PRO">PRO</option>
+                            <option value="PREMIUM">PREMIUM</option>
                           </select>
                         </div>
                       </td>
@@ -320,6 +473,13 @@ export default function SuperadminStoresPage() {
                             <span className="w-4 h-4 rounded-full border-2 border-brand border-t-transparent animate-spin" />
                           ) : (
                             <>
+                              <button
+                                onClick={() => setProductsModal(store)}
+                                title="Ver produtos"
+                                className="px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors border bg-surface-2 hover:bg-surface-3 text-ink-2 border-border"
+                              >
+                                Produtos
+                              </button>
                               <button
                                 onClick={() => handleToggle(store.id)}
                                 title={store.isActive ? 'Desativar' : 'Ativar'}

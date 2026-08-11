@@ -31,6 +31,18 @@ const OnboardingPage = lazy(() => import('./pages/admin/OnboardingPage'))
 const SuperadminStoresPage = lazy(() => import('./pages/superadmin/StoresPage'))
 const SuperadminStatsPage = lazy(() => import('./pages/superadmin/StatsPage'))
 
+// PDV
+const PdvLayout = lazy(() => import('./pages/admin/pdv/PdvLayout'))
+const PdvHomePage = lazy(() => import('./pages/admin/pdv/PdvHomePage'))
+const PdvNovaVenda = lazy(() => import('./pages/admin/pdv/PdvNovaVenda'))
+const PdvVendasPage = lazy(() => import('./pages/admin/pdv/PdvVendasPage'))
+const PdvVendaDetalhePage = lazy(() => import('./pages/admin/pdv/PdvVendaDetalhePage'))
+const PdvClientesPage = lazy(() => import('./pages/admin/pdv/PdvClientesPage'))
+const PdvClienteDetalhePage = lazy(() => import('./pages/admin/pdv/PdvClienteDetalhePage'))
+const PdvFuncionariosPage = lazy(() => import('./pages/admin/pdv/PdvFuncionariosPage'))
+const PdvCaixaPage = lazy(() => import('./pages/admin/pdv/PdvCaixaPage'))
+const PdvEstoquePage = lazy(() => import('./pages/admin/pdv/PdvEstoquePage'))
+
 function PublicOnlyRoute() {
   const { isAuthenticated, isLoading } = useAuth()
   if (isLoading) return null
@@ -96,6 +108,19 @@ export default function App() {
               <Route path="/admin/attributes" element={<AttributesPage />} />
               <Route path="/admin/product-types" element={<ProductTypesPage />} />
               <Route path="/admin/settings" element={<SettingsPage />} />
+            </Route>
+
+            {/* ── PDV (own full-screen layout, no AdminLayout sidebar) ── */}
+            <Route element={<PdvLayout />}>
+              <Route path="/admin/pdv" element={<PdvHomePage />} />
+              <Route path="/admin/pdv/nova-venda" element={<PdvNovaVenda />} />
+              <Route path="/admin/pdv/vendas" element={<PdvVendasPage />} />
+              <Route path="/admin/pdv/vendas/:id" element={<PdvVendaDetalhePage />} />
+              <Route path="/admin/pdv/clientes" element={<PdvClientesPage />} />
+              <Route path="/admin/pdv/clientes/:id" element={<PdvClienteDetalhePage />} />
+              <Route path="/admin/pdv/funcionarios" element={<PdvFuncionariosPage />} />
+              <Route path="/admin/pdv/caixa" element={<PdvCaixaPage />} />
+              <Route path="/admin/pdv/estoque" element={<PdvEstoquePage />} />
             </Route>
           </Route>
 

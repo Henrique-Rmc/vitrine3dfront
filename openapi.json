@@ -16,16 +16,20 @@
       "description": "Gerenciamento de produtos da vitrine"
     },
     {
-      "name": "Health",
-      "description": "Verificação de disponibilidade do serviço e de suas dependências (Postgres, Redis)"
-    },
-    {
       "name": "Usuários",
       "description": "Cadastro e consulta de lojistas"
     },
     {
+      "name": "Health",
+      "description": "Verificação de disponibilidade do serviço e de suas dependências (Postgres, Redis)"
+    },
+    {
       "name": "Tipos de produto",
       "description": "Sub-categorias de produto criadas pela propria loja (ex.: Camisa, Action Figure)"
+    },
+    {
+      "name": "PDV",
+      "description": "Ponto de venda — requer plano Premium"
     },
     {
       "name": "Localização",
@@ -246,6 +250,132 @@
         }
       }
     },
+    "/api/pdv/employees/{id}": {
+      "put": {
+        "tags": [
+          "PDV"
+        ],
+        "operationId": "updateEmployee",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PdvEmployeeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PdvEmployeeResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "PDV"
+        ],
+        "operationId": "deactivateEmployee",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/pdv/customers/{id}": {
+      "put": {
+        "tags": [
+          "PDV"
+        ],
+        "operationId": "updateCustomer",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PdvCustomerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PdvCustomerResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "PDV"
+        ],
+        "operationId": "deleteCustomer",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
     "/api/admin/stores/{id}/subscription": {
       "put": {
         "tags": [
@@ -436,6 +566,36 @@
             }
           }
         }
+      },
+      "delete": {
+        "tags": [
+          "Usuários"
+        ],
+        "summary": "Remove a foto de capa da loja",
+        "operationId": "deleteCoverImage",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreResponse"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/users/register": {
@@ -443,7 +603,7 @@
         "tags": [
           "Usuários"
         ],
-        "summary": "Cadastra um novo lojista",
+        "summary": "Cadastra um novo lojista — retorna access token para login imediato",
         "operationId": "register",
         "requestBody": {
           "content": {
@@ -461,7 +621,38 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/StoreResponse"
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/register/affiliate": {
+      "post": {
+        "tags": [
+          "Usuários"
+        ],
+        "summary": "Cadastra um lojista afiliado — profileType definido internamente como AFFILIATE",
+        "operationId": "registerAffiliate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StoreRegisterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
                 }
               }
             }
@@ -776,6 +967,467 @@
         }
       }
     },
+    "/api/pdv/sync": {
+      "post": {
+        "tags": [
+          "PDV"
+        ],
+        "operationId": "sync",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PdvSyncRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PdvSyncResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pdv/sales": {
+      "get": {
+        "tags": [
+          "PDV"
+        ],
+        "operationId": "listSales",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagePdvSaleResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PDV"
+        ],
+        "operationId": "createSale",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PdvSaleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PdvSaleResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pdv/employees": {
+      "get": {
+        "tags": [
+          "PDV"
+        ],
+        "operationId": "listEmployees",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PdvEmployeeResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PDV"
+        ],
+        "operationId": "createEmployee",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PdvEmployeeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PdvEmployeeResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pdv/employees/pin": {
+      "post": {
+        "tags": [
+          "PDV"
+        ],
+        "operationId": "verifyPin",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PdvPinAuthRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PdvEmployeeResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pdv/customers": {
+      "get": {
+        "tags": [
+          "PDV"
+        ],
+        "operationId": "listCustomers",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PdvCustomerResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PDV"
+        ],
+        "operationId": "createCustomer",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PdvCustomerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PdvCustomerResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pdv/customers/{id}/credits": {
+      "get": {
+        "tags": [
+          "PDV"
+        ],
+        "operationId": "listCredits",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PdvCustomerCreditResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PDV"
+        ],
+        "operationId": "addCredit",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PdvCustomerCreditRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PdvCustomerCreditResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pdv/customers/{customerId}/credits/{creditId}/payments": {
+      "post": {
+        "tags": [
+          "PDV"
+        ],
+        "operationId": "addPayment",
+        "parameters": [
+          {
+            "name": "customerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "creditId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PdvCreditPaymentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PdvCreditPaymentResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pdv/cash-flow": {
+      "get": {
+        "tags": [
+          "PDV"
+        ],
+        "operationId": "listCashFlow",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagePdvCashFlowResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PDV"
+        ],
+        "operationId": "addCashFlow",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PdvCashFlowRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PdvCashFlowResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/auth/resend-verification": {
       "post": {
         "tags": [
@@ -966,6 +1618,78 @@
         }
       }
     },
+    "/api/pdv/sales/{id}/cancel": {
+      "patch": {
+        "tags": [
+          "PDV"
+        ],
+        "operationId": "cancelSale",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PdvSaleResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pdv/products/{id}/stock": {
+      "patch": {
+        "tags": [
+          "PDV"
+        ],
+        "operationId": "adjustStock",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PdvStockPatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PdvStockResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/stores/{id}/toggle-active": {
       "patch": {
         "tags": [
@@ -1046,6 +1770,62 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/StoreResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/me": {
+      "get": {
+        "tags": [
+          "Usuários"
+        ],
+        "summary": "Perfil completo do lojista autenticado — usado pela própria tela de configurações",
+        "operationId": "getMe",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/me/attributes": {
+      "get": {
+        "tags": [
+          "Usuários"
+        ],
+        "summary": "Lista atributos do lojista autenticado, filtrados por tipo de produto",
+        "operationId": "listMyAttributes",
+        "parameters": [
+          {
+            "name": "productTypeId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AttributeDefinitionResponse"
+                  }
                 }
               }
             }
@@ -1245,6 +2025,77 @@
                   "items": {
                     "$ref": "#/components/schemas/ProductResponse"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pdv/sales/{id}": {
+      "get": {
+        "tags": [
+          "PDV"
+        ],
+        "operationId": "getSale",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PdvSaleResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pdv/cash-flow/summary": {
+      "get": {
+        "tags": [
+          "PDV"
+        ],
+        "operationId": "getCashFlowSummary",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PdvCashFlowSummaryResponse"
                 }
               }
             }
@@ -1581,6 +2432,17 @@
   },
   "components": {
     "schemas": {
+      "PatchFieldString": {
+        "type": "object",
+        "properties": {
+          "present": {
+            "type": "boolean"
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      },
       "StoreUpdateRequest": {
         "type": "object",
         "properties": {
@@ -1603,6 +2465,25 @@
             "maxLength": 500,
             "minLength": 0
           },
+          "addressStreet": {
+            "type": "string",
+            "maxLength": 150,
+            "minLength": 0
+          },
+          "addressNumber": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 0
+          },
+          "addressNeighborhood": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 0
+          },
+          "addressZipCode": {
+            "type": "string",
+            "pattern": "\\d{5}-?\\d{3}"
+          },
           "stateId": {
             "type": "integer",
             "format": "int64"
@@ -1621,6 +2502,15 @@
               "STANDARD",
               "AFFILIATE"
             ]
+          },
+          "storeNameFont": {
+            "$ref": "#/components/schemas/PatchFieldString"
+          },
+          "coverColor": {
+            "$ref": "#/components/schemas/PatchFieldString"
+          },
+          "storeTheme": {
+            "$ref": "#/components/schemas/PatchFieldString"
           }
         }
       },
@@ -1661,6 +2551,18 @@
           "isActive": {
             "type": "boolean"
           },
+          "addressStreet": {
+            "type": "string"
+          },
+          "addressNumber": {
+            "type": "string"
+          },
+          "addressNeighborhood": {
+            "type": "string"
+          },
+          "addressZipCode": {
+            "type": "string"
+          },
           "stateId": {
             "type": "integer",
             "format": "int64"
@@ -1700,6 +2602,15 @@
           },
           "subscription": {
             "$ref": "#/components/schemas/SubscriptionResponse"
+          },
+          "storeNameFont": {
+            "type": "string"
+          },
+          "coverColor": {
+            "type": "string"
+          },
+          "storeTheme": {
+            "type": "string"
           }
         }
       },
@@ -1711,7 +2622,8 @@
             "enum": [
               "FREE",
               "BASIC",
-              "PRO"
+              "PRO",
+              "PREMIUM"
             ]
           },
           "status": {
@@ -1863,6 +2775,118 @@
           }
         }
       },
+      "PdvEmployeeRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 0
+          },
+          "pin": {
+            "type": "string",
+            "maxLength": 6,
+            "minLength": 4,
+            "pattern": "\\d*"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "OWNER",
+              "MANAGER",
+              "CASHIER"
+            ]
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "PdvEmployeeResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "OWNER",
+              "MANAGER",
+              "CASHIER"
+            ]
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PdvCustomerRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 0
+          },
+          "phone": {
+            "type": "string"
+          },
+          "cpf": {
+            "type": "string",
+            "maxLength": 14,
+            "minLength": 0
+          },
+          "address": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "PdvCustomerResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "cpf": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "openCreditsCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalBalance": {
+            "type": "number"
+          }
+        }
+      },
       "SubscriptionAdminUpdateRequest": {
         "type": "object",
         "properties": {
@@ -1871,7 +2895,8 @@
             "enum": [
               "FREE",
               "BASIC",
-              "PRO"
+              "PRO",
+              "PREMIUM"
             ]
           },
           "status": {
@@ -2001,6 +3026,30 @@
           "userName",
           "whatsappNumber"
         ]
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "storeId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
       },
       "ProductCreateMultipartDoc": {
         "type": "object",
@@ -2218,6 +3267,466 @@
           "value"
         ]
       },
+      "PdvCashFlowRequest": {
+        "type": "object",
+        "properties": {
+          "offlineId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "IN",
+              "OUT"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "SALE",
+              "CREDIT_PAYMENT",
+              "OPENING",
+              "EXPENSE",
+              "WITHDRAWAL",
+              "OTHER"
+            ]
+          },
+          "amount": {
+            "type": "number",
+            "minimum": 0.01
+          },
+          "description": {
+            "type": "string"
+          },
+          "flowDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "operatorId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "amount",
+          "category",
+          "flowDate",
+          "offlineId",
+          "type"
+        ]
+      },
+      "PdvSaleItemRequest": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "productName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "unitPrice": {
+            "type": "number",
+            "minimum": 0
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "productName",
+          "unitPrice"
+        ]
+      },
+      "PdvSaleRequest": {
+        "type": "object",
+        "properties": {
+          "offlineId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "customerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "paymentMethod": {
+            "type": "string",
+            "enum": [
+              "CASH",
+              "PIX",
+              "CARD",
+              "CREDIT"
+            ]
+          },
+          "amountPaid": {
+            "type": "number",
+            "minimum": 0
+          },
+          "saleDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PdvSaleItemRequest"
+            },
+            "minItems": 1
+          },
+          "note": {
+            "type": "string"
+          },
+          "operatorId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "amountPaid",
+          "items",
+          "offlineId",
+          "paymentMethod",
+          "saleDate"
+        ]
+      },
+      "PdvSyncRequest": {
+        "type": "object",
+        "properties": {
+          "sales": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PdvSaleRequest"
+            }
+          },
+          "cashFlows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PdvCashFlowRequest"
+            }
+          }
+        }
+      },
+      "PdvSyncResponse": {
+        "type": "object",
+        "properties": {
+          "salesProcessed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "salesSkipped": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cashFlowsProcessed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cashFlowsSkipped": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "PdvSaleItemResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "productId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "productName": {
+            "type": "string"
+          },
+          "unitPrice": {
+            "type": "number"
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "subtotal": {
+            "type": "number"
+          }
+        }
+      },
+      "PdvSaleResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "offlineId": {
+            "type": "string"
+          },
+          "customerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "customerName": {
+            "type": "string"
+          },
+          "operatorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "operatorName": {
+            "type": "string"
+          },
+          "paymentMethod": {
+            "type": "string",
+            "enum": [
+              "CASH",
+              "PIX",
+              "CARD",
+              "CREDIT"
+            ]
+          },
+          "totalAmount": {
+            "type": "number"
+          },
+          "amountPaid": {
+            "type": "number"
+          },
+          "changeAmount": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "COMPLETED",
+              "CANCELLED"
+            ]
+          },
+          "note": {
+            "type": "string"
+          },
+          "saleDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "syncedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PdvSaleItemResponse"
+            }
+          }
+        }
+      },
+      "PdvPinAuthRequest": {
+        "type": "object",
+        "properties": {
+          "employeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "pin": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "employeeId",
+          "pin"
+        ]
+      },
+      "PdvCustomerCreditRequest": {
+        "type": "object",
+        "properties": {
+          "originSaleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "totalDue": {
+            "type": "number",
+            "minimum": 0.01
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "totalDue"
+        ]
+      },
+      "PdvCreditPaymentResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "paymentMethod": {
+            "type": "string",
+            "enum": [
+              "CASH",
+              "PIX",
+              "CARD",
+              "CREDIT"
+            ]
+          },
+          "paidAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PdvCustomerCreditResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "originSaleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "totalDue": {
+            "type": "number"
+          },
+          "amountPaid": {
+            "type": "number"
+          },
+          "balance": {
+            "type": "number"
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "PARTIAL",
+              "PAID",
+              "OVERDUE"
+            ]
+          },
+          "note": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "payments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PdvCreditPaymentResponse"
+            }
+          }
+        }
+      },
+      "PdvCreditPaymentRequest": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "minimum": 0.01
+          },
+          "paymentMethod": {
+            "type": "string",
+            "enum": [
+              "CASH",
+              "PIX",
+              "CARD",
+              "CREDIT"
+            ]
+          },
+          "paidAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "amount",
+          "paymentMethod"
+        ]
+      },
+      "PdvCashFlowResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "offlineId": {
+            "type": "string"
+          },
+          "operatorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "operatorName": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "IN",
+              "OUT"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "SALE",
+              "CREDIT_PAYMENT",
+              "OPENING",
+              "EXPENSE",
+              "WITHDRAWAL",
+              "OTHER"
+            ]
+          },
+          "amount": {
+            "type": "number"
+          },
+          "description": {
+            "type": "string"
+          },
+          "flowDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "syncedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "RefreshResponse": {
         "type": "object",
         "properties": {
@@ -2247,27 +3756,37 @@
           "password"
         ]
       },
-      "LoginResponse": {
+      "PdvStockPatchRequest": {
         "type": "object",
         "properties": {
-          "accessToken": {
+          "quantityDelta": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "trackStock": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "quantityDelta"
+        ]
+      },
+      "PdvStockResponse": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "productName": {
             "type": "string"
           },
-          "type": {
-            "type": "string"
+          "trackStock": {
+            "type": "boolean"
           },
-          "role": {
-            "type": "string"
-          },
-          "email": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "storeId": {
-            "type": "string",
-            "format": "uuid"
+          "stockQuantity": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -2322,6 +3841,160 @@
             "additionalProperties": {
               "type": "string"
             }
+          }
+        }
+      },
+      "PagePdvSaleResponse": {
+        "type": "object",
+        "properties": {
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PdvSaleResponse"
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PageableObject": {
+        "type": "object",
+        "properties": {
+          "unpaged": {
+            "type": "boolean"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "paged": {
+            "type": "boolean"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "offset": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          }
+        }
+      },
+      "SortObject": {
+        "type": "object",
+        "properties": {
+          "unsorted": {
+            "type": "boolean"
+          },
+          "sorted": {
+            "type": "boolean"
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PagePdvCashFlowResponse": {
+        "type": "object",
+        "properties": {
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PdvCashFlowResponse"
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PdvCashFlowSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "totalIn": {
+            "type": "number"
+          },
+          "totalOut": {
+            "type": "number"
+          },
+          "balance": {
+            "type": "number"
+          },
+          "countIn": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "countOut": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },
@@ -2394,7 +4067,8 @@
             "enum": [
               "FREE",
               "BASIC",
-              "PRO"
+              "PRO",
+              "PREMIUM"
             ]
           },
           "status": {

@@ -15,7 +15,7 @@ import {
   type ProductType,
 } from '../../services/productTypeService'
 import { useAuth } from '../../context/AuthContext'
-import { compressImage } from '../../services/imageOptimizationService'
+import { normalizeImage } from '../../services/imageOptimizationService'
 import ErrorBanner from '../../components/ErrorBanner'
 import { inputClass } from '../../components/form/inputClass'
 import FormField from '../../components/form/FormField'
@@ -138,9 +138,12 @@ export default function ProductFormPage() {
 
     const MAX = 5
     const MAX_BYTES = 2 * 1024 * 1024
-    const ALLOWED = ['image/png', 'image/jpeg', 'image/webp']
+    const ALLOWED = ['image/png', 'image/jpeg', 'image/webp', 'image/heic', 'image/heif']
 
-    const badType = selected.find((f) => !ALLOWED.includes(f.type))
+    const badType = selected.find((f) => {
+      const heicByExt = /\.(heic|heif)$/i.test(f.name)
+      return !ALLOWED.includes(f.type) && !heicByExt
+    })
     if (badType) { setSaveError(`Formato não suportado: ${badType.name}. Use PNG, JPG ou WebP.`); return }
     const tooBig = selected.find((f) => f.size > MAX_BYTES)
     if (tooBig) { setSaveError(`${tooBig.name} excede 2 MB.`); return }
@@ -157,11 +160,13 @@ export default function ProductFormPage() {
     }
 
     setIsOptimizingImage(true)
-    if (imageFiles.length === 0) setField('imageUrls', []) // switching from URL to file mode
+    if (imageFiles.length === 0) setField('imageUrls', [])
     try {
-      const compressed = await Promise.all(capped.map(compressImage))
-      setImageFiles((prev) => [...prev, ...compressed])
-      setImagePreviews((prev) => [...prev, ...compressed.map((f) => URL.createObjectURL(f))])
+      const normalized = await Promise.all(capped.map(normalizeImage))
+      setImageFiles((prev) => [...prev, ...normalized])
+      setImagePreviews((prev) => [...prev, ...normalized.map((f) => URL.createObjectURL(f))])
+    } catch {
+      setSaveError('Não foi possível processar a imagem. Tente com outro arquivo.')
     } finally {
       setIsOptimizingImage(false)
     }
@@ -188,8 +193,13 @@ export default function ProductFormPage() {
       setIsSaving(false)
       setShowSuccess(true)
       setTimeout(() => navigate('/admin/products'), 1700)
-    } catch {
-      setSaveError('Erro ao salvar produto. Verifique sua conexão e tente novamente.')
+    } catch (err: unknown) {
+      console.error('[ProductForm] save error:', err)
+      const serverMsg = (err as { response?: { data?: { message?: string; error?: string } } })
+        ?.response?.data?.message
+        ?? (err as { response?: { data?: { message?: string; error?: string } } })
+        ?.response?.data?.error
+      setSaveError(serverMsg ?? 'Erro ao salvar produto. Verifique sua conexão e tente novamente.')
       setIsSaving(false)
     }
   }
@@ -293,7 +303,7 @@ export default function ProductFormPage() {
           </FormField>
 
           <FormField label="Descrição">
-            <textarea rows={3} disabled={isDisabled}
+            <textarea rows={3} maxLength={2000} disabled={isDisabled}
               value={form.description}
               onChange={(e) => setField('description', e.target.value)}
               placeholder="Detalhes sobre o produto, materiais, técnica, tamanho..."
@@ -402,9 +412,13 @@ export default function ProductFormPage() {
             {!omitPrice && (
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-ink-3 pointer-events-none">R$</span>
-                <input type="number" min="0.01" step="0.01" disabled={isDisabled}
-                  value={form.price ?? ''}
-                  onChange={(e) => setField('price', e.target.value ? Number(e.target.value) : null)}
+                <input type="text" inputMode="decimal" disabled={isDisabled}
+                  value={form.price != null ? String(form.price).replace('.', ',') : ''}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(',', '.')
+                    const n = parseFloat(raw)
+                    setField('price', isNaN(n) ? null : n)
+                  }}
                   placeholder="0,00" className={`${inputClass} pl-9`} />
               </div>
             )}

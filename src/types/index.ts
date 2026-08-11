@@ -65,4 +65,6 @@ export interface Product {
   attributes?: Record<string, unknown>
   productTypeId?: number | null
   productTypeLabel?: string | null
+  trackStock?: boolean | null
+  stockQuantity?: number | null
 }

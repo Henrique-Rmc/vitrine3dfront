@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, useCallback } from 'react'
-import { useParams, useSearchParams } from 'react-router-dom'
+import { useParams, useSearchParams, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import StoreProfileHeader from '../components/StoreProfileHeader'
 import StoreEditPanel, { type StoreDraft } from '../components/StoreEditPanel'
@@ -97,8 +97,6 @@ export default function StorePage() {
       }
 
       if (draft.storeNameFont !== undefined || 'coverColor' in draft || 'storeTheme' in draft) {
-        // Always send current server values as fallback so the PUT doesn't reset
-        // fields that weren't part of this draft (PUT = full replace on the backend).
         await updateUserProfile(user.id, {
           userName: user.userName,
           storeName: user.storeName,
@@ -348,8 +346,8 @@ const visibleProducts = useMemo(
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
             {/* Search bar — always visible */}
-            <div className="py-2.5">
-              <div className="relative flex items-center w-full md:max-w-sm">
+            <div className="py-2.5 flex items-center gap-3">
+              <div className="relative flex items-center flex-1 md:max-w-sm">
                 <svg className="absolute left-3 w-4 h-4 text-ink-4 pointer-events-none shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                 </svg>
@@ -372,6 +370,20 @@ const visibleProducts = useMemo(
                   </button>
                 )}
               </div>
+
+              {/* PDV button — owner only */}
+              {isOwner && (
+                <Link
+                  to="/admin/pdv"
+                  className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-cta text-cta-fg text-sm font-semibold hover:opacity-90 transition-opacity"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <rect x={2} y={6} width={20} height={12} rx={2} />
+                    <circle cx={12} cy={12} r={3} />
+                  </svg>
+                  PDV
+                </Link>
+              )}
             </div>
 
             {/* ProductType tabs — hidden during search */}
