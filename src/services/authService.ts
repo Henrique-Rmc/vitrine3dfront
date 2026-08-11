@@ -55,8 +55,11 @@ interface StoreApiResponse {
 export async function loginUser(credentials: LoginRequest): Promise<LoginResponse> {
   const { data } = await apiClient.post<LoginApiResponse>('/api/auth/login', credentials)
 
-  // Admin login: no storeId, no refresh cookie — return minimal user object
-  if (data.role === 'ADMIN' || !data.storeId) {
+  // Admin login: no storeId, no refresh cookie — return minimal user object.
+  // Normalize role to 'ADMIN' regardless of what the backend sends
+  // (Spring may return 'ROLE_ADMIN'; we always store the canonical 'ADMIN').
+  const isAdmin = !data.storeId || data.role?.toUpperCase().includes('ADMIN')
+  if (isAdmin) {
     const displayName = data.name ?? data.storeName ?? data.email
     return {
       token: data.accessToken,
@@ -72,7 +75,7 @@ export async function loginUser(credentials: LoginRequest): Promise<LoginRespons
         createdAt: '',
         updatedAt: '',
         isActive: true,
-        role: data.role,
+        role: 'ADMIN',
         emailVerified: true,
         profileType: null,
         subscription: null,

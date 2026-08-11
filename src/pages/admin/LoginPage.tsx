@@ -25,9 +25,12 @@ export default function LoginPage() {
     setIsLoading(true)
     try {
       const loggedUser = await login(email, password)
-      const dest =
-        locationFrom ??
-        (loggedUser.role === 'ADMIN' ? '/superadmin/lojas' : '/admin/products')
+      const isAdmin = loggedUser.role === 'ADMIN'
+      // For admin: only respect locationFrom if it's a superadmin route;
+      // a regular /admin/* locationFrom means they were browsing the wrong area.
+      const dest = isAdmin
+        ? (locationFrom?.startsWith('/superadmin') ? locationFrom : '/superadmin/lojas')
+        : (locationFrom ?? '/admin/products')
       navigate(dest, { replace: true })
     } catch {
       setError('E-mail ou senha incorretos. Tente novamente.')
