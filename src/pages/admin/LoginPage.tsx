@@ -16,16 +16,19 @@ export default function LoginPage() {
   const [error, setError]         = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
 
-  const from = (location.state as { from?: { pathname: string } } | null)
-    ?.from?.pathname ?? '/admin/products'
+  const locationFrom = (location.state as { from?: { pathname: string } } | null)
+    ?.from?.pathname
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
     setIsLoading(true)
     try {
-      await login(email, password)
-      navigate(from, { replace: true })
+      const loggedUser = await login(email, password)
+      const dest =
+        locationFrom ??
+        (loggedUser.role === 'ADMIN' ? '/superadmin/lojas' : '/admin/products')
+      navigate(dest, { replace: true })
     } catch {
       setError('E-mail ou senha incorretos. Tente novamente.')
     } finally {

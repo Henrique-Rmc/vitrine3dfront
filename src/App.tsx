@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import { AuthProvider } from './context/AuthContext'
 import { useAuth } from './context/AuthContext'
@@ -53,8 +53,9 @@ function PublicOnlyRoute() {
 
 function AdminOnlyRoute() {
   const { user, isAuthenticated, isLoading } = useAuth()
+  const location = useLocation()
   if (isLoading) return null
-  if (!isAuthenticated) return <Navigate to="/admin/login" replace />
+  if (!isAuthenticated) return <Navigate to="/admin/login" state={{ from: location }} replace />
   if (user?.role !== 'ADMIN') return <Navigate to="/admin/products" replace />
   return <Outlet />
 }

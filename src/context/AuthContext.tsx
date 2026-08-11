@@ -16,7 +16,7 @@ interface AuthContextValue {
   isLoading: boolean
   register: (payload: RegisterRequest) => Promise<Omit<User, 'password'>>
   registerAffiliate: (payload: AffiliateRegisterRequest) => Promise<Omit<User, 'password'>>
-  login: (email: string, password: string) => Promise<void>
+  login: (email: string, password: string) => Promise<Omit<User, 'password'>>
   loginGoogle: (accessToken: string) => Promise<{ isNewUser: boolean }>
   logout: () => void
   updateUser: (updates: Partial<Omit<User, 'password'>>) => void
@@ -105,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return newUser
   }
 
-  async function login(email: string, password: string) {
+  async function login(email: string, password: string): Promise<Omit<User, 'password'>> {
     const { token: newToken, user: loggedUser } = await loginUser({ email, password })
     tokenStore.set(newToken)
     // flushSync garante que o estado de auth é commitado no DOM antes de retornar,
@@ -115,6 +115,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(loggedUser)
     })
     localStorage.setItem(USER_KEY, JSON.stringify(loggedUser))
+    return loggedUser
   }
 
   async function loginGoogle(accessToken: string): Promise<{ isNewUser: boolean }> {
