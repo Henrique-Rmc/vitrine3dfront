@@ -2,7 +2,8 @@ import axios from 'axios'
 import { tokenStore } from './tokenStore'
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL as string,
+  baseURL: import.meta.env.VITE_API_STAGING_URL as string,
+  //baseURL: import.meta.env.VITE_API_BASE_URL as string,
   timeout: 10_000,
   withCredentials: true, // browser sends httpOnly refresh cookie automatically
 })
