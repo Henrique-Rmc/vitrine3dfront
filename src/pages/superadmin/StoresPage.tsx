@@ -201,7 +201,7 @@ function StoreManagementModal({
               </div>
               <div>
                 <label className="block text-xs font-medium text-ink-2 mb-1">Status</label>
-                <select value={status} onChange={(e) => setStatus(e.target.value)} className={inputCls}>
+                <select value={status} onChange={(e) => setStatus(e.target.value as typeof status)} className={inputCls}>
                   <option value="TRIAL">Trial</option>
                   <option value="ACTIVE">Ativo</option>
                   <option value="PAST_DUE">Pendente</option>

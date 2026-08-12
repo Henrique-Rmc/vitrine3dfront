@@ -89,7 +89,7 @@ export async function loginUser(credentials: LoginRequest): Promise<LoginRespons
   return {
     token: data.accessToken,
     user: {
-      id: data.storeId,
+      id: data.storeId!,
       email: data.email,
       userName: profile.userName,
       storeName: data.storeName ?? data.name ?? profile.storeName,

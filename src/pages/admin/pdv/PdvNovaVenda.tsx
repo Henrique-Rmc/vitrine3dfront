@@ -51,7 +51,7 @@ export default function PdvNovaVenda() {
   useEffect(() => {
     if (user?.id) {
       listProducts(user.id, 0, 100)
-        .then((r) => setProducts(r.content.map((p) => ({ id: p.id, name: p.name, price: p.price }))))
+        .then((r) => setProducts(r.content.map((p) => ({ id: p.id, name: p.name, price: p.price ?? null }))))
         .catch(() => {})
       listCustomers().then(setCustomers).catch(() => {})
     }

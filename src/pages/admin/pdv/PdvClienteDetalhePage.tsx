@@ -6,7 +6,6 @@ import {
   addCredit,
   addPayment,
   deleteCustomer,
-  updateCustomer,
   fmtMoney,
   fmtDate,
   PAYMENT_LABELS,
@@ -113,7 +112,7 @@ export default function PdvClienteDetalhePage() {
           const isExpanded = expandedCredit === credit.id
           const statusColor =
             credit.status === 'PAID' ? 'text-emerald-600 dark:text-emerald-400'
-            : credit.status === 'OVERDUE' || (credit.dueDate && new Date(credit.dueDate) < new Date() && credit.status !== 'PAID') ? 'text-red-500'
+            : credit.status === 'OVERDUE' || (credit.dueDate && new Date(credit.dueDate) < new Date()) ? 'text-red-500'
             : 'text-amber-500'
 
           return (
