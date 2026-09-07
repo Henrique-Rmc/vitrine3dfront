@@ -195,7 +195,7 @@ export default function LojaTemplate({
       <StoreProfileHeader
         storeName={storeName || 'Carregando…'}
         storeDescription={storeDescription ?? ''}
-        logoUrl={logoUrl}
+        logoUrl={logoUrl ?? ''}
         coverImageUrl={coverImageUrl}
         coverColor={coverColor}
         storeNameFont={storeNameFont}
@@ -341,7 +341,7 @@ export default function LojaTemplate({
         {!loading && selectedTypeId === null && !hasActiveFilter && featuredProducts.length > 0 && (
           <HeroSection
             products={featuredProducts}
-            whatsappNumber={whatsappNumber}
+            whatsappNumber={whatsappNumber ?? ''}
             onOpenModal={handleOpenModal}
           />
         )}
@@ -364,7 +364,7 @@ export default function LojaTemplate({
                   <ProductCard
                     key={product.id}
                     product={product}
-                    whatsappNumber={whatsappNumber}
+                    whatsappNumber={whatsappNumber ?? ''}
                     onOpenModal={handleOpenModal}
                   />
                 ))}
@@ -424,7 +424,7 @@ export default function LojaTemplate({
       {selectedProduct && (
         <ProductModal
           product={selectedProduct}
-          whatsappNumber={whatsappNumber}
+          whatsappNumber={whatsappNumber ?? ''}
           onClose={handleCloseModal}
         />
       )}
