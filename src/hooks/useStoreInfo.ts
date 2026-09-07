@@ -14,6 +14,8 @@ interface StoreUser {
   coverColor?: string | null
   storeNameFont?: string | null
   storeTheme?: string | null
+  storeLayoutMode?: 'PRODUTOS' | 'SERVICOS' | null
+  businessTypeName?: string | null
   cityName?: string | null
 }
 
@@ -34,6 +36,7 @@ export interface StoreInfo {
   coverColor: string | null
   storeNameFont: string | null
   storeTheme: string | null
+  storeTemplateType: string | null
   cityName: string | null
   products: Product[]
   featuredProducts: Product[]
@@ -57,6 +60,7 @@ export function useStoreInfo(storeSlug: string): StoreInfo {
   const [coverColor, setCoverColor]         = useState<string | null>(null)
   const [storeNameFont, setStoreNameFont]   = useState<string | null>(null)
   const [storeTheme, setStoreTheme]         = useState<string | null>(null)
+  const [storeTemplateType, setStoreTemplateType] = useState<string | null>(null)
   const [cityName, setCityName]             = useState<string | null>(null)
   const [products, setProducts]             = useState<Product[]>([])
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
@@ -93,6 +97,7 @@ export function useStoreInfo(storeSlug: string): StoreInfo {
       setCoverColor(storeUser.coverColor ?? null)
       setStoreNameFont(storeUser.storeNameFont ?? null)
       setStoreTheme(storeUser.storeTheme ?? null)
+      setStoreTemplateType(storeUser.storeLayoutMode === 'SERVICOS' ? 'servicos' : 'loja')
       setCityName(storeUser.cityName ?? null)
       setProducts(publicPage.content)
       setFeaturedProducts(featured)
@@ -111,7 +116,7 @@ export function useStoreInfo(storeSlug: string): StoreInfo {
     if ('storeNameFont' in patch) setStoreNameFont(patch.storeNameFont ?? null)
     if ('coverColor'    in patch) setCoverColor(patch.coverColor ?? null)
     if ('coverImageUrl' in patch) setCoverImageUrl(patch.coverImageUrl ?? null)
-    if ('storeTheme'    in patch) setStoreTheme(patch.storeTheme ?? null)
+    if ('storeTheme' in patch) setStoreTheme(patch.storeTheme ?? null)
   }
 
   function loadMore() {
@@ -137,6 +142,7 @@ export function useStoreInfo(storeSlug: string): StoreInfo {
     coverColor,
     storeNameFont,
     storeTheme,
+    storeTemplateType,
     cityName,
     products,
     featuredProducts,

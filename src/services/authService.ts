@@ -48,6 +48,8 @@ interface StoreApiResponse {
   cityName?: string | null
   storeNameFont?: string | null
   storeTheme?: string | null
+  storeLayoutMode?: 'PRODUTOS' | 'SERVICOS' | null
+  businessTypeName?: string | null
   createdAt?: string
   updatedAt?: string
 }
@@ -127,6 +129,7 @@ export interface RegisterRequest {
   storeDescription: string
   stateId: number
   cityId?: number
+  layoutMode?: 'PRODUTOS' | 'SERVICOS'
 }
 
 export async function registerUser(payload: RegisterRequest): Promise<LoginResponse> {
@@ -309,6 +312,7 @@ export interface UpdateProfileRequest {
   storeNameFont?: string | null
   coverColor?: string | null
   storeTheme?: string | null
+  layoutMode?: 'PRODUTOS' | 'SERVICOS' | null
 }
 
 export async function updateUserProfile(

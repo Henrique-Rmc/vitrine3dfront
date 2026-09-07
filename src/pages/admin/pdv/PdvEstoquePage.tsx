@@ -9,6 +9,24 @@ interface StockItem {
   stock: PdvStockResponse | null
 }
 
+// ProductResponse does not include trackStock/stockQuantity (backend limitation).
+// This module-level cache survives component remounts (navigation away and back)
+// and is the source of truth for stock state within the browser session.
+const stockCache = new Map<number, PdvStockResponse>()
+
+function resolveStock(p: Product): PdvStockResponse | null {
+  if (stockCache.has(p.id)) return stockCache.get(p.id)!
+  if (p.trackStock != null) {
+    return {
+      productId: p.id,
+      productName: p.name,
+      trackStock: p.trackStock ?? false,
+      stockQuantity: p.stockQuantity ?? 0,
+    }
+  }
+  return null
+}
+
 export default function PdvEstoquePage() {
   const { user } = useAuth()
   const [items, setItems] = useState<StockItem[]>([])
@@ -23,12 +41,7 @@ export default function PdvEstoquePage() {
       .then((r) => {
         setItems(r.content.map((p) => ({
           product: p,
-          stock: p.trackStock != null ? {
-            productId: p.id,
-            productName: p.name,
-            trackStock: p.trackStock ?? false,
-            stockQuantity: p.stockQuantity ?? 0,
-          } : null,
+          stock: resolveStock(p),
         })))
       })
       .catch(() => setError('Erro ao carregar produtos.'))
@@ -36,6 +49,7 @@ export default function PdvEstoquePage() {
   }, [user?.id])
 
   function handleAdjusted(updated: PdvStockResponse) {
+    stockCache.set(updated.productId, updated)
     setItems((prev) => prev.map((i) =>
       i.product.id === updated.productId
         ? { ...i, stock: updated }

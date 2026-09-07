@@ -43,6 +43,16 @@ apiClient.interceptors.response.use(
     const url = (error.config?.url as string | undefined) ?? ''
     const skip = SKIP_INTERCEPT.some((p) => url.includes(p))
 
+    // Retry GET requests once on timeout — handles Render cold-start (~15-20s wake time).
+    // Only GET is safe to retry (idempotent). One retry is enough: first attempt times out
+    // while the server wakes up, then the retry succeeds immediately after.
+    const isTimeout = error.code === 'ECONNABORTED' || !!error.message?.includes('timeout')
+    const isGet = (error.config?.method ?? '').toLowerCase() === 'get'
+    if (isTimeout && isGet && !error.config._retried) {
+      error.config._retried = true
+      return apiClient(error.config)
+    }
+
     if (error.response?.status !== 401 || skip || error.config._retry) {
       return Promise.reject(error)
     }

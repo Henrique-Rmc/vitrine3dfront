@@ -4,8 +4,9 @@ import heic2any from 'heic2any'
 const HEIC_TYPES = ['image/heic', 'image/heif']
 
 const COMPRESSION_OPTIONS: Parameters<typeof imageCompression>[1] = {
-  maxSizeMB: 0.5,
+  maxSizeMB: 2,
   maxWidthOrHeight: 1920,
+  initialQuality: 0.85,
   fileType: 'image/webp',
   useWebWorker: true,
 }

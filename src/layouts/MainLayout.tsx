@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Header from '../components/Header'
 import MobileDrawer from '../components/MobileDrawer'
 import VitrineSidebar from '../components/VitrineSidebar'
+import AdminSidebar from '../components/AdminSidebar'
 
-const ADMIN_MOBILE_NAV = [
+const MOBILE_NAV = [
   {
     to: '/admin/products',
     label: 'Produtos',
@@ -26,18 +27,51 @@ const ADMIN_MOBILE_NAV = [
       </>
     ),
   },
+  {
+    to: '/admin/pdv',
+    label: 'PDV',
+    icon: (
+      <>
+        <rect x={2} y={7} width={20} height={14} rx={2} />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" />
+        <line x1={12} y1={12} x2={12} y2={16} />
+        <line x1={10} y1={14} x2={14} y2={14} />
+      </>
+    ),
+  },
 ]
+
+function accountLabel(user: ReturnType<typeof useAuth>['user']): string {
+  if (user?.role === 'ADMIN') return 'Admin'
+  if (user?.profileType === 'AFFILIATE') return 'Loja de Afiliado'
+  return 'Loja'
+}
 
 export default function MainLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user, logout } = useAuth()
+  const navigate = useNavigate()
+
+  function handleLogout() {
+    logout()
+    navigate('/admin/login', { replace: true })
+  }
 
   return (
     <div className="min-h-screen bg-surface text-ink">
-      {/* Desktop sidebar (both admin and non-admin) */}
-      <VitrineSidebar />
+      {/* Sidebar: único AdminSidebar para owner, VitrineSidebar público para visitantes */}
+      {isAuthenticated ? (
+        <AdminSidebar
+          userName={user?.userName ?? user?.email}
+          storeName={user?.storeName}
+          storeSlug={user?.slug}
+          accountLabel={accountLabel(user)}
+          onLogout={handleLogout}
+        />
+      ) : (
+        <VitrineSidebar />
+      )}
 
-      {/* All content is offset from the sidebar on desktop */}
       <div className="md:ml-60">
         <Header
           mobileMenuOpen={mobileMenuOpen}
@@ -45,7 +79,6 @@ export default function MainLayout() {
           showHamburger={!isAuthenticated}
         />
 
-        {/* Mobile drawer — only for non-authenticated visitors */}
         {!isAuthenticated && (
           <MobileDrawer isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
         )}
@@ -55,13 +88,11 @@ export default function MainLayout() {
         </main>
 
         <footer data-neutral-ui className="mt-16 border-t border-border">
-          {/* Legal disclaimer */}
           <div className="bg-surface-2 border-b border-border px-4 py-3 text-center text-xs text-ink-3">
             O VitreIn é uma vitrine digital. As negociações ocorrem diretamente entre comprador e vendedor via WhatsApp,
             fora do ambiente do site, sendo de <strong className="font-medium text-ink-2">inteira responsabilidade do vendedor</strong>.
             O VitreIn não gerencia pagamentos, envios ou qualquer etapa da venda.
           </div>
-          {/* Links + copyright */}
           <div className="px-4 py-6 text-center space-y-3">
             <nav className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-xs text-ink-3">
               <a href="/termos-de-uso" className="hover:text-brand transition-colors">Termos de Uso</a>
@@ -75,10 +106,10 @@ export default function MainLayout() {
         </footer>
       </div>
 
-      {/* Mobile bottom nav — admin only, mirrors AdminLayout nav */}
+      {/* Mobile bottom nav — owner, espelha o mesmo da AdminLayout */}
       {isAuthenticated && (
         <nav data-neutral-ui className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-canvas border-t border-border h-16 flex items-stretch shadow-[0_-1px_0_var(--color-border)]">
-          {ADMIN_MOBILE_NAV.map(({ to, label, icon }) => (
+          {MOBILE_NAV.map(({ to, label, icon }) => (
             <NavLink
               key={to}
               to={to}
@@ -95,7 +126,7 @@ export default function MainLayout() {
             </NavLink>
           ))}
 
-          {/* "Vitrine" tab — always active since we're on the vitrine */}
+          {/* "Vitrine" tab — sempre ativo neste layout */}
           <div className="flex-1 flex flex-col items-center justify-center gap-0.5 text-xs font-semibold text-brand">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016 2.993 2.993 0 002.25-1.016 3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z" />

@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { createProductType } from '../../services/productTypeService'
 import { createCustomAttribute, addOption, labelToKey } from '../../services/attributeService'
+import { updateUserProfile } from '../../services/authService'
 import Logo from '../../components/Logo'
 import presetsData from '../../utils/businessPresets.json'
 
@@ -32,7 +33,9 @@ const negocios = presetsData.negocios as Negocio[]
 
 // ── Step type ─────────────────────────────────────────────────────────────────
 
-type Step = 'preset' | 'preview' | 1 | 2 | 3
+type Step = 'layout' | 'preset' | 'preview' | 1 | 2 | 3
+
+type LayoutMode = 'PRODUTOS' | 'SERVICOS'
 
 const inputClass =
   'w-full rounded-lg bg-surface-2 border border-border px-4 py-2.5 text-sm text-ink placeholder-ink-4 focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/60 disabled:opacity-50 transition-colors'
@@ -79,6 +82,98 @@ function ProgressBar({ step }: { step: 1 | 2 }) {
           style={{ width: `${pct}%` }}
         />
       </div>
+    </div>
+  )
+}
+
+// ── Step layout: produtos vs serviços ─────────────────────────────────────────
+
+function LayoutStepContent({
+  onNext,
+}: {
+  onNext: (mode: LayoutMode) => void
+}) {
+  const [selected, setSelected] = useState<LayoutMode | null>(null)
+
+  const options: { mode: LayoutMode; title: string; description: string; icon: React.ReactNode }[] = [
+    {
+      mode: 'PRODUTOS',
+      title: 'Produtos',
+      description: 'Vendo itens físicos ou digitais — roupas, eletrônicos, artesanato, etc.',
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+        </svg>
+      ),
+    },
+    {
+      mode: 'SERVICOS',
+      title: 'Serviços',
+      description: 'Ofereço serviços ou trabalho por projeto — consultoria, imóveis, veículos, etc.',
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z" />
+        </svg>
+      ),
+    },
+  ]
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <h2 className="text-base font-bold text-ink leading-snug">
+          Como sua loja funciona?
+        </h2>
+        <p className="text-sm text-ink-3 mt-1 leading-relaxed">
+          Isso define o layout da sua vitrine para os clientes.
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        {options.map(({ mode, title, description, icon }) => (
+          <button
+            key={mode}
+            onClick={() => setSelected(mode)}
+            className={`w-full text-left rounded-xl border px-4 py-4 transition-all ${
+              selected === mode
+                ? 'border-brand bg-brand/5 ring-1 ring-brand/20'
+                : 'border-border bg-canvas hover:border-border-2 hover:bg-surface-2'
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <span className={`mt-0.5 shrink-0 ${selected === mode ? 'text-brand' : 'text-ink-3'}`}>
+                {icon}
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-ink">{title}</p>
+                <p className="text-xs text-ink-3 mt-0.5">{description}</p>
+              </div>
+              <div
+                className={`shrink-0 mt-1 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                  selected === mode ? 'border-brand bg-brand' : 'border-border'
+                }`}
+              >
+                {selected === mode && (
+                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                )}
+              </div>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      <button
+        onClick={() => selected && onNext(selected)}
+        disabled={!selected}
+        className="w-full flex items-center justify-center gap-2 rounded-lg bg-cta hover:bg-cta-2 disabled:opacity-50 disabled:cursor-not-allowed text-cta-fg font-semibold py-2.5 transition-colors"
+      >
+        Continuar
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+        </svg>
+      </button>
     </div>
   )
 }
@@ -535,7 +630,7 @@ export default function OnboardingPage() {
   const { user } = useAuth()
   const storeId = user?.id ?? ''
 
-  const [step, setStep]                 = useState<Step>('preset')
+  const [step, setStep]                 = useState<Step>('layout')
   const [wasPreset, setWasPreset]       = useState(false)
   const [appliedPresetName, setAppliedPresetName] = useState('')
 
@@ -555,6 +650,29 @@ export default function OnboardingPage() {
 
   const step1InputRef = useRef<HTMLInputElement>(null)
   const step2InputRef = useRef<HTMLInputElement>(null)
+
+  // ── Layout step handler ─────────────────────────────────────────────────────
+
+  async function handleLayoutNext(mode: LayoutMode) {
+    if (user) {
+      try {
+        await updateUserProfile(storeId, {
+          userName: user.userName,
+          storeName: user.storeName,
+          whatsappNumber: user.whatsappNumber,
+          storeDescription: user.storeDescription,
+          storeNameFont: user.storeNameFont ?? null,
+          coverColor: user.coverColor ?? null,
+          storeTheme: user.storeTheme ?? null,
+          layoutMode: mode,
+        })
+        // User type doesn't include layoutMode — backend is the source of truth
+      } catch {
+        // non-blocking — proceed to next step even if save fails
+      }
+    }
+    setStep('preset')
+  }
 
   // ── Preset path handlers ────────────────────────────────────────────────────
 
@@ -722,6 +840,11 @@ export default function OnboardingPage() {
         )}
 
         <div className="px-8 pb-8 pt-6">
+          {step === 'layout' && (
+            <LayoutStepContent
+              onNext={handleLayoutNext}
+            />
+          )}
           {step === 'preset' && (
             <PresetStepContent
               onSelectNegocio={handleSelectNegocio}
