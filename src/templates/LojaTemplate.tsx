@@ -194,7 +194,7 @@ export default function LojaTemplate({
     <div style={themeToStyle(storeTheme)}>
       <StoreProfileHeader
         storeName={storeName || 'Carregando…'}
-        storeDescription={storeDescription}
+        storeDescription={storeDescription ?? ''}
         logoUrl={logoUrl}
         coverImageUrl={coverImageUrl}
         coverColor={coverColor}

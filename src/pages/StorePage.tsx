@@ -98,10 +98,10 @@ export default function StorePage() {
   }, [draft, user, storeId, applyTheme, coverImageUrl, coverColor, storeTheme, storeNameFont])
 
   // Resolved values: draft takes priority over server values
-  const resolvedFont       = draft.storeNameFont !== undefined ? draft.storeNameFont : storeNameFont
-  const resolvedCoverUrl   = draft.coverPreviewUrl !== undefined ? draft.coverPreviewUrl : coverImageUrl
-  const resolvedCoverColor = 'coverColor' in draft ? draft.coverColor : coverColor
-  const resolvedTheme      = 'storeTheme' in draft ? draft.storeTheme : storeTheme
+  const resolvedFont       = (draft.storeNameFont !== undefined ? draft.storeNameFont : storeNameFont) ?? null
+  const resolvedCoverUrl   = (draft.coverPreviewUrl !== undefined ? draft.coverPreviewUrl : coverImageUrl) ?? null
+  const resolvedCoverColor = ('coverColor' in draft ? draft.coverColor : coverColor) ?? null
+  const resolvedTheme      = ('storeTheme' in draft ? draft.storeTheme : storeTheme) ?? null
 
   // Apply store theme to document root (page bg + mobile header follow the theme)
   useEffect(() => {
