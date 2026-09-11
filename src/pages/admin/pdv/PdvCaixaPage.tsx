@@ -13,6 +13,8 @@ import {
   type FlowCategory,
   type Page,
 } from '../../../services/pdvService'
+import { useNetworkStatus } from '../../../hooks/useNetworkStatus'
+import { queueCashFlow } from '../../../services/pdvOfflineStore'
 
 function todayStr() { return new Date().toISOString().slice(0, 10) }
 
@@ -20,6 +22,7 @@ const IN_CATEGORIES: FlowCategory[] = ['OPENING', 'CREDIT_PAYMENT', 'OTHER']
 const OUT_CATEGORIES: FlowCategory[] = ['EXPENSE', 'WITHDRAWAL', 'OTHER']
 
 export default function PdvCaixaPage() {
+  const isOnline = useNetworkStatus()
   const [entries, setEntries] = useState<PdvCashFlowResponse[]>([])
   const [page, setPage] = useState<Page<PdvCashFlowResponse> | null>(null)
   const [currentPage, setCurrentPage] = useState(0)
@@ -152,6 +155,7 @@ export default function PdvCaixaPage() {
           categories={showForm === 'IN' ? IN_CATEGORIES : OUT_CATEGORIES}
           onClose={() => setShowForm(null)}
           onSaved={() => { setShowForm(null); load(0) }}
+          isOnline={isOnline}
         />
       )}
     </div>
@@ -163,11 +167,13 @@ function CashFlowModal({
   categories,
   onClose,
   onSaved,
+  isOnline,
 }: {
   type: FlowType
   categories: FlowCategory[]
   onClose: () => void
   onSaved: () => void
+  isOnline: boolean
 }) {
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState<FlowCategory>(categories[0])
@@ -181,19 +187,34 @@ function CashFlowModal({
     if (isNaN(val) || val <= 0) { setError('Valor inválido.'); return }
     setSaving(true)
     setError('')
+
+    const payload = {
+      offlineId: generateOfflineId(),
+      type,
+      category,
+      amount: val,
+      description: description.trim() || undefined,
+      flowDate: new Date().toISOString(),
+    }
+
+    // Offline path: queue locally and close
+    if (!isOnline) {
+      try {
+        await queueCashFlow(payload)
+        onSaved()
+      } catch {
+        setError('Erro ao salvar localmente.')
+        setSaving(false)
+      }
+      return
+    }
+
+    // Online path
     try {
-      await addCashFlow({
-        offlineId: generateOfflineId(),
-        type,
-        category,
-        amount: val,
-        description: description.trim() || undefined,
-        flowDate: new Date().toISOString(),
-      })
+      await addCashFlow(payload)
       onSaved()
     } catch (err) {
       setError((err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Erro ao lançar.')
-    } finally {
       setSaving(false)
     }
   }

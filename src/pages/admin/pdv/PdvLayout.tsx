@@ -1,4 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { usePdvSync } from '../../../hooks/usePdvSync'
+import type { SyncResult } from '../../../services/pdvSyncManager'
 
 const NAV = [
   { to: '/admin/pdv', label: 'Início', icon: HomeIcon, end: true },
@@ -12,6 +14,7 @@ const NAV = [
 
 export default function PdvLayout() {
   const navigate = useNavigate()
+  const { isOnline, isSyncing, pendingCount, lastSyncResult, syncNow } = usePdvSync()
 
   return (
     <div className="flex h-screen overflow-hidden bg-canvas text-ink">
@@ -25,7 +28,14 @@ export default function PdvLayout() {
           >
             <ChevronLeftIcon />
           </button>
-          <span className="font-bold text-base text-ink">PDV</span>
+          <span className="font-bold text-base text-ink flex-1">PDV</span>
+          <OfflineDot
+            isOnline={isOnline}
+            isSyncing={isSyncing}
+            pendingCount={pendingCount}
+            lastSyncResult={lastSyncResult}
+            onRetry={syncNow}
+          />
         </div>
 
         <nav className="flex flex-col gap-1 px-2 py-3 flex-1 overflow-y-auto">
@@ -60,6 +70,13 @@ export default function PdvLayout() {
             <ChevronLeftIcon />
           </button>
           <span className="font-bold text-base text-ink flex-1">PDV</span>
+          <OfflineDot
+            isOnline={isOnline}
+            isSyncing={isSyncing}
+            pendingCount={pendingCount}
+            lastSyncResult={lastSyncResult}
+            onRetry={syncNow}
+          />
         </header>
 
         <div className="flex-1 overflow-y-auto">
@@ -89,6 +106,54 @@ export default function PdvLayout() {
       </main>
     </div>
   )
+}
+
+// ── Compact offline dot indicator ────────────────────────────────────────────
+
+function OfflineDot({
+  isOnline,
+  isSyncing,
+  pendingCount,
+  lastSyncResult,
+  onRetry,
+}: {
+  isOnline: boolean
+  isSyncing: boolean
+  pendingCount: number
+  lastSyncResult: SyncResult | null
+  onRetry: () => void
+}) {
+  if (isSyncing) {
+    return (
+      <span className="flex items-center gap-1.5 text-xs text-blue-500 font-medium">
+        <span className="w-2 h-2 rounded-full border border-blue-400 border-t-transparent animate-spin" />
+        Sincronizando
+      </span>
+    )
+  }
+
+  if (lastSyncResult && lastSyncResult.errors.length > 0) {
+    return (
+      <button
+        onClick={onRetry}
+        className="flex items-center gap-1.5 text-xs text-amber-500 font-medium hover:text-amber-600 transition-colors"
+      >
+        <span className="w-2 h-2 rounded-full bg-amber-400" />
+        Erro · Tentar
+      </button>
+    )
+  }
+
+  if (!isOnline) {
+    return (
+      <span className="flex items-center gap-1.5 text-xs text-amber-500 font-medium">
+        <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+        {pendingCount > 0 ? `Offline · ${pendingCount}` : 'Offline'}
+      </span>
+    )
+  }
+
+  return null
 }
 
 // ── Inline SVG icons (no dep) ─────────────────────────────────────────────────
