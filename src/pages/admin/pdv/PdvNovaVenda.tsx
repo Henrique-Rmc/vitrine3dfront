@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import {
   createSale,
   listCustomers,
-  addCredit,
   generateOfflineId,
+  getApiErrorCode,
+  getApiErrorMessage,
   fmtMoney,
   PAYMENT_LABELS,
   type PdvCustomerResponse,
@@ -27,6 +28,12 @@ type Step = 'items' | 'payment' | 'confirm'
 
 interface CartItem extends PdvSaleItemRequest {
   _key: string
+  originalUnitPrice: number | null
+}
+
+function itemDiscount(item: CartItem): number {
+  if (item.originalUnitPrice == null) return 0
+  return Math.max(item.originalUnitPrice - item.unitPrice, 0)
 }
 
 interface CachedProduct {
@@ -280,29 +287,38 @@ export default function PdvNovaVenda() {
 
   // Items step state
   const [selectedTypeId, setSelectedTypeId] = useState<number | null>(null)
-  const [searchOpen, setSearchOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [cartDrawerOpen, setCartDrawerOpen] = useState(false)
   const [showCustomForm, setShowCustomForm] = useState(false)
   const [customName, setCustomName] = useState('')
   const [customPrice, setCustomPrice] = useState('')
+  const [priceEntryProduct, setPriceEntryProduct] = useState<CachedProduct | null>(null)
 
   // Payment step state
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('PIX')
   const [amountPaidCents, setAmountPaidCents] = useState(0)
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null)
   const [note, setNote] = useState('')
-  const [creditNote, setCreditNote] = useState('')
-  const [creditDueDate, setCreditDueDate] = useState('')
+  const [partialAmountStr, setPartialAmountStr] = useState('')
 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
   // Derived
   const total = cart.reduce((s, i) => s + i.unitPrice * i.quantity, 0)
+  const totalDiscount = cart.reduce((s, i) => s + itemDiscount(i) * i.quantity, 0)
   const totalCents = Math.round(total * 100)
-  const paid = paymentMethod === 'CASH' ? amountPaidCents / 100 : total
-  const change = Math.max((amountPaidCents / 100) - total, 0)
+  const paid =
+    paymentMethod === 'CASH'
+      ? amountPaidCents / 100
+      : paymentMethod === 'CREDIT'
+      ? 0
+      : partialAmountStr
+      ? parseFloat(partialAmountStr.replace(',', '.')) || 0
+      : total
+  const change = paymentMethod === 'CASH' ? Math.max((amountPaidCents / 100) - total, 0) : 0
+  const remainingBalance = Math.max(total - paid, 0)
+  const hasDebt = remainingBalance > 0.005
   const cartCount = cart.reduce((s, i) => s + i.quantity, 0)
 
   // Load data
@@ -350,15 +366,28 @@ export default function PdvNovaVenda() {
 
   // Cart operations
   function addProduct(p: CachedProduct) {
+    if (p.price == null) {
+      setPriceEntryProduct(p)
+      return
+    }
+    addProductWithPrice(p, p.price)
+  }
+
+  function addProductWithPrice(p: CachedProduct, price: number) {
     const existing = cart.find((c) => c.productId === p.id)
     if (existing) {
       setCart((prev) => prev.map((c) => c._key === existing._key ? { ...c, quantity: c.quantity + 1 } : c))
     } else {
       setCart((prev) => [
         ...prev,
-        { _key: generateOfflineId(), productId: p.id, productName: p.name, unitPrice: p.price ?? 0, quantity: 1 },
+        { _key: generateOfflineId(), productId: p.id, productName: p.name, originalUnitPrice: p.price, unitPrice: price, quantity: 1 },
       ])
     }
+    setPriceEntryProduct(null)
+  }
+
+  function updateItemPrice(key: string, price: number) {
+    setCart((prev) => prev.map((c) => c._key === key ? { ...c, unitPrice: price } : c))
   }
 
   function addCustomItem() {
@@ -366,7 +395,7 @@ export default function PdvNovaVenda() {
     if (!customName.trim() || isNaN(price) || price < 0) return
     setCart((prev) => [
       ...prev,
-      { _key: generateOfflineId(), productId: null, productName: customName.trim(), unitPrice: price, quantity: 1 },
+      { _key: generateOfflineId(), productId: null, productName: customName.trim(), originalUnitPrice: null, unitPrice: price, quantity: 1 },
     ])
     setCustomName('')
     setCustomPrice('')
@@ -384,22 +413,27 @@ export default function PdvNovaVenda() {
     setError('')
     setSaving(true)
 
+    const payload = {
+      offlineId: generateOfflineId(),
+      paymentMethod,
+      amountPaid: paid,
+      saleDate: new Date().toISOString(),
+      items: cart.map(({ _key: _, originalUnitPrice, ...item }) => ({
+        ...item,
+        originalUnitPrice: originalUnitPrice ?? undefined,
+      })),
+      customerId: selectedCustomerId ?? undefined,
+      note: note.trim() || undefined,
+    }
+
     if (!isOnline) {
-      if (paymentMethod === 'CREDIT') {
-        setError('Vendas a prazo requerem conexão. Escolha outro método.')
+      if (hasDebt) {
+        setError('Vendas com valor em aberto requerem conexão. Pague o total ou conecte-se primeiro.')
         setSaving(false)
         return
       }
       try {
-        await queueSale({
-          offlineId: generateOfflineId(),
-          paymentMethod,
-          amountPaid: paid,
-          saleDate: new Date().toISOString(),
-          items: cart.map(({ _key: _, ...item }) => item),
-          customerId: selectedCustomerId ?? undefined,
-          note: note.trim() || undefined,
-        })
+        await queueSale(payload)
         navigate('/admin/pdv', { replace: true })
       } catch {
         setError('Erro ao salvar venda localmente.')
@@ -409,34 +443,18 @@ export default function PdvNovaVenda() {
     }
 
     try {
-      const sale = await createSale({
-        offlineId: generateOfflineId(),
-        paymentMethod,
-        amountPaid: paymentMethod === 'CREDIT' ? 0 : paid,
-        saleDate: new Date().toISOString(),
-        items: cart.map(({ _key: _, ...item }) => item),
-        customerId: selectedCustomerId ?? undefined,
-        note: note.trim() || undefined,
-      })
-
-      if (paymentMethod === 'CREDIT' && selectedCustomerId) {
-        await addCredit(selectedCustomerId, {
-          originSaleId: sale.id,
-          totalDue: sale.totalAmount,
-          dueDate: creditDueDate ? new Date(creditDueDate).toISOString() : undefined,
-          note: creditNote.trim() || undefined,
-        })
-      }
-
+      const sale = await createSale(payload)
       navigate(`/admin/pdv/vendas/${sale.id}`, { replace: true })
     } catch (err) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Erro ao registrar venda.'
-      setError(msg)
+      const code = getApiErrorCode(err)
+      setError(
+        code === 'CUSTOMER_REQUIRED_FOR_PARTIAL'
+          ? 'Selecione um cliente: o valor pago é menor que o total da venda.'
+          : getApiErrorMessage(err, 'Erro ao registrar venda.'),
+      )
       setSaving(false)
     }
-  }, [cart, paymentMethod, paid, selectedCustomerId, note, creditNote, creditDueDate, navigate, isOnline])
+  }, [cart, paymentMethod, paid, hasDebt, selectedCustomerId, note, navigate, isOnline])
 
   // ── Step: items ───────────────────────────────────────────────────────────
   if (step === 'items') {
@@ -446,57 +464,40 @@ export default function PdvNovaVenda() {
         {/* Product panel */}
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
 
-          {/* Category pills + search toggle */}
+          {/* Category pills + search */}
           <div className="border-b border-border bg-surface shrink-0">
-            <div className="flex items-center gap-2 px-3 pt-3">
-              <div className="flex-1 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-                <div className="flex gap-1.5 pb-3">
+            <div className="flex-1 overflow-x-auto px-3 pt-3" style={{ scrollbarWidth: 'none' }}>
+              <div className="flex gap-1.5 pb-3">
+                <button
+                  onClick={() => { setSelectedTypeId(null); setSearch('') }}
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                    selectedTypeId === null && !search ? 'bg-cta text-cta-fg' : 'bg-canvas border border-border text-ink-2 hover:text-ink'
+                  }`}
+                >
+                  Todos
+                </button>
+                {productTypes.map((t) => (
                   <button
-                    onClick={() => { setSelectedTypeId(null); setSearch('') }}
+                    key={t.id}
+                    onClick={() => { setSelectedTypeId(t.id); setSearch('') }}
                     className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                      selectedTypeId === null && !search ? 'bg-cta text-cta-fg' : 'bg-canvas border border-border text-ink-2 hover:text-ink'
+                      selectedTypeId === t.id ? 'bg-cta text-cta-fg' : 'bg-canvas border border-border text-ink-2 hover:text-ink'
                     }`}
                   >
-                    Todos
+                    {t.label}
                   </button>
-                  {productTypes.map((t) => (
-                    <button
-                      key={t.id}
-                      onClick={() => { setSelectedTypeId(t.id); setSearch('') }}
-                      className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                        selectedTypeId === t.id ? 'bg-cta text-cta-fg' : 'bg-canvas border border-border text-ink-2 hover:text-ink'
-                      }`}
-                    >
-                      {t.label}
-                    </button>
-                  ))}
-                </div>
+                ))}
               </div>
-              <button
-                onClick={() => { setSearchOpen((o) => !o); if (searchOpen) setSearch('') }}
-                className={`shrink-0 mb-3 w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                  searchOpen ? 'bg-cta text-cta-fg' : 'text-ink-2 hover:bg-canvas border border-border'
-                }`}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
-                  <circle cx={11} cy={11} r={8} />
-                  <line x1={21} y1={21} x2={16.65} y2={16.65} />
-                </svg>
-              </button>
             </div>
-
-            {searchOpen && (
-              <div className="px-3 pb-3">
-                <input
-                  autoFocus
-                  type="search"
-                  placeholder="Buscar produto..."
-                  value={search}
-                  onChange={(e) => { setSearch(e.target.value); setSelectedTypeId(null) }}
-                  className="w-full px-3 py-2 rounded-xl border border-border bg-canvas text-sm text-ink placeholder:text-ink-3 focus:outline-none focus:border-cta"
-                />
-              </div>
-            )}
+            <div className="px-3 pb-3">
+              <input
+                type="search"
+                placeholder="Buscar produto..."
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setSelectedTypeId(null) }}
+                className="w-full px-3 py-2 rounded-xl border border-border bg-canvas text-sm text-ink placeholder:text-ink-3 focus:outline-none focus:border-cta"
+              />
+            </div>
           </div>
 
           {/* Product tile grid */}
@@ -598,37 +599,60 @@ export default function PdvNovaVenda() {
               </div>
             ) : (
               cart.map((item) => (
-                <div key={item._key} className="flex items-center gap-2 rounded-xl border border-border bg-canvas px-3 py-2.5">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-ink truncate">{item.productName}</p>
-                    <p className="text-[10px] text-ink-3">{fmtMoney(item.unitPrice)}</p>
-                  </div>
-                  <div className="flex items-center gap-1.5">
+                <div key={item._key} className="rounded-xl border border-border bg-canvas px-3 py-2.5 space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs font-semibold text-ink truncate flex-1">{item.productName}</p>
                     <button
                       type="button"
                       onClick={() => changeQty(item._key, -1)}
-                      className="w-6 h-6 rounded-full border border-border text-ink flex items-center justify-center text-sm leading-none hover:bg-surface transition-colors"
+                      className="w-5 h-5 rounded-full border border-border text-ink flex items-center justify-center text-xs leading-none hover:bg-surface transition-colors shrink-0"
                     >
                       −
                     </button>
-                    <span className="text-xs font-bold text-ink w-4 text-center">{item.quantity}</span>
+                    <span className="text-xs font-bold text-ink w-3 text-center">{item.quantity}</span>
                     <button
                       type="button"
                       onClick={() => changeQty(item._key, 1)}
-                      className="w-6 h-6 rounded-full border border-border text-ink flex items-center justify-center text-sm leading-none hover:bg-surface transition-colors"
+                      className="w-5 h-5 rounded-full border border-border text-ink flex items-center justify-center text-xs leading-none hover:bg-surface transition-colors shrink-0"
                     >
                       +
                     </button>
                   </div>
-                  <p className="text-xs font-bold text-ink tabular-nums w-16 text-right">
-                    {fmtMoney(item.unitPrice * item.quantity)}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 flex-1">
+                      <span className="text-[10px] text-ink-3">R$</span>
+                      <input
+                        type="number"
+                        min={0}
+                        step={0.01}
+                        value={item.unitPrice || ''}
+                        onChange={(e) => updateItemPrice(item._key, parseFloat(e.target.value) || 0)}
+                        onClick={(e) => e.stopPropagation()}
+                        placeholder="0,00"
+                        className="w-full px-1.5 py-0.5 rounded-lg border border-border bg-canvas text-xs text-ink text-right tabular-nums focus:outline-none focus:border-cta"
+                      />
+                    </div>
+                    <p className="text-xs font-bold text-ink tabular-nums shrink-0">
+                      = {fmtMoney(item.unitPrice * item.quantity)}
+                    </p>
+                  </div>
+                  {itemDiscount(item) > 0 && (
+                    <p className="text-[10px] text-emerald-600 dark:text-emerald-400">
+                      Tabela {fmtMoney(item.originalUnitPrice!)} · desconto −{fmtMoney(itemDiscount(item))}
+                    </p>
+                  )}
                 </div>
               ))
             )}
           </div>
 
           <div className="border-t border-border p-4 shrink-0 space-y-3">
+            {totalDiscount > 0 && (
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-emerald-600 dark:text-emerald-400">Desconto</span>
+                <span className="font-medium text-emerald-600 dark:text-emerald-400 tabular-nums">−{fmtMoney(totalDiscount)}</span>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <span className="text-sm text-ink-2 font-medium">Total</span>
               <span className="text-2xl font-bold text-ink tabular-nums">{fmtMoney(total)}</span>
@@ -679,21 +703,43 @@ export default function PdvNovaVenda() {
               </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-2">
                 {cart.map((item) => (
-                  <div key={item._key} className="flex items-center gap-3 rounded-xl border border-border bg-canvas px-3 py-2.5">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-ink truncate">{item.productName}</p>
-                      <p className="text-xs text-ink-3">{fmtMoney(item.unitPrice)}</p>
+                  <div key={item._key} className="rounded-xl border border-border bg-canvas px-3 py-2.5 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-ink truncate flex-1">{item.productName}</p>
+                      <button type="button" onClick={() => changeQty(item._key, -1)} className="w-7 h-7 rounded-full border border-border text-ink flex items-center justify-center text-sm">−</button>
+                      <span className="text-sm font-bold text-ink w-5 text-center">{item.quantity}</span>
+                      <button type="button" onClick={() => changeQty(item._key, 1)} className="w-7 h-7 rounded-full border border-border text-ink flex items-center justify-center text-sm">+</button>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button type="button" onClick={() => changeQty(item._key, -1)} className="w-8 h-8 rounded-full border border-border text-ink flex items-center justify-center">−</button>
-                      <span className="text-sm font-bold text-ink w-5 text-center">{item.quantity}</span>
-                      <button type="button" onClick={() => changeQty(item._key, 1)} className="w-8 h-8 rounded-full border border-border text-ink flex items-center justify-center">+</button>
+                      <div className="flex items-center gap-1 flex-1">
+                        <span className="text-xs text-ink-3">R$</span>
+                        <input
+                          type="number"
+                          min={0}
+                          step={0.01}
+                          value={item.unitPrice || ''}
+                          onChange={(e) => updateItemPrice(item._key, parseFloat(e.target.value) || 0)}
+                          placeholder="0,00"
+                          className="w-full px-2 py-1 rounded-lg border border-border bg-canvas text-sm text-ink text-right tabular-nums focus:outline-none focus:border-cta"
+                        />
+                      </div>
+                      <p className="text-sm font-bold text-ink tabular-nums shrink-0">= {fmtMoney(item.unitPrice * item.quantity)}</p>
                     </div>
-                    <p className="text-sm font-bold text-ink tabular-nums w-20 text-right">{fmtMoney(item.unitPrice * item.quantity)}</p>
+                    {itemDiscount(item) > 0 && (
+                      <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                        Tabela {fmtMoney(item.originalUnitPrice!)} · desconto −{fmtMoney(itemDiscount(item))}
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>
               <div className="border-t border-border p-4 shrink-0 space-y-3">
+                {totalDiscount > 0 && (
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-emerald-600 dark:text-emerald-400">Desconto</span>
+                    <span className="font-medium text-emerald-600 dark:text-emerald-400 tabular-nums">−{fmtMoney(totalDiscount)}</span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-ink-2">Total</span>
                   <span className="text-2xl font-bold text-ink tabular-nums">{fmtMoney(total)}</span>
@@ -709,6 +755,14 @@ export default function PdvNovaVenda() {
             </div>
           </div>
         )}
+      {/* Price entry modal for products with no price set */}
+      {priceEntryProduct && (
+        <ProductPriceEntryModal
+          productName={priceEntryProduct.name}
+          onConfirm={(price) => addProductWithPrice(priceEntryProduct, price)}
+          onClose={() => setPriceEntryProduct(null)}
+        />
+      )}
       </div>
     )
   }
@@ -729,6 +783,11 @@ export default function PdvNovaVenda() {
           <div className="text-center pt-2">
             <p className="text-xs text-ink-3 mb-1">Total da venda</p>
             <p className="text-5xl font-bold tabular-nums text-ink tracking-tight">{fmtMoney(total)}</p>
+            {totalDiscount > 0 && (
+              <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">
+                Desconto aplicado: −{fmtMoney(totalDiscount)}
+              </p>
+            )}
           </div>
 
           {/* Payment method buttons */}
@@ -758,11 +817,51 @@ export default function PdvNovaVenda() {
             })}
           </div>
 
-          {/* Customer search — shown for all methods */}
+          {/* Amount received — PIX / CARD */}
+          {(paymentMethod === 'PIX' || paymentMethod === 'CARD') && (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold text-ink-2 uppercase tracking-wide">Valor recebido</p>
+                {hasDebt && (
+                  <span className="text-xs text-amber-600 dark:text-amber-400 font-semibold">
+                    Diferença: {fmtMoney(remainingBalance)}
+                  </span>
+                )}
+              </div>
+              <input
+                type="number"
+                min={0}
+                step={0.01}
+                value={partialAmountStr}
+                onChange={(e) => setPartialAmountStr(e.target.value)}
+                placeholder={total.toFixed(2)}
+                className="w-full px-3 py-3 rounded-xl border border-border bg-canvas text-2xl font-bold text-ink tabular-nums focus:outline-none focus:border-cta"
+              />
+            </div>
+          )}
+
+          {/* Numeric keypad — cash */}
+          {paymentMethod === 'CASH' && (
+            <NumericKeypad
+              valueCents={amountPaidCents}
+              totalCents={totalCents}
+              onChange={setAmountPaidCents}
+            />
+          )}
+
+          {/* Troco (cash, overpaid) */}
+          {paymentMethod === 'CASH' && amountPaidCents > 0 && amountPaidCents >= totalCents && (
+            <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 p-4 text-center">
+              <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium mb-1">Troco</p>
+              <p className="text-3xl font-bold tabular-nums text-emerald-700 dark:text-emerald-400">{fmtMoney(change)}</p>
+            </div>
+          )}
+
+          {/* Customer search */}
           <div className="space-y-1.5">
             <p className="text-xs font-semibold text-ink-2 uppercase tracking-wide">
               Cliente{' '}
-              {paymentMethod === 'CREDIT'
+              {hasDebt
                 ? <span className="text-red-500 font-bold">*</span>
                 : <span className="font-normal normal-case text-ink-3">(opcional)</span>}
             </p>
@@ -773,53 +872,30 @@ export default function PdvNovaVenda() {
             />
           </div>
 
-          {/* Numeric keypad — only for cash */}
-          {paymentMethod === 'CASH' && (
-            <NumericKeypad
-              valueCents={amountPaidCents}
-              totalCents={totalCents}
-              onChange={setAmountPaidCents}
-            />
-          )}
-
-          {/* Troco */}
-          {paymentMethod === 'CASH' && amountPaidCents > 0 && amountPaidCents >= totalCents && (
-            <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 p-4 text-center">
-              <p className="text-xs text-emerald-700 dark:text-emerald-400 font-medium mb-1">Troco</p>
-              <p className="text-3xl font-bold tabular-nums text-emerald-700 dark:text-emerald-400">{fmtMoney(change)}</p>
-            </div>
-          )}
-
-          {/* Offline + credit warning */}
-          {!isOnline && paymentMethod === 'CREDIT' && (
-            <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950 rounded-xl px-3 py-2.5">
-              Fiado requer conexão. Escolha outro método ou conecte-se primeiro.
+          {/* Debt warning when no customer selected */}
+          {hasDebt && !selectedCustomerId && (
+            <p className="text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950 rounded-xl px-3 py-2.5 font-medium">
+              {fmtMoney(remainingBalance)} ficará em aberto — selecione um cliente para registrar a dívida.
             </p>
           )}
 
-          {/* Fiado details */}
-          {paymentMethod === 'CREDIT' && (
-            <div className="space-y-3 rounded-2xl border border-border bg-surface p-4">
-              <p className="text-xs font-semibold text-ink-2">Detalhes do fiado</p>
-              <div className="space-y-1">
-                <label className="text-xs text-ink-3">Vencimento (opcional)</label>
-                <input
-                  type="date"
-                  value={creditDueDate}
-                  onChange={(e) => setCreditDueDate(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-border bg-canvas text-sm text-ink focus:outline-none focus:border-cta"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-ink-3">Observação</label>
-                <input
-                  type="text"
-                  value={creditNote}
-                  onChange={(e) => setCreditNote(e.target.value)}
-                  placeholder="Ex.: combinado para pagar na sexta"
-                  className="w-full px-3 py-2 rounded-xl border border-border bg-canvas text-sm text-ink focus:outline-none focus:border-cta"
-                />
-              </div>
+          {/* Offline + debt warning */}
+          {!isOnline && hasDebt && (
+            <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950 rounded-xl px-3 py-2.5">
+              Valor em aberto requer conexão para registrar. Pague o total ou conecte-se primeiro.
+            </p>
+          )}
+
+          {/* Debt notice — backend creates the credit automatically */}
+          {hasDebt && selectedCustomerId && (
+            <div className="rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 p-4">
+              <p className="text-sm text-amber-800 dark:text-amber-300">
+                <span className="font-bold">{fmtMoney(remainingBalance)}</span> ficarão em aberto para{' '}
+                <span className="font-semibold">{customers.find((c) => c.id === selectedCustomerId)?.name}</span>.
+              </p>
+              <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                O débito será registrado automaticamente no perfil do cliente.
+              </p>
             </div>
           )}
 
@@ -839,7 +915,7 @@ export default function PdvNovaVenda() {
           <button
             type="button"
             onClick={() => setStep('confirm')}
-            disabled={paymentMethod === 'CREDIT' && !selectedCustomerId}
+            disabled={hasDebt && !selectedCustomerId}
             className="w-full py-4 rounded-xl bg-cta text-cta-fg font-bold text-base disabled:opacity-40 transition-opacity"
           >
             Revisar venda
@@ -868,29 +944,51 @@ export default function PdvNovaVenda() {
       <div className="flex-1 overflow-y-auto p-4 space-y-4 max-w-md mx-auto w-full">
         {/* Items */}
         <div className="rounded-2xl border border-border bg-surface divide-y divide-border overflow-hidden">
-          {cart.map((item) => (
-            <div key={item._key} className="flex items-center justify-between px-4 py-3">
-              <div>
-                <p className="text-sm font-medium text-ink">{item.productName}</p>
-                <p className="text-xs text-ink-3">{item.quantity}× {fmtMoney(item.unitPrice)}</p>
+          {cart.map((item) => {
+            const disc = itemDiscount(item)
+            return (
+              <div key={item._key} className="flex items-center justify-between px-4 py-3">
+                <div>
+                  <p className="text-sm font-medium text-ink">{item.productName}</p>
+                  <p className="text-xs text-ink-3">
+                    {item.quantity}×{' '}
+                    {disc > 0 && <span className="line-through mr-1">{fmtMoney(item.originalUnitPrice!)}</span>}
+                    {fmtMoney(item.unitPrice)}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-ink tabular-nums">{fmtMoney(item.unitPrice * item.quantity)}</p>
+                  {disc > 0 && (
+                    <p className="text-xs text-emerald-600 dark:text-emerald-400 tabular-nums">−{fmtMoney(disc * item.quantity)}</p>
+                  )}
+                </div>
               </div>
-              <p className="text-sm font-semibold text-ink tabular-nums">{fmtMoney(item.unitPrice * item.quantity)}</p>
+            )
+          })}
+          <div className="px-4 py-4 bg-canvas space-y-1.5">
+            {totalDiscount > 0 && (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-emerald-600 dark:text-emerald-400">Desconto</span>
+                <span className="font-medium text-emerald-600 dark:text-emerald-400 tabular-nums">−{fmtMoney(totalDiscount)}</span>
+              </div>
+            )}
+            <div className="flex items-center justify-between">
+              <span className="text-base font-bold text-ink">Total</span>
+              <span className="text-2xl font-bold text-ink tabular-nums">{fmtMoney(total)}</span>
             </div>
-          ))}
-          <div className="flex items-center justify-between px-4 py-4 bg-canvas">
-            <span className="text-base font-bold text-ink">Total</span>
-            <span className="text-2xl font-bold text-ink tabular-nums">{fmtMoney(total)}</span>
           </div>
         </div>
 
         {/* Payment summary */}
         <div className="rounded-2xl border border-border bg-surface p-4 space-y-2 text-sm">
           <Row label="Pagamento" value={PAYMENT_LABELS[paymentMethod]} />
-          {paymentMethod === 'CASH' && amountPaidCents > 0 && (
-            <>
-              <Row label="Recebido" value={fmtMoney(amountPaidCents / 100)} />
-              <Row label="Troco" value={fmtMoney(change)} />
-            </>
+          <Row label="Pago agora" value={fmtMoney(paid)} />
+          {change > 0 && <Row label="Troco" value={fmtMoney(change)} />}
+          {hasDebt && (
+            <div className="flex justify-between">
+              <span className="text-amber-600 dark:text-amber-400">Fica em aberto</span>
+              <span className="font-semibold text-amber-600 dark:text-amber-400 tabular-nums">{fmtMoney(remainingBalance)}</span>
+            </div>
           )}
           {customer && <Row label="Cliente" value={customer.name} />}
           {note && <Row label="Obs." value={note} />}
@@ -934,6 +1032,63 @@ function Row({ label, value }: { label: string; value: string }) {
     <div className="flex justify-between">
       <span className="text-ink-3">{label}</span>
       <span className="text-ink font-medium">{value}</span>
+    </div>
+  )
+}
+
+function ProductPriceEntryModal({
+  productName,
+  onConfirm,
+  onClose,
+}: {
+  productName: string
+  onConfirm: (price: number) => void
+  onClose: () => void
+}) {
+  const [price, setPrice] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => { inputRef.current?.focus() }, [])
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    const val = parseFloat(price.replace(',', '.'))
+    if (isNaN(val) || val < 0) return
+    onConfirm(val)
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative w-full max-w-xs rounded-t-2xl md:rounded-2xl bg-surface p-5 z-10 space-y-4">
+        <div>
+          <p className="text-xs text-ink-3 mb-0.5">Produto sem preço cadastrado</p>
+          <h3 className="text-base font-bold text-ink">{productName}</h3>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1">
+            <label className="text-xs text-ink-2">Preço unitário (R$)</label>
+            <input
+              ref={inputRef}
+              type="number"
+              min={0}
+              step={0.01}
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              placeholder="0,00"
+              className="w-full px-3 py-2.5 rounded-xl border border-border bg-canvas text-lg font-semibold text-ink focus:outline-none focus:border-cta"
+            />
+          </div>
+          <div className="flex gap-2">
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-border text-sm text-ink font-medium">
+              Cancelar
+            </button>
+            <button type="submit" className="flex-1 py-2.5 rounded-xl bg-cta text-cta-fg text-sm font-semibold">
+              Adicionar
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   )
 }

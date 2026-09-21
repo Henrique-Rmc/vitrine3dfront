@@ -3,11 +3,11 @@ import apiClient from './apiClient'
 // ── Shared types ──────────────────────────────────────────────────────────────
 
 export type PaymentMethod = 'CASH' | 'PIX' | 'CARD' | 'CREDIT'
-export type SaleStatus = 'COMPLETED' | 'CANCELLED'
+export type SaleStatus = 'COMPLETED' | 'PARTIAL' | 'CANCELLED'
 export type EmployeeRole = 'OWNER' | 'MANAGER' | 'CASHIER'
 export type CreditStatus = 'OPEN' | 'PARTIAL' | 'PAID' | 'OVERDUE'
 export type FlowType = 'IN' | 'OUT'
-export type FlowCategory = 'SALE' | 'CREDIT_PAYMENT' | 'OPENING' | 'EXPENSE' | 'WITHDRAWAL' | 'OTHER'
+export type FlowCategory = 'SALE' | 'CREDIT_PAYMENT' | 'OPENING' | 'EXPENSE' | 'RECURRING_EXPENSE' | 'WITHDRAWAL' | 'OTHER'
 
 export interface Page<T> {
   content: T[]
@@ -23,7 +23,9 @@ export interface Page<T> {
 export interface PdvSaleItemRequest {
   productId?: number | null
   productName: string
+  originalUnitPrice?: number | null
   unitPrice: number
+  unitCost?: number | null
   quantity: number
 }
 
@@ -42,7 +44,9 @@ export interface PdvSaleItemResponse {
   id: number
   productId: number | null
   productName: string
+  originalUnitPrice?: number | null
   unitPrice: number
+  itemDiscountAmount?: number | null
   quantity: number
   subtotal: number
 }
@@ -63,6 +67,8 @@ export interface PdvSaleResponse {
   saleDate: string
   syncedAt: string
   items: PdvSaleItemResponse[]
+  originalAmount?: number | null
+  discountAmount?: number | null
 }
 
 export async function listSales(params?: {
@@ -139,6 +145,7 @@ export async function verifyPin(payload: PdvPinAuthRequest): Promise<PdvEmployee
 export interface PdvCustomerRequest {
   name: string
   phone?: string | null
+  email?: string | null
   cpf?: string | null
   address?: string | null
 }
@@ -147,6 +154,7 @@ export interface PdvCustomerResponse {
   id: string
   name: string
   phone: string | null
+  email?: string | null
   cpf: string | null
   address: string | null
   createdAt: string
@@ -173,6 +181,66 @@ export async function deleteCustomer(id: string): Promise<void> {
   await apiClient.delete(`/api/pdv/customers/${id}`)
 }
 
+// ── Relationships (Parentesco) ────────────────────────────────────────────────
+
+export type RelationshipType =
+  | 'PAI' | 'MAE' | 'FILHO' | 'FILHA' | 'IRMAO' | 'IRMA'
+  | 'TIO' | 'TIA' | 'SOBRINHO' | 'SOBRINHA'
+  | 'AVO' | 'AVOA' | 'NETO' | 'NETA'
+  | 'PRIMO' | 'PRIMA' | 'CONJUGE' | 'OUTRO'
+
+export const RELATIONSHIP_LABELS: Record<RelationshipType, string> = {
+  PAI: 'Pai',
+  MAE: 'Mãe',
+  FILHO: 'Filho',
+  FILHA: 'Filha',
+  IRMAO: 'Irmão',
+  IRMA: 'Irmã',
+  TIO: 'Tio',
+  TIA: 'Tia',
+  SOBRINHO: 'Sobrinho',
+  SOBRINHA: 'Sobrinha',
+  AVO: 'Avô',
+  AVOA: 'Avó',
+  NETO: 'Neto',
+  NETA: 'Neta',
+  PRIMO: 'Primo',
+  PRIMA: 'Prima',
+  CONJUGE: 'Cônjuge',
+  OUTRO: 'Outro',
+}
+
+export interface PdvRelationshipRequest {
+  relativeId: string
+  relationship: RelationshipType
+  note?: string | null
+}
+
+export interface PdvRelationshipResponse {
+  id: number
+  relativeId: string
+  relativeName: string
+  relativePhone: string | null
+  relationship: RelationshipType
+  fromMe: boolean
+  note: string | null
+  createdAt: string
+}
+
+export async function listRelationships(customerId: string): Promise<PdvRelationshipResponse[]> {
+  const { data } = await apiClient.get<PdvRelationshipResponse[]>(`/api/pdv/customers/${customerId}/relationships`)
+  return data
+}
+
+export async function createRelationship(customerId: string, payload: PdvRelationshipRequest): Promise<PdvRelationshipResponse> {
+  const { data } = await apiClient.post<PdvRelationshipResponse>(`/api/pdv/customers/${customerId}/relationships`, payload)
+  return data
+}
+
+export async function deleteRelationship(customerId: string, relId: number): Promise<void> {
+  await apiClient.delete(`/api/pdv/customers/${customerId}/relationships/${relId}`)
+}
+
 // ── Credits (Fiado) ───────────────────────────────────────────────────────────
 
 export interface PdvCustomerCreditRequest {
@@ -180,6 +248,9 @@ export interface PdvCustomerCreditRequest {
   totalDue: number
   dueDate?: string | null
   note?: string | null
+  productName: string
+  productId?: number | null
+  originalAmount?: number | null
 }
 
 export interface PdvCreditPaymentRequest {
@@ -207,6 +278,10 @@ export interface PdvCustomerCreditResponse {
   note: string | null
   createdAt: string
   payments: PdvCreditPaymentResponse[]
+  productName: string
+  productId?: number | null
+  originalAmount?: number | null
+  discountAmount?: number | null
 }
 
 export async function listCredits(customerId: string): Promise<PdvCustomerCreditResponse[]> {
@@ -303,11 +378,71 @@ export async function adjustStock(productId: number, payload: PdvStockPatchReque
   return data
 }
 
+// ── Product cost (private to PDV — never exposed on public product routes) ──
+
+export interface PdvProductCostResponse {
+  productId: number
+  productName: string
+  costPrice: number | null
+  price: number | null
+  marginAmount: number | null
+  marginPercent: number | null
+}
+
+export async function getProductCost(productId: number): Promise<PdvProductCostResponse> {
+  const { data } = await apiClient.get<PdvProductCostResponse>(`/api/pdv/products/${productId}/cost`)
+  return data
+}
+
+export async function updateProductCost(productId: number, costPrice: number | null): Promise<PdvProductCostResponse> {
+  const { data } = await apiClient.patch<PdvProductCostResponse>(`/api/pdv/products/${productId}/cost`, { costPrice })
+  return data
+}
+
+// ── Balance (DRE) ─────────────────────────────────────────────────────────────
+
+export interface PdvBalanceResponse {
+  periodo: { from: string | null; to: string | null }
+  basis: 'ACCRUAL'
+  dre: {
+    receitaBruta: number
+    descontos: number
+    receitaLiquida: number
+    cmv: number | null
+    lucroBruto: number | null
+    despesasInsumos: number
+    despesasFixas: number
+    retiradas: number
+    lucroLiquido: number | null
+  }
+  indicadores: {
+    margemBruta: number | null
+    margemLiquida: number | null
+    ticketMedio: number | null
+    numeroVendas: number
+  }
+  posicao: {
+    saldoEmCaixa: number
+    contasAReceber: number
+    estoqueACusto: number | null
+  }
+  qualidade: {
+    cmvCoverage: number
+    estimado: boolean
+  }
+}
+
+export async function getBalance(params?: { from?: string; to?: string }): Promise<PdvBalanceResponse> {
+  const { data } = await apiClient.get<PdvBalanceResponse>('/api/pdv/balance', { params })
+  return data
+}
+
 // ── Sync ──────────────────────────────────────────────────────────────────────
 
 export interface PdvSyncRequest {
   sales?: PdvSaleRequest[]
   cashFlows?: PdvCashFlowRequest[]
+  expenseBatches?: import('./pdvExpenseService').ExpenseBatchRequest[]
 }
 
 export interface PdvSyncResponse {
@@ -315,6 +450,8 @@ export interface PdvSyncResponse {
   salesSkipped: number
   cashFlowsProcessed: number
   cashFlowsSkipped: number
+  expenseBatchesProcessed?: number
+  expenseBatchesSkipped?: number
   errors: string[]
 }
 
@@ -324,6 +461,16 @@ export async function syncPdv(payload: PdvSyncRequest): Promise<PdvSyncResponse>
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+type ApiError = { response?: { data?: { code?: string; message?: string } } }
+
+export function getApiErrorCode(err: unknown): string | undefined {
+  return (err as ApiError)?.response?.data?.code
+}
+
+export function getApiErrorMessage(err: unknown, fallback: string): string {
+  return (err as ApiError)?.response?.data?.message ?? fallback
+}
 
 export function generateOfflineId(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -361,7 +508,8 @@ export const FLOW_CATEGORY_LABELS: Record<FlowCategory, string> = {
   SALE: 'Venda',
   CREDIT_PAYMENT: 'Pgto. Fiado',
   OPENING: 'Abertura',
-  EXPENSE: 'Despesa',
+  EXPENSE: 'Insumos',
+  RECURRING_EXPENSE: 'Conta fixa',
   WITHDRAWAL: 'Retirada',
   OTHER: 'Outro',
 }
@@ -377,4 +525,23 @@ export const CREDIT_STATUS_LABELS: Record<CreditStatus, string> = {
   PARTIAL: 'Parcial',
   PAID: 'Pago',
   OVERDUE: 'Vencido',
+}
+
+// ── Discounts ─────────────────────────────────────────────────────────────────
+
+export interface PdvDiscountSummaryResponse {
+  totalOriginal: number
+  totalCharged: number
+  totalDiscounted: number
+}
+
+export async function getDiscountSummary(params?: {
+  from?: string
+  to?: string
+}): Promise<PdvDiscountSummaryResponse> {
+  const { data } = await apiClient.get<PdvDiscountSummaryResponse>(
+    '/api/pdv/sales/discount-summary',
+    { params },
+  )
+  return data
 }

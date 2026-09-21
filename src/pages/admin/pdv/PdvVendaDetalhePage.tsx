@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 import {
   getSale,
   cancelSale,
+  getApiErrorCode,
+  getApiErrorMessage,
   fmtMoney,
   fmtDateTime,
   PAYMENT_LABELS,
@@ -17,6 +19,7 @@ export default function PdvVendaDetalhePage() {
   const [cancelling, setCancelling] = useState(false)
   const [confirmCancel, setConfirmCancel] = useState(false)
   const [error, setError] = useState('')
+  const [cancelError, setCancelError] = useState('')
 
   useEffect(() => {
     if (!id) return
@@ -29,15 +32,18 @@ export default function PdvVendaDetalhePage() {
   async function handleCancel() {
     if (!id) return
     setCancelling(true)
+    setCancelError('')
     try {
       const updated = await cancelSale(id)
       setSale(updated)
       setConfirmCancel(false)
     } catch (err) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-        ?? 'Erro ao cancelar.'
-      setError(msg)
+      setConfirmCancel(false)
+      setCancelError(
+        getApiErrorCode(err) === 'SALE_HAS_CREDIT_PAYMENTS'
+          ? 'Esta venda possui um débito com pagamentos registrados. Estorne os pagamentos antes de cancelar a venda.'
+          : getApiErrorMessage(err, 'Erro ao cancelar.'),
+      )
     } finally {
       setCancelling(false)
     }
@@ -57,6 +63,8 @@ export default function PdvVendaDetalhePage() {
   }
 
   const isCancelled = sale.status === 'CANCELLED'
+  const isPartial = sale.status === 'PARTIAL'
+  const openBalance = Math.max(sale.totalAmount - sale.amountPaid, 0)
 
   return (
     <div className="p-4 md:p-6 space-y-4 max-w-lg mx-auto">
@@ -65,6 +73,11 @@ export default function PdvVendaDetalhePage() {
         {isCancelled && (
           <span className="px-2.5 py-1 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-semibold">
             Cancelada
+          </span>
+        )}
+        {isPartial && (
+          <span className="px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-semibold">
+            Parcial
           </span>
         )}
       </div>
@@ -80,40 +93,92 @@ export default function PdvVendaDetalhePage() {
 
       {/* Items */}
       <div className="rounded-2xl border border-border bg-surface divide-y divide-border overflow-hidden">
-        {sale.items.map((item) => (
-          <div key={item.id} className="flex items-center justify-between px-4 py-3">
-            <div>
-              <p className="text-sm font-medium text-ink">{item.productName}</p>
-              <p className="text-xs text-ink-2">{item.quantity}× {fmtMoney(item.unitPrice)}</p>
+        {sale.items.map((item) => {
+          const disc = item.itemDiscountAmount ?? 0
+          return (
+            <div key={item.id} className="flex items-center justify-between px-4 py-3">
+              <div>
+                <p className="text-sm font-medium text-ink">{item.productName}</p>
+                <p className="text-xs text-ink-2">
+                  {item.quantity}×{' '}
+                  {disc > 0 && item.originalUnitPrice != null && (
+                    <span className="line-through text-ink-3 mr-1">{fmtMoney(item.originalUnitPrice)}</span>
+                  )}
+                  {fmtMoney(item.unitPrice)}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-semibold text-ink tabular-nums">{fmtMoney(item.subtotal)}</p>
+                {disc > 0 && (
+                  <p className="text-xs text-emerald-600 dark:text-emerald-400 tabular-nums">−{fmtMoney(disc)}</p>
+                )}
+              </div>
             </div>
-            <p className="text-sm font-semibold text-ink tabular-nums">{fmtMoney(item.subtotal)}</p>
-          </div>
-        ))}
+          )
+        })}
 
         {/* Totals */}
         <div className="px-4 py-3 space-y-1.5 bg-canvas">
+          {sale.originalAmount != null && (
+            <div className="flex justify-between text-sm">
+              <span className="text-ink-2">Preço original</span>
+              <span className="font-medium text-ink tabular-nums">{fmtMoney(sale.originalAmount)}</span>
+            </div>
+          )}
+          {sale.discountAmount != null && sale.discountAmount > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-emerald-600 dark:text-emerald-400">Desconto</span>
+              <span className="font-medium text-emerald-600 dark:text-emerald-400 tabular-nums">
+                −{fmtMoney(sale.discountAmount)}
+              </span>
+            </div>
+          )}
           <div className="flex justify-between text-sm">
             <span className="text-ink-2">Total</span>
             <span className="font-bold text-ink tabular-nums">{fmtMoney(sale.totalAmount)}</span>
           </div>
-          {sale.paymentMethod !== 'CREDIT' && (
-            <>
-              <div className="flex justify-between text-sm">
-                <span className="text-ink-2">Pago</span>
-                <span className="font-medium text-ink tabular-nums">{fmtMoney(sale.amountPaid)}</span>
-              </div>
-              {sale.changeAmount > 0 && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-ink-2">Troco</span>
-                  <span className="font-medium text-ink tabular-nums">{fmtMoney(sale.changeAmount)}</span>
-                </div>
-              )}
-            </>
+          <div className="flex justify-between text-sm">
+            <span className="text-ink-2">Pago</span>
+            <span className="font-medium text-ink tabular-nums">{fmtMoney(sale.amountPaid)}</span>
+          </div>
+          {sale.changeAmount > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-ink-2">Troco</span>
+              <span className="font-medium text-ink tabular-nums">{fmtMoney(sale.changeAmount)}</span>
+            </div>
+          )}
+          {isPartial && (
+            <div className="flex justify-between text-sm">
+              <span className="text-amber-600 dark:text-amber-400">Em aberto</span>
+              <span className="font-semibold text-amber-600 dark:text-amber-400 tabular-nums">{fmtMoney(openBalance)}</span>
+            </div>
           )}
         </div>
       </div>
 
-      {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+      {isPartial && (
+        <div className="rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 p-4">
+          <p className="text-sm text-amber-800 dark:text-amber-300">
+            Débito de <span className="font-bold">{fmtMoney(openBalance)}</span> gerado automaticamente
+            {sale.customerName ? <> para <span className="font-semibold">{sale.customerName}</span></> : null}.
+          </p>
+          {sale.customerId && (
+            <button
+              type="button"
+              onClick={() => navigate(`/admin/pdv/clientes/${sale.customerId}`)}
+              className="text-xs font-semibold text-amber-700 dark:text-amber-400 hover:opacity-80 mt-1.5"
+            >
+              Ver cliente e registrar pagamento →
+            </button>
+          )}
+        </div>
+      )}
+
+      {cancelError && (
+        <p className="text-sm text-red-700 dark:text-red-300 rounded-xl bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 px-3 py-2.5">
+          {cancelError}
+        </p>
+      )}
 
       {/* Cancel action */}
       {!isCancelled && (
@@ -121,8 +186,13 @@ export default function PdvVendaDetalhePage() {
           {confirmCancel ? (
             <div className="rounded-2xl border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4 space-y-3">
               <p className="text-sm text-red-700 dark:text-red-300 font-medium">
-                Confirma o cancelamento? O estoque não será restaurado automaticamente.
+                Confirma o cancelamento?
               </p>
+              <ul className="text-xs text-red-700/90 dark:text-red-300/90 space-y-0.5 list-disc pl-4">
+                <li>O valor recebido será estornado do caixa</li>
+                <li>Itens com controle de estoque voltam ao estoque</li>
+                {sale.status === 'PARTIAL' && <li>O débito gerado por esta venda será removido</li>}
+              </ul>
               <div className="flex gap-2">
                 <button
                   onClick={() => setConfirmCancel(false)}

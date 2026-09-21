@@ -8,6 +8,8 @@ const NAV = [
   { to: '/admin/pdv/vendas', label: 'Vendas', icon: ReceiptIcon, end: false },
   { to: '/admin/pdv/clientes', label: 'Clientes', icon: UsersIcon, end: false },
   { to: '/admin/pdv/caixa', label: 'Caixa', icon: CashIcon, end: false },
+  { to: '/admin/pdv/gastos', label: 'Gastos', icon: ReceiptMoneyIcon, end: false },
+  { to: '/admin/pdv/balanco', label: 'Balanço', icon: ChartIcon, end: false },
   { to: '/admin/pdv/funcionarios', label: 'Equipe', icon: BadgeIcon, end: false },
   { to: '/admin/pdv/estoque', label: 'Estoque', icon: BoxIcon, end: false },
 ]
@@ -217,6 +219,27 @@ function BoxIcon() {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 md:w-4 md:h-4 w-full h-full">
       <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
       <polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1={12} y1={22.08} x2={12} y2={12} />
+    </svg>
+  )
+}
+
+function ReceiptMoneyIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 md:w-4 md:h-4 w-full h-full">
+      <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+      <rect x={9} y={3} width={6} height={4} rx={1} />
+      <path d="M9 12h6M9 16h4" />
+    </svg>
+  )
+}
+
+function ChartIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 md:w-4 md:h-4 w-full h-full">
+      <line x1={4} y1={20} x2={20} y2={20} />
+      <rect x={5} y={11} width={3} height={6} rx={0.5} />
+      <rect x={10.5} y={7} width={3} height={10} rx={0.5} />
+      <rect x={16} y={4} width={3} height={13} rx={0.5} />
     </svg>
   )
 }

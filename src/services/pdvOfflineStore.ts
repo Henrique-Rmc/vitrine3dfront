@@ -1,5 +1,6 @@
 import Dexie, { type Table } from 'dexie'
 import type { PdvSaleRequest, PdvCashFlowRequest, PdvCustomerResponse } from './pdvService'
+import type { ExpenseBatchRequest } from './pdvExpenseService'
 
 // ── Stored shapes ─────────────────────────────────────────────────────────────
 
@@ -12,6 +13,12 @@ interface PendingSale {
 interface PendingCashFlow {
   offlineId: string
   payload: PdvCashFlowRequest
+  createdAt: number
+}
+
+interface PendingExpenseBatch {
+  offlineId: string
+  payload: ExpenseBatchRequest
   createdAt: number
 }
 
@@ -32,6 +39,7 @@ interface CachedCustomers {
 class PdvOfflineDatabase extends Dexie {
   pendingSales!: Table<PendingSale, string>
   pendingCashFlows!: Table<PendingCashFlow, string>
+  pendingExpenseBatches!: Table<PendingExpenseBatch, string>
   cachedProducts!: Table<CachedProducts, string>
   cachedCustomers!: Table<CachedCustomers, string>
 
@@ -40,6 +48,13 @@ class PdvOfflineDatabase extends Dexie {
     this.version(1).stores({
       pendingSales: 'offlineId, createdAt',
       pendingCashFlows: 'offlineId, createdAt',
+      cachedProducts: 'storeId',
+      cachedCustomers: 'id',
+    })
+    this.version(2).stores({
+      pendingSales: 'offlineId, createdAt',
+      pendingCashFlows: 'offlineId, createdAt',
+      pendingExpenseBatches: 'offlineId, createdAt',
       cachedProducts: 'storeId',
       cachedCustomers: 'id',
     })
@@ -59,11 +74,12 @@ export async function queueCashFlow(payload: PdvCashFlowRequest): Promise<void> 
 }
 
 export async function getPendingCount(): Promise<number> {
-  const [sales, flows] = await Promise.all([
+  const [sales, flows, batches] = await Promise.all([
     db.pendingSales.count(),
     db.pendingCashFlows.count(),
+    db.pendingExpenseBatches.count(),
   ])
-  return sales + flows
+  return sales + flows + batches
 }
 
 export async function getAllPendingSales(): Promise<PdvSaleRequest[]> {
@@ -82,6 +98,19 @@ export async function clearSyncedSales(offlineIds: string[]): Promise<void> {
 
 export async function clearSyncedCashFlows(offlineIds: string[]): Promise<void> {
   await db.pendingCashFlows.bulkDelete(offlineIds)
+}
+
+export async function queueExpenseBatch(payload: ExpenseBatchRequest): Promise<void> {
+  await db.pendingExpenseBatches.put({ offlineId: payload.offlineId, payload, createdAt: Date.now() })
+}
+
+export async function getAllPendingExpenseBatches(): Promise<ExpenseBatchRequest[]> {
+  const rows = await db.pendingExpenseBatches.orderBy('createdAt').toArray()
+  return rows.map((r) => r.payload)
+}
+
+export async function clearSyncedExpenseBatches(offlineIds: string[]): Promise<void> {
+  await db.pendingExpenseBatches.bulkDelete(offlineIds)
 }
 
 // ── Cache helpers ─────────────────────────────────────────────────────────────

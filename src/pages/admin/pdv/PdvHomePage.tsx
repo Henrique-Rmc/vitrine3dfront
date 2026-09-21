@@ -8,6 +8,10 @@ import {
   type PdvCashFlowSummaryResponse,
   type PdvSaleResponse,
 } from '../../../services/pdvService'
+import {
+  listRecurringAlerts,
+  type RecurringExpenseResponse,
+} from '../../../services/pdvExpenseService'
 
 function today() {
   return new Date().toISOString().slice(0, 10)
@@ -17,6 +21,7 @@ export default function PdvHomePage() {
   const navigate = useNavigate()
   const [summary, setSummary] = useState<PdvCashFlowSummaryResponse | null>(null)
   const [recentSales, setRecentSales] = useState<PdvSaleResponse[]>([])
+  const [recurringAlerts, setRecurringAlerts] = useState<RecurringExpenseResponse[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -25,10 +30,12 @@ export default function PdvHomePage() {
     Promise.all([
       getCashFlowSummary({ from: date, to: date }),
       listSales({ from: date, to: date, size: 5 }),
+      listRecurringAlerts().catch(() => [] as RecurringExpenseResponse[]),
     ])
-      .then(([sum, sales]) => {
+      .then(([sum, sales, alerts]) => {
         setSummary(sum)
         setRecentSales(sales.content)
+        setRecurringAlerts(alerts)
       })
       .catch((err) => {
         const data = (err as { response?: { data?: { message?: string; code?: string } } })?.response?.data
@@ -69,6 +76,26 @@ export default function PdvHomePage() {
 
       {!loading && !error && summary && (
         <>
+          {/* ── Recurring alerts ── */}
+          {recurringAlerts.length > 0 && (
+            <div className="rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950 px-4 py-3 flex items-center gap-3">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+              <p className="flex-1 text-sm text-amber-800 dark:text-amber-300 font-medium">
+                {recurringAlerts.length === 1
+                  ? '1 conta a vencer'
+                  : `${recurringAlerts.length} contas a vencer`}
+              </p>
+              <button
+                onClick={() => navigate('/admin/pdv/gastos/recorrentes')}
+                className="text-xs font-semibold text-amber-700 dark:text-amber-400 hover:opacity-80 transition-opacity shrink-0"
+              >
+                Ver contas →
+              </button>
+            </div>
+          )}
+
           {/* ── Balance hero card ── */}
           <div className={`rounded-2xl border p-5 ${summary.balance >= 0 ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950' : 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950'}`}>
             <div className="flex items-start justify-between">
@@ -118,7 +145,7 @@ export default function PdvHomePage() {
           </button>
 
           {/* ── Secondary actions ── */}
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-4 gap-2">
             <SecondaryAction
               label="Caixa"
               onClick={() => navigate('/admin/pdv/caixa')}
@@ -137,6 +164,17 @@ export default function PdvHomePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
                   <circle cx={9} cy={7} r={4} />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
+                </svg>
+              }
+            />
+            <SecondaryAction
+              label="Gastos"
+              onClick={() => navigate('/admin/pdv/gastos')}
+              icon={
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+                  <rect x={9} y={3} width={6} height={4} rx={1} />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6M9 16h4" />
                 </svg>
               }
             />
@@ -200,6 +238,9 @@ export default function PdvHomePage() {
                           {fmtMoney(sale.totalAmount)}
                         </p>
                         {cancelled && <span className="text-[10px] font-semibold text-red-500">Cancelada</span>}
+                        {sale.status === 'PARTIAL' && (
+                          <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400">Parcial</span>
+                        )}
                       </div>
                     </button>
                   )

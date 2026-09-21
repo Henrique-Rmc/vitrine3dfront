@@ -43,6 +43,12 @@ const PdvClienteDetalhePage = lazy(() => import('./pages/admin/pdv/PdvClienteDet
 const PdvFuncionariosPage = lazy(() => import('./pages/admin/pdv/PdvFuncionariosPage'))
 const PdvCaixaPage = lazy(() => import('./pages/admin/pdv/PdvCaixaPage'))
 const PdvEstoquePage = lazy(() => import('./pages/admin/pdv/PdvEstoquePage'))
+const PdvGastosPage = lazy(() => import('./pages/admin/pdv/PdvGastosPage'))
+const PdvNovaCompra = lazy(() => import('./pages/admin/pdv/PdvNovaCompra'))
+const PdvComprasPage = lazy(() => import('./pages/admin/pdv/PdvComprasPage'))
+const PdvCompraDetalhePage = lazy(() => import('./pages/admin/pdv/PdvCompraDetalhePage'))
+const PdvRecorrentesPage = lazy(() => import('./pages/admin/pdv/PdvRecorrentesPage'))
+const PdvBalancoPage = lazy(() => import('./pages/admin/pdv/PdvBalancoPage'))
 
 function PublicOnlyRoute() {
   const { isAuthenticated, isLoading, user } = useAuth()
@@ -124,6 +130,12 @@ export default function App() {
               <Route path="/admin/pdv/funcionarios" element={<PdvFuncionariosPage />} />
               <Route path="/admin/pdv/caixa" element={<PdvCaixaPage />} />
               <Route path="/admin/pdv/estoque" element={<PdvEstoquePage />} />
+              <Route path="/admin/pdv/gastos" element={<PdvGastosPage />} />
+              <Route path="/admin/pdv/gastos/nova-compra" element={<PdvNovaCompra />} />
+              <Route path="/admin/pdv/gastos/compras" element={<PdvComprasPage />} />
+              <Route path="/admin/pdv/gastos/compras/:id" element={<PdvCompraDetalhePage />} />
+              <Route path="/admin/pdv/gastos/recorrentes" element={<PdvRecorrentesPage />} />
+              <Route path="/admin/pdv/balanco" element={<PdvBalancoPage />} />
             </Route>
           </Route>
 

@@ -2,8 +2,10 @@ import { syncPdv } from './pdvService'
 import {
   getAllPendingSales,
   getAllPendingCashFlows,
+  getAllPendingExpenseBatches,
   clearSyncedSales,
   clearSyncedCashFlows,
+  clearSyncedExpenseBatches,
   getPendingCount,
 } from './pdvOfflineStore'
 
@@ -13,30 +15,32 @@ export interface SyncResult {
 }
 
 export async function syncPendingItems(): Promise<SyncResult> {
-  const [sales, cashFlows] = await Promise.all([
+  const [sales, cashFlows, expenseBatches] = await Promise.all([
     getAllPendingSales(),
     getAllPendingCashFlows(),
+    getAllPendingExpenseBatches(),
   ])
 
-  if (sales.length === 0 && cashFlows.length === 0) {
+  if (sales.length === 0 && cashFlows.length === 0 && expenseBatches.length === 0) {
     return { synced: 0, errors: [] }
   }
 
-  const response = await syncPdv({ sales, cashFlows })
+  const response = await syncPdv({ sales, cashFlows, expenseBatches })
 
-  // Build processed offlineId sets from the sync response.
-  // The backend returns counts, not IDs — so we clear all items that were sent
-  // assuming the backend processed or skipped them (idempotent by offlineId).
-  // Only keep items if the call itself threw (network error), handled by caller.
   const salesIds = sales.map((s) => s.offlineId)
   const flowIds = cashFlows.map((f) => f.offlineId)
+  const batchIds = expenseBatches.map((b) => b.offlineId)
 
   await Promise.all([
     clearSyncedSales(salesIds),
     clearSyncedCashFlows(flowIds),
+    clearSyncedExpenseBatches(batchIds),
   ])
 
-  const synced = response.salesProcessed + response.cashFlowsProcessed
+  const synced =
+    response.salesProcessed +
+    response.cashFlowsProcessed +
+    (response.expenseBatchesProcessed ?? 0)
   return { synced, errors: response.errors }
 }
 
